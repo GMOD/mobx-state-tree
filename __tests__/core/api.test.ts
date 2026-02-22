@@ -128,7 +128,8 @@ const TYPES = stringToArray(`
     lazy,
     undefined,
     null,
-    snapshotProcessor
+    snapshotProcessor,
+    resilient
 `)
 
 test("correct api exposed", () => {
@@ -158,7 +159,7 @@ test("all methods mentioned in API docs", () => {
       identifier => apimd.indexOf("#" + identifier.toLowerCase()) === -1
     )
   )
-  expect(missing).toEqual(["types.lazy", "types", "setDevMode"])
+  expect(missing).toEqual(["types.lazy", "types.resilient", "types", "setDevMode"])
 })
 
 test("only accepted dependencies", () => {
