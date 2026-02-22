@@ -206,4 +206,59 @@ describe("types.resilient", () => {
     expect((getSnapshot(store.items[2]) as any).type).toBe("ErrorPlaceholder")
     expect((getSnapshot(store.items[3]) as any).type).toBe("ErrorPlaceholder")
   })
+
+  test("throws clear error when fallback type itself fails to instantiate", () => {
+    const BadFallback = types.model("BadFallback", {
+      required: types.refinement(types.string, val => val.length > 0)
+    })
+    const BadResilient = types.resilient(
+      MyUnion,
+      BadFallback,
+      () => (null as any)
+    )
+    const Store = types.model({ item: BadResilient })
+    expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
+      /resilient.*fallback type.*BadFallback.*failed to instantiate/
+    )
+  })
+
+  test("throws clear error when createFallbackSnapshot throws", () => {
+    const BadResilient = types.resilient(
+      MyUnion,
+      ErrorPlaceholder,
+      () => { throw new Error("callback broke") }
+    )
+    const Store = types.model({ item: BadResilient })
+    expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
+      /resilient.*createFallbackSnapshot threw/
+    )
+  })
+
+  test("reconciling a fallback node with a valid snapshot recovers to normal type", () => {
+    const Store = types.model({ items: types.array(ResilientUnion) })
+    const store = Store.create({
+      items: [{ type: "BROKEN" }]
+    })
+    expect((getSnapshot(store.items[0]) as any).type).toBe("ErrorPlaceholder")
+    unprotect(store)
+    applySnapshot(store, {
+      items: [{ type: "A", value: "recovered" }]
+    })
+    expect(getSnapshot(store.items[0])).toEqual({ type: "A", value: "recovered" })
+  })
+
+  test("reconciling a fallback node with another bad snapshot stays as fallback", () => {
+    const Store = types.model({ items: types.array(ResilientUnion) })
+    const store = Store.create({
+      items: [{ type: "BROKEN1" }]
+    })
+    expect((getSnapshot(store.items[0]) as any).originalSnapshot).toEqual({ type: "BROKEN1" })
+    unprotect(store)
+    applySnapshot(store, {
+      items: [{ type: "BROKEN2" }]
+    })
+    const fallback = getSnapshot(store.items[0]) as any
+    expect(fallback.type).toBe("ErrorPlaceholder")
+    expect(fallback.originalSnapshot).toEqual({ type: "BROKEN2" })
+  })
 })

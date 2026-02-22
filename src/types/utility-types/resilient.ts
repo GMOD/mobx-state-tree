@@ -7,6 +7,7 @@ import {
   type IValidationContext,
   type IValidationResult,
   assertIsType,
+  fail,
   isStateTreeNode,
   isType,
   typeCheckSuccess
@@ -37,6 +38,38 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     return `resilient(${this._subtype.describe()})`
   }
 
+  private _instantiateFallback(
+    parent: AnyObjectNode | null,
+    subpath: string,
+    environment: any,
+    originalSnapshot: any,
+    originalError: unknown
+  ): this["N"] {
+    let fallbackSnapshot: FT["CreationType"]
+    try {
+      fallbackSnapshot = this._createFallbackSnapshot(
+        originalError,
+        originalSnapshot
+      )
+    } catch (e) {
+      throw fail(
+        `resilient: createFallbackSnapshot threw while handling error for '${this._subtype.name}': ${originalError}. createFallbackSnapshot error: ${e}`
+      )
+    }
+    try {
+      return this._fallbackType.instantiate(
+        parent,
+        subpath,
+        environment,
+        fallbackSnapshot
+      ) as this["N"]
+    } catch (e) {
+      throw fail(
+        `resilient: fallback type '${this._fallbackType.name}' failed to instantiate while handling error for '${this._subtype.name}': ${originalError}. Fallback error: ${e}`
+      )
+    }
+  }
+
   instantiate(
     parent: AnyObjectNode | null,
     subpath: string,
@@ -59,13 +92,13 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
         initialValue
       ) as this["N"]
     } catch (e) {
-      const fallbackSnapshot = this._createFallbackSnapshot(e, initialValue)
-      return this._fallbackType.instantiate(
+      return this._instantiateFallback(
         parent,
         subpath,
         environment,
-        fallbackSnapshot
-      ) as this["N"]
+        initialValue,
+        e
+      )
     }
   }
 
@@ -83,6 +116,23 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
         subpath
       ) as this["N"]
     }
+    if (this._fallbackType.isAssignableFrom(current.type)) {
+      try {
+        return this._subtype.instantiate(
+          parent,
+          subpath,
+          undefined,
+          newValue
+        ) as this["N"]
+      } catch (e) {
+        return this._fallbackType.reconcile(
+          current,
+          this._createFallbackSnapshot(e, newValue),
+          parent,
+          subpath
+        ) as this["N"]
+      }
+    }
     try {
       return this._subtype.reconcile(
         current,
@@ -91,14 +141,8 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
         subpath
       ) as this["N"]
     } catch (e) {
-      const fallbackSnapshot = this._createFallbackSnapshot(e, newValue)
       current.die()
-      return this._fallbackType.instantiate(
-        parent,
-        subpath,
-        undefined,
-        fallbackSnapshot
-      ) as this["N"]
+      return this._instantiateFallback(parent, subpath, undefined, newValue, e)
     }
   }
 
@@ -121,7 +165,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
         return true
       }
     } catch (_e) {
-      // subtype.is() may throw (e.g. union dispatcher), that's fine
+      // subtype.is() may throw (e.g. union dispatcher)
     }
     try {
       return this._fallbackType.is(thing)
