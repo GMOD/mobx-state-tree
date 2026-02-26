@@ -25,6 +25,7 @@ import {
   reference,
   refinement,
   safeReference,
+  resilient,
   snapshotProcessor,
   string,
   undefinedType,
@@ -60,5 +61,6 @@ export const types = {
   lazy,
   undefined: undefinedType,
   null: nullType,
-  snapshotProcessor
+  snapshotProcessor,
+  resilient
 }
