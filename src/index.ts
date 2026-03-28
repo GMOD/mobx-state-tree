@@ -122,6 +122,7 @@ export {
   isLiteralType,
   isMapType,
   isModelType,
+  lazyInit,
   isOptionalType,
   isPrimitiveType,
   isProtected,

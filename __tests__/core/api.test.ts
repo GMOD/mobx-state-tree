@@ -68,6 +68,7 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     isLiteralType,
     isMapType,
     isModelType,
+    lazyInit,
     isOptionalType,
     isPrimitiveType,
     isReferenceType,
@@ -158,7 +159,7 @@ test("all methods mentioned in API docs", () => {
       identifier => apimd.indexOf("#" + identifier.toLowerCase()) === -1
     )
   )
-  expect(missing).toEqual(["types.lazy", "types", "setDevMode"])
+  expect(missing).toEqual(["types.lazy", "lazyInit", "types", "setDevMode"])
 })
 
 test("only accepted dependencies", () => {
