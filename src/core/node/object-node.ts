@@ -1,6 +1,5 @@
-// noinspection ES6UnusedImports
 import {
-  IComputedValue,
+  type IComputedValue,
   _allowStateChangesInsideComputed,
   action,
   computed,
@@ -233,7 +232,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     const type = this.type
 
     try {
-      // @ts-expect-error
+      // @ts-expect-error storedValue type mismatch during initialization
       this.storedValue = type.createNewInstance(this._childNodes)
       this.preboot()
 
@@ -553,6 +552,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   private preboot(): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
     this._applyPatches = createActionInvoker(
       this.storedValue,

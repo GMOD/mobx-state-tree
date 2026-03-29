@@ -2,7 +2,6 @@ import { action as mobxAction } from "mobx"
 
 import {
   Hook,
-  argsToArray,
   devMode,
   fail,
   getRoot,
@@ -131,7 +130,7 @@ export function createActionInvoker<T extends FunctionWithFlag>(
   name: string,
   fn: T
 ) {
-  const res = function () {
+  const res = function (...args: any[]) {
     const id = getNextActionId()
     const parentContext = currentActionContext
     const parentActionContext = getParentActionContext(parentContext)
@@ -141,7 +140,7 @@ export function createActionInvoker<T extends FunctionWithFlag>(
         type: "action",
         name,
         id,
-        args: argsToArray(arguments),
+        args,
         context: target,
         tree: getRoot(target),
         rootId: parentContext ? parentContext.rootId : id,
@@ -267,7 +266,7 @@ function runMiddleWares(
   const middlewares = new CollectedMiddlewares(node, originalFn)
   // Short circuit
   if (middlewares.isEmpty) {
-    return mobxAction(originalFn).apply(null, baseCall.args)
+    return mobxAction(originalFn)(...baseCall.args)
   }
 
   let result: any = null
@@ -277,7 +276,7 @@ function runMiddleWares(
     const handler = middleware && middleware.handler
 
     if (!handler) {
-      return mobxAction(originalFn).apply(null, call.args)
+      return mobxAction(originalFn)(...call.args)
     }
 
     // skip hooks if asked to

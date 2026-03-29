@@ -71,7 +71,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
   ): IT["CreationType"] | typeof $preProcessorFailed {
     try {
       return this.preProcessSnapshot(sn)
-    } catch (e) {
+    } catch (_e) {
       return $preProcessorFailed
     }
   }

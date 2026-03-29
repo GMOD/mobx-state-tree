@@ -676,7 +676,7 @@ export function tryResolve(target: IAnyStateTreeNode, path: string): any {
   }
   try {
     return node.value
-  } catch (e) {
+  } catch (_e) {
     // For what ever reason not resolvable (e.g. totally not existing path, or value that cannot be fetched)
     // see test / issue: 'try resolve doesn't work #686'
     return undefined

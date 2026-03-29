@@ -11,9 +11,6 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.1.0)
-      '@types/node':
-        specifier: ^25.5.0
-        version: 25.5.0
       concat:
         specifier: ^1.0.3
         version: 1.0.3
@@ -1811,6 +1808,7 @@ snapshots:
   '@types/node@25.5.0':
     dependencies:
       undici-types: 7.18.2
+    optional: true
 
   '@typescript-eslint/eslint-plugin@8.57.2(@typescript-eslint/parser@8.57.2(eslint@10.1.0)(typescript@6.0.2))(eslint@10.1.0)(typescript@6.0.2)':
     dependencies:
@@ -3092,7 +3090,8 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@7.18.2: {}
+  undici-types@7.18.2:
+    optional: true
 
   uri-js@4.4.1:
     dependencies:

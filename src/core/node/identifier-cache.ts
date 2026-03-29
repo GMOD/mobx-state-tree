@@ -1,4 +1,4 @@
-import { IObservableArray, entries, observable, values } from "mobx"
+import { type IObservableArray, entries, observable, values } from "mobx"
 
 import {
   type AnyObjectNode,

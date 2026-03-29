@@ -539,7 +539,7 @@ export function reference<IT extends IAnyComplexType>(
 ): IReferenceType<IT> {
   assertIsType(subType, 1)
   if (devMode()) {
-    if (arguments.length === 2 && typeof arguments[1] === "string") {
+    if (options && typeof options === "string") {
       // istanbul ignore next
       throw fail(
         "References with base path are no longer supported. Please remove the base path."
@@ -590,14 +590,14 @@ export function isReferenceType<IT extends IReferenceType<any>>(
 
 export function safeReference<IT extends IAnyComplexType>(
   subType: IT,
-  options: (ReferenceOptionsGetSet<IT> | {}) & {
+  options: (ReferenceOptionsGetSet<IT> | object) & {
     acceptsUndefined: false
     onInvalidated?: OnReferenceInvalidated<ReferenceT<IT>>
   }
 ): IReferenceType<IT>
 export function safeReference<IT extends IAnyComplexType>(
   subType: IT,
-  options?: (ReferenceOptionsGetSet<IT> | {}) & {
+  options?: (ReferenceOptionsGetSet<IT> | object) & {
     acceptsUndefined?: boolean
     onInvalidated?: OnReferenceInvalidated<ReferenceT<IT>>
   }
@@ -622,7 +622,7 @@ export function safeReference<IT extends IAnyComplexType>(
  */
 export function safeReference<IT extends IAnyComplexType>(
   subType: IT,
-  options?: (ReferenceOptionsGetSet<IT> | {}) & {
+  options?: (ReferenceOptionsGetSet<IT> | object) & {
     acceptsUndefined?: boolean
     onInvalidated?: OnReferenceInvalidated<ReferenceT<IT>>
   }
