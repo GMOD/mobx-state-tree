@@ -190,12 +190,14 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
   }
 }
 
-export interface IResilientType<IT extends IAnyType, FT extends IAnyType>
-  extends IType<
-    IT["CreationType"] | FT["CreationType"],
-    IT["SnapshotType"] | FT["SnapshotType"],
-    IT["TypeWithoutSTN"] | FT["TypeWithoutSTN"]
-  > {}
+export interface IResilientType<
+  IT extends IAnyType,
+  FT extends IAnyType
+> extends IType<
+  IT["CreationType"] | FT["CreationType"],
+  IT["SnapshotType"] | FT["SnapshotType"],
+  IT["TypeWithoutSTN"] | FT["TypeWithoutSTN"]
+> {}
 
 /**
  * `types.resilient` - Wraps a type so that instantiation errors are caught
@@ -214,10 +216,7 @@ export interface IResilientType<IT extends IAnyType, FT extends IAnyType>
 export function resilient<IT extends IAnyType, FT extends IAnyType>(
   type: IT,
   fallbackType: FT,
-  createFallbackSnapshot: (
-    error: unknown,
-    snapshot: any
-  ) => FT["CreationType"]
+  createFallbackSnapshot: (error: unknown, snapshot: any) => FT["CreationType"]
 ): IResilientType<IT, FT> {
   assertIsType(type, 1)
   assertIsType(fallbackType, 2)

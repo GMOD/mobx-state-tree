@@ -1,4 +1,4 @@
-declare var process: {
+declare let process: {
   env: Record<string, string | undefined>
 }
 

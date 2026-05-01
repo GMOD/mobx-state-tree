@@ -159,7 +159,12 @@ test("all methods mentioned in API docs", () => {
       identifier => apimd.indexOf("#" + identifier.toLowerCase()) === -1
     )
   )
-  expect(missing).toEqual(["types.lazy", "types.resilient", "types", "setDevMode"])
+  expect(missing).toEqual([
+    "types.lazy",
+    "types.resilient",
+    "types",
+    "setDevMode"
+  ])
 })
 
 test("only accepted dependencies", () => {

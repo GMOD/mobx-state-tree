@@ -19,7 +19,7 @@ export const EMPTY_ARRAY: ReadonlyArray<any> = Object.freeze([])
  * @internal
  * @hidden
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+
 export const EMPTY_OBJECT: {} = Object.freeze({})
 
 /**
