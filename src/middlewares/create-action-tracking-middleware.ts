@@ -34,7 +34,7 @@ export function createActionTrackingMiddleware<T = any>(
   return function actionTrackingMiddleware(
     call: IMiddlewareEvent,
     next: (actionCall: IMiddlewareEvent) => any,
-    abort: (value: any) => any
+    _abort: (value: any) => any
   ) {
     switch (call.type) {
       case "action": {

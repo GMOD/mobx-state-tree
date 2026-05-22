@@ -1,6 +1,6 @@
 import { test, expect } from "vitest"
 import { Hero, Monster, Treasure } from "./fixtures/fixture-models"
-import { unprotect } from "../../dist/mobx-state-tree.module.js"
+import { unprotect } from "../../src"
 
 const SAMPLE_HERO = {
   id: 1,

@@ -87,7 +87,7 @@ export class Union extends BaseType<any, any, any> {
   ): this["N"] {
     const type = this.determineType(initialValue, undefined)
     if (!type) {
-      throw fail("No matching type for union " + this.describe())
+      throw fail(this.noMatchMessage(initialValue))
     } // can happen in prod builds
     return type.instantiate(parent, subpath, environment, initialValue)
   }
@@ -100,9 +100,17 @@ export class Union extends BaseType<any, any, any> {
   ): this["N"] {
     const type = this.determineType(newValue, current.getReconciliationType())
     if (!type) {
-      throw fail("No matching type for union " + this.describe())
+      throw fail(this.noMatchMessage(newValue))
     } // can happen in prod builds
     return type.reconcile(current, newValue, parent, subpath)
+  }
+
+  private noMatchMessage(value: unknown): string {
+    const discriminator =
+      isPlainObject(value) && typeof (value as any).type === "string"
+        ? ` for snapshot with type "${(value as any).type}"`
+        : ""
+    return `No matching type for union ${this.name}${discriminator}`
   }
 
   determineType(
@@ -245,10 +253,18 @@ export class Union extends BaseType<any, any, any> {
       return this._dispatcher(value).validate(value, context)
     }
 
+    // for plain-object snapshots, prefer union members whose literal-typed
+    // discriminator properties match the value (e.g. {type: "MsaView"})
+    // so error output is scoped to the intended branch instead of every member
+    const candidates =
+      isPlainObject(value) && !isStateTreeNode(value)
+        ? this._types.filter(t => this.snapshotLooksLikeType(value, t))
+        : []
+    const typesToValidate = candidates.length > 0 ? candidates : this._types
+
     const allErrors: IValidationError[][] = []
     let applicableTypes = 0
-    for (let i = 0; i < this._types.length; i++) {
-      const type = this._types[i]
+    for (const type of typesToValidate) {
       const errors = type.validate(value, context)
       if (errors.length === 0) {
         if (this._eager) {

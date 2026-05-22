@@ -1,6 +1,6 @@
 import {
-  IObjectDidChange,
-  IObjectWillChange,
+  type IObjectDidChange,
+  type IObjectWillChange,
   _getAdministration,
   _interceptReads,
   action,
@@ -461,9 +461,9 @@ export class ModelType<
       const baseAction = (self as any)[name]
       if (name in Hook && baseAction) {
         const specializedAction = action2
-        action2 = function () {
-          baseAction.apply(null, arguments)
-          specializedAction.apply(null, arguments)
+        action2 = function (...args: any[]) {
+          baseAction(...args)
+          specializedAction(...args)
         }
       }
 
@@ -720,12 +720,12 @@ export class ModelType<
 
   getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const res = {} as any
-    this.forAllProps((name, type) => {
+    this.forAllProps((name, _type) => {
       try {
         // TODO: FIXME, make sure the observable ref is used!
         const atom = getAtom(node.storedValue, name)
         ;(atom as any).reportObserved()
-      } catch (e) {
+      } catch (_e) {
         throw fail(`${name} property is declared twice`)
       }
       res[name] = this.getChildNode(node, name).snapshot

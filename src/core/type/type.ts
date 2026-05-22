@@ -331,7 +331,7 @@ export abstract class BaseType<
     return this.instantiate(null, "", environment, snapshot!).value
   }
 
-  getSnapshot(node: N, applyPostProcess?: boolean): S {
+  getSnapshot(_node: N, _applyPostProcess?: boolean): S {
     // istanbul ignore next
     throw fail("unimplemented method")
   }

@@ -122,7 +122,7 @@ export function refinement(...args: any[]): IAnyType {
   const predicate = args[1]
   const message = args[2]
     ? args[2]
-    : (v: any) => "Value does not respect the refinement predicate"
+    : (_v: any) => "Value does not respect the refinement predicate"
   // ensures all parameters are correct
   assertIsType(type, [1, 2])
   assertIsString(name, 1)

@@ -24,13 +24,18 @@ const ModelB = types.model("ModelB", {
 })
 
 const MyUnion = types.union(
-  { dispatcher: (sn: any) => {
-    switch (sn?.type) {
-      case "A": return ModelA
-      case "B": return ModelB
-      default: throw new Error(`Unknown type: ${sn?.type}`)
+  {
+    dispatcher: (sn: any) => {
+      switch (sn?.type) {
+        case "A":
+          return ModelA
+        case "B":
+          return ModelB
+        default:
+          throw new Error(`Unknown type: ${sn?.type}`)
+      }
     }
-  }},
+  },
   ModelA,
   ModelB
 )
@@ -72,14 +77,20 @@ describe("types.resilient", () => {
     expect(getSnapshot(store.items[0])).toEqual({ type: "A", value: "hello" })
     const fallback = getSnapshot(store.items[1]) as any
     expect(fallback.type).toBe("ErrorPlaceholder")
-    expect(fallback.originalSnapshot).toEqual({ type: "UNKNOWN", data: "stuff" })
+    expect(fallback.originalSnapshot).toEqual({
+      type: "UNKNOWN",
+      data: "stuff"
+    })
     expect(fallback.errorMessage).toContain("Unknown type: UNKNOWN")
     expect(getSnapshot(store.items[2])).toEqual({ type: "B", count: 42 })
   })
 
   test("preserves the original snapshot in the fallback", () => {
     const Store = types.model({ items: types.array(ResilientUnion) })
-    const originalSnapshot = { type: "MISSING_PLUGIN", config: { a: 1, b: [2, 3] } }
+    const originalSnapshot = {
+      type: "MISSING_PLUGIN",
+      config: { a: 1, b: [2, 3] }
+    }
     const store = Store.create({ items: [originalSnapshot] })
     const fallback = getSnapshot(store.items[0]) as any
     expect(fallback.originalSnapshot).toEqual(originalSnapshot)
@@ -117,11 +128,13 @@ describe("types.resilient", () => {
   test("is() accepts both wrapped and fallback type values", () => {
     expect(ResilientUnion.is({ type: "A", value: "hi" })).toBe(true)
     expect(ResilientUnion.is({ type: "B", count: 5 })).toBe(true)
-    expect(ResilientUnion.is({
-      type: "ErrorPlaceholder",
-      originalSnapshot: {},
-      errorMessage: "err"
-    })).toBe(true)
+    expect(
+      ResilientUnion.is({
+        type: "ErrorPlaceholder",
+        originalSnapshot: {},
+        errorMessage: "err"
+      })
+    ).toBe(true)
   })
 
   test("works with types.map", () => {
@@ -132,7 +145,10 @@ describe("types.resilient", () => {
         bad: { type: "NOPE" }
       }
     })
-    expect(getSnapshot(store.items.get("good")!)).toEqual({ type: "A", value: "yes" })
+    expect(getSnapshot(store.items.get("good")!)).toEqual({
+      type: "A",
+      value: "yes"
+    })
     const fallback = getSnapshot(store.items.get("bad")!) as any
     expect(fallback.type).toBe("ErrorPlaceholder")
     expect(fallback.originalSnapshot).toEqual({ type: "NOPE" })
@@ -214,7 +230,7 @@ describe("types.resilient", () => {
     const BadResilient = types.resilient(
       MyUnion,
       BadFallback,
-      () => (null as any)
+      () => null as any
     )
     const Store = types.model({ item: BadResilient })
     expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
@@ -223,11 +239,9 @@ describe("types.resilient", () => {
   })
 
   test("throws clear error when createFallbackSnapshot throws", () => {
-    const BadResilient = types.resilient(
-      MyUnion,
-      ErrorPlaceholder,
-      () => { throw new Error("callback broke") }
-    )
+    const BadResilient = types.resilient(MyUnion, ErrorPlaceholder, () => {
+      throw new Error("callback broke")
+    })
     const Store = types.model({ item: BadResilient })
     expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
       /resilient.*createFallbackSnapshot threw/
@@ -244,7 +258,10 @@ describe("types.resilient", () => {
     applySnapshot(store, {
       items: [{ type: "A", value: "recovered" }]
     })
-    expect(getSnapshot(store.items[0])).toEqual({ type: "A", value: "recovered" })
+    expect(getSnapshot(store.items[0])).toEqual({
+      type: "A",
+      value: "recovered"
+    })
   })
 
   test("reconciling a fallback node with another bad snapshot stays as fallback", () => {
@@ -252,7 +269,9 @@ describe("types.resilient", () => {
     const store = Store.create({
       items: [{ type: "BROKEN1" }]
     })
-    expect((getSnapshot(store.items[0]) as any).originalSnapshot).toEqual({ type: "BROKEN1" })
+    expect((getSnapshot(store.items[0]) as any).originalSnapshot).toEqual({
+      type: "BROKEN1"
+    })
     unprotect(store)
     applySnapshot(store, {
       items: [{ type: "BROKEN2" }]

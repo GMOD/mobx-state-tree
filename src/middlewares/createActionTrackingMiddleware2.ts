@@ -4,8 +4,6 @@ import {
   type IMiddlewareHandler
 } from "../internal.ts"
 
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>
-
 export interface IActionTrackingMiddleware2Call<
   TEnv
 > extends Readonly<IActionContext> {

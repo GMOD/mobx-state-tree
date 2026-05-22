@@ -1,4 +1,4 @@
-import { IAtom, createAtom } from "mobx"
+import { type IAtom, createAtom } from "mobx"
 
 import {
   type AnyObjectNode,
@@ -24,6 +24,7 @@ type HookSubscribers = {
  * @internal
  * @hidden
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export abstract class BaseNode<C, S, T> {
   private _escapedSubpath?: string
 

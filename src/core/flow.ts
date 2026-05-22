@@ -1,4 +1,4 @@
-import { argsToArray, fail, setImmediateWithFallback } from "../utils.ts"
+import { fail, setImmediateWithFallback } from "../utils.ts"
 import {
   getCurrentActionContext,
   getNextActionId,
@@ -95,7 +95,7 @@ export function* toGenerator<R>(p: Promise<R>) {
  * @hidden
  */
 export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
-  const spawner = function flowSpawner(this: any) {
+  const spawner = function flowSpawner(this: any, ...flowArgs: any[]) {
     // Implementation based on https://github.com/tj/co/blob/master/index.js
     const runId = getNextActionId()
     const parentContext = getCurrentActionContext()!
@@ -119,8 +119,6 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
       parentActionEvent: parentActionContext
     }
 
-    const args = arguments
-
     function wrap(fn: any, type: IMiddlewareEventType, arg: any) {
       fn.$mst_middleware = (spawner as any).$mst_middleware // pick up any middleware attached to the flow
       return runWithActionContext(
@@ -135,8 +133,8 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
 
     return new Promise(function (resolve, reject) {
       let gen: any
-      const init = function asyncActionInit() {
-        gen = generator.apply(null, arguments)
+      const init = function asyncActionInit(...initArgs: any[]) {
+        gen = generator(...initArgs)
         onFulfilled(undefined) // kick off the flow
       }
       ;(init as any).$mst_middleware = (spawner as any).$mst_middleware
@@ -145,7 +143,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
         {
           ...contextBase,
           type: "flow_spawn",
-          args: argsToArray(args)
+          args: flowArgs
         },
         init
       )
@@ -154,14 +152,14 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
         let ret
         try {
           // prettier-ignore
-          const cancelError: any = wrap((r: any) => { ret = gen.next(r) }, "flow_resume", res)
+          const cancelError: any = wrap((_r: any) => { ret = gen.next(_r) }, "flow_resume", res)
           if (cancelError instanceof Error) {
             ret = gen.throw(cancelError)
           }
         } catch (e) {
           // prettier-ignore
           setImmediateWithFallback(() => {
-                        wrap((r: any) => { reject(e) }, "flow_throw", e)
+                        wrap((_r: any) => { reject(e) }, "flow_throw", e)
                     })
           return
         }
@@ -173,11 +171,11 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
         let ret
         try {
           // prettier-ignore
-          wrap((r: any) => { ret = gen.throw(r) }, "flow_resume_error", err) // or yieldError?
+          wrap((_r: any) => { ret = gen.throw(_r) }, "flow_resume_error", err) // or yieldError?
         } catch (e) {
           // prettier-ignore
           setImmediateWithFallback(() => {
-                        wrap((r: any) => { reject(e) }, "flow_throw", e)
+                        wrap((_r: any) => { reject(e) }, "flow_throw", e)
                     })
           return
         }

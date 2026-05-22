@@ -135,9 +135,8 @@ function baseApplyAction(
   if (!(typeof resolvedTarget[action.name] === "function")) {
     throw fail(`Action '${action.name}' does not exist in '${node.path}'`)
   }
-  return resolvedTarget[action.name].apply(
-    resolvedTarget,
-    action.args ? action.args.map(v => deserializeArgument(node, v)) : []
+  return resolvedTarget[action.name](
+    ...(action.args ? action.args.map(v => deserializeArgument(node, v)) : [])
   )
 }
 

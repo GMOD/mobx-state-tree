@@ -9,6 +9,7 @@ export default defineConfig(
       "dist/*",
       "esm/*",
       "eslint.config.mjs",
+      "rollup.config.js",
       "scripts/*",
       "lib/*",
       "vitest.config.ts",
@@ -31,6 +32,20 @@ export default defineConfig(
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        {
+          allowInterfaces: "with-single-extends",
+          allowObjectTypes: "always"
+        }
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ],
       curly: "error",
       "import/extensions": ["error", "ignorePackages"],
       "import/no-unresolved": "off"

@@ -13,18 +13,13 @@ const plainObjectString = Object.toString()
  * @internal
  * @hidden
  */
-declare const global: any
-
-/**
- * @internal
- * @hidden
- */
 export const EMPTY_ARRAY: ReadonlyArray<any> = Object.freeze([])
 
 /**
  * @internal
  * @hidden
  */
+
 export const EMPTY_OBJECT: {} = Object.freeze({})
 
 /**
@@ -245,9 +240,11 @@ export function defineProperty(
   key: PropertyKey,
   descriptor: PropertyDescriptor
 ) {
-  isObservableObject(object)
-    ? mobxDefineProperty(object, key, descriptor)
-    : Object.defineProperty(object, key, descriptor)
+  if (isObservableObject(object)) {
+    mobxDefineProperty(object, key, descriptor)
+  } else {
+    Object.defineProperty(object, key, descriptor)
+  }
 }
 
 /**

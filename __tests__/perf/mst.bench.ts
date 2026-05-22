@@ -71,7 +71,19 @@ function createTestModels(mst: typeof mstBranch1) {
     children: mst.types.array(Level1)
   })
 
-  return { Item, Container, Dog, Cat, Bird, Animal, Zoo, DeepTree, Level1, Level2, Level3 }
+  return {
+    Item,
+    Container,
+    Dog,
+    Cat,
+    Bird,
+    Animal,
+    Zoo,
+    DeepTree,
+    Level1,
+    Level2,
+    Level3
+  }
 }
 
 const models1 = createTestModels(mstBranch1)
@@ -112,9 +124,15 @@ function generateZooSnapshot(count: number) {
 
 function generateDeepTreeSnapshot(width: number) {
   const batch = snapshotCounter++
-  const level3 = Array.from({ length: width }, (_, i) => ({ value: `leaf-${batch}-${i}` }))
-  const level2 = Array.from({ length: width }, () => ({ children: [...level3] }))
-  const level1 = Array.from({ length: width }, () => ({ children: [...level2] }))
+  const level3 = Array.from({ length: width }, (_, i) => ({
+    value: `leaf-${batch}-${i}`
+  }))
+  const level2 = Array.from({ length: width }, () => ({
+    children: [...level3]
+  }))
+  const level1 = Array.from({ length: width }, () => ({
+    children: [...level2]
+  }))
   return { children: level1 }
 }
 

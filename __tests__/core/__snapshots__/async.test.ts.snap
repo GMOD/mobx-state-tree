@@ -411,7 +411,7 @@ exports[`can handle nested async actions 1`] = `
       "drinking black",
     ],
     "id": 27,
-    "name": "uppercase2",
+    "name": "uppercase",
     "parentActionEvent": {
       "allParentIds": [],
       "args": [
@@ -477,7 +477,7 @@ exports[`can handle nested async actions 1`] = `
       undefined,
     ],
     "id": 27,
-    "name": "uppercase2",
+    "name": "uppercase",
     "parentActionEvent": {
       "allParentIds": [],
       "args": [
@@ -543,7 +543,7 @@ exports[`can handle nested async actions 1`] = `
       "DRINKING BLACK",
     ],
     "id": 27,
-    "name": "uppercase2",
+    "name": "uppercase",
     "parentActionEvent": {
       "allParentIds": [],
       "args": [
@@ -609,7 +609,7 @@ exports[`can handle nested async actions 1`] = `
       "DRINKING BLACK",
     ],
     "id": 27,
-    "name": "uppercase2",
+    "name": "uppercase",
     "parentActionEvent": {
       "allParentIds": [],
       "args": [
