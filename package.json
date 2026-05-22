@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GMOD/mobx-state-tree.git"
+    "url": "git+https://github.com/GMOD/mobx-state-tree.git"
   },
   "author": "Michel Weststrate",
   "license": "MIT",
