@@ -2,9 +2,10 @@
   "include": ["src"],
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "lib",
+    "outDir": "dist",
     "target": "esnext",
-    "lib": ["dom", "esnext"],
+    "lib": ["esnext"],
+    "types": ["node"],
     "declaration": true,
     "moduleResolution": "nodenext",
     "module": "nodenext",
