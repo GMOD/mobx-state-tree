@@ -1,6 +1,7 @@
 {
   "include": ["src"],
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "lib",
     "target": "esnext",
     "lib": ["dom", "esnext"],

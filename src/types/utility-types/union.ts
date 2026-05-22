@@ -260,8 +260,7 @@ export class Union extends BaseType<any, any, any> {
       isPlainObject(value) && !isStateTreeNode(value)
         ? this._types.filter(t => this.snapshotLooksLikeType(value, t))
         : []
-    const typesToValidate =
-      candidates.length > 0 ? candidates : this._types
+    const typesToValidate = candidates.length > 0 ? candidates : this._types
 
     const allErrors: IValidationError[][] = []
     let applicableTypes = 0

@@ -41,7 +41,10 @@ function safeStringify(value: any) {
     const ancestors: any[] = []
     return JSON.stringify(value, function (_key, val) {
       if (val !== null && typeof val === "object") {
-        while (ancestors.length > 0 && ancestors[ancestors.length - 1] !== this) {
+        while (
+          ancestors.length > 0 &&
+          ancestors[ancestors.length - 1] !== this
+        ) {
           ancestors.pop()
         }
         if (ancestors.length >= MAX_STRINGIFY_DEPTH) {
