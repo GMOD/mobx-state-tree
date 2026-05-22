@@ -22,3 +22,12 @@ Fork of mobx-state-tree v5.4.2 for use in jbrowse
   meaning any value is considered a valid snapshot. Validation is deferred to
   instantiation time, where failures are caught and routed to the fallback
 - dramatically shorter error messages with large type trees
+
+## Publishing
+
+[Trusted publishing](https://docs.npmjs.com/about-trusted-publishing) via GitHub
+Actions.
+
+```bash
+pnpm version patch  # or minor/major
+```
