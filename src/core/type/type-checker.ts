@@ -34,9 +34,23 @@ export interface IValidationError {
 /** Type validation result, which is an array of type validation errors */
 export type IValidationResult = IValidationError[]
 
+const MAX_STRINGIFY_DEPTH = 3
+
 function safeStringify(value: any) {
   try {
-    return JSON.stringify(value)
+    const ancestors: any[] = []
+    return JSON.stringify(value, function (_key, val) {
+      if (val !== null && typeof val === "object") {
+        while (ancestors.length > 0 && ancestors[ancestors.length - 1] !== this) {
+          ancestors.pop()
+        }
+        if (ancestors.length >= MAX_STRINGIFY_DEPTH) {
+          return Array.isArray(val) ? "[…]" : "{…}"
+        }
+        ancestors.push(val)
+      }
+      return val
+    })
   } catch (e) {
     // istanbul ignore next
     return `<Unserializable: ${e}>`
@@ -80,16 +94,16 @@ function toErrorString(error: IValidationError): string {
     type && isStateTreeNode(value) && type.is(getStateTreeNode(value).snapshot)
 
   return (
-    `${pathPrefix}${currentTypename} ${prettyPrintValue(value)} is not assignable ${
+    `${pathPrefix}${currentTypename} ${shortenPrintValue(prettyPrintValue(value))} is not assignable ${
       type ? `to type: \`${type.name}\`` : ``
     }` +
     (error.message ? ` (${error.message})` : "") +
     (type
       ? isPrimitiveType(type) || isPrimitive(value)
         ? `.`
-        : `, expected an instance of \`${(type as IAnyType).name}\` or a snapshot like \`${(
-            type as IAnyType
-          ).describe()}\` instead.` +
+        : `, expected an instance of \`${(type as IAnyType).name}\` or a snapshot like \`${shortenPrintValue(
+            (type as IAnyType).describe()
+          )}\` instead.` +
           (isSnapshotCompatible
             ? " (Note that a snapshot of the provided value is compatible with the targeted type)"
             : "")
@@ -187,6 +201,8 @@ export function typecheck<IT extends IAnyType>(
   }
 }
 
+const MAX_ERRORS_REPORTED = 10
+
 function validationErrorsToString<IT extends IAnyType>(
   type: IT,
   value: ExtractCSTWithSTN<IT>,
@@ -196,9 +212,15 @@ function validationErrorsToString<IT extends IAnyType>(
     return undefined
   }
 
+  const shown = errors.slice(0, MAX_ERRORS_REPORTED).map(toErrorString)
+  const overflow = errors.length - shown.length
+  if (overflow > 0) {
+    shown.push(`(… and ${overflow} more error${overflow === 1 ? "" : "s"})`)
+  }
+
   return (
     `Error while converting ${shortenPrintValue(prettyPrintValue(value))} to \`${
       type.name
-    }\`:\n\n    ` + errors.map(toErrorString).join("\n    ")
+    }\`:\n\n    ` + shown.join("\n    ")
   )
 }

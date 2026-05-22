@@ -1,4 +1,4 @@
-import { types } from "../../../dist/mobx-state-tree.module.js"
+import { types } from "../../../src"
 
 // tiny
 export const Treasure = types.model("Treasure", {
