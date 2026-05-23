@@ -1,6 +1,6 @@
 {
   "name": "@jbrowse/mobx-state-tree",
-  "version": "5.7.0",
+  "version": "5.7.1",
   "description": "Fork of mobx-state-tree starting from v5.4.2 for use in jbrowse 2",
   "license": "MIT",
   "repository": {
