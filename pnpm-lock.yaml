@@ -4,16 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  root: link:../../jbrowse-components
-
 importers:
 
   .:
-    dependencies:
-      root:
-        specifier: link:../../jbrowse-components
-        version: link:../../jbrowse-components
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
