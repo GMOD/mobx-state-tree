@@ -70,7 +70,9 @@ export type {
   _CustomCSProcessor,
   _CustomJoin,
   _CustomOrOther,
-  _NotCustomized
+  _NotCustomized,
+  NonEmptyObject,
+  ExtractCFromProps
 } from "./internal.ts"
 
 export {
