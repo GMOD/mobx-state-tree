@@ -14,11 +14,11 @@ import {
   set
 } from "mobx"
 
+import { ComplexType } from "../../core/type/type.ts"
 import {
   type AnyNode,
   type AnyObjectNode,
   ArrayType,
-  ComplexType,
   EMPTY_ARRAY,
   EMPTY_OBJECT,
   type FunctionWithFlag,

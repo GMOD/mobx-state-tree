@@ -1,9 +1,9 @@
+import { SimpleType } from "../../core/type/type.ts"
 import {
   type AnyObjectNode,
   type IType,
   type IValidationContext,
   type IValidationResult,
-  SimpleType,
   TypeFlags,
   createScalarNode,
   typeCheckFailure,

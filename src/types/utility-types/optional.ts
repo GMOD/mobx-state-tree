@@ -1,6 +1,6 @@
+import { BaseType } from "../../core/type/type.ts"
 import {
   type AnyObjectNode,
-  BaseType,
   type ExtractCSTWithSTN,
   type IAnyType,
   type IType,

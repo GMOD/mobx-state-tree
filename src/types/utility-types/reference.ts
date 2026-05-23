@@ -1,3 +1,4 @@
+import { SimpleType } from "../../core/type/type.ts"
 import {
   type AnyNode,
   type AnyObjectNode,
@@ -13,7 +14,6 @@ import {
   type IValidationResult,
   NodeLifeCycle,
   type ReferenceIdentifier,
-  SimpleType,
   TypeFlags,
   applyPatch,
   assertIsType,

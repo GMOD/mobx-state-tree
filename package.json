@@ -2,14 +2,14 @@
   "name": "@jbrowse/mobx-state-tree",
   "version": "5.6.10",
   "description": "Fork of mobx-state-tree starting from v5.4.2 for use in jbrowse 2",
-  "types": "dist/index.d.ts",
-  "main": "dist/mobx-state-tree.js",
-  "module": "dist/mobx-state-tree.module.js",
+  "type": "module",
+  "types": "esm/index.d.ts",
+  "main": "dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/mobx-state-tree.module.js",
-      "require": "./dist/mobx-state-tree.js"
+      "types": "./esm/index.d.ts",
+      "import": "./esm/index.js",
+      "require": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -17,7 +17,10 @@
   "scripts": {
     "lint": "eslint --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write .",
-    "build": "rm -rf dist && tsc && rollup -c",
+    "build:esm": "tsc",
+    "build:cjs": "tsc --module commonjs --moduleResolution bundler --outDir dist",
+    "postbuild:cjs": "echo '{\"type\": \"commonjs\"}' > dist/package.json",
+    "build": "rm -rf esm dist && pnpm build:esm && pnpm build:cjs",
     "test": "vitest",
     "test-ci": "pnpm test:dev --run && pnpm test:prod --run",
     "test:dev": "NODE_ENV=development vitest",
@@ -34,7 +37,8 @@
   "author": "Michel Weststrate",
   "license": "MIT",
   "files": [
-    "dist/"
+    "esm",
+    "dist"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -43,7 +47,6 @@
     "eslint-plugin-import": "^2.32.0",
     "mobx": "^6.15.3",
     "prettier": "^3.8.3",
-    "rollup": "^4.60.4",
     "spec.ts": "^1.1.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",

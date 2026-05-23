@@ -1,5 +1,5 @@
+import { SimpleType } from "../core/type/type.ts"
 import {
-  SimpleType,
   TypeFlags,
   createScalarNode,
   fail,

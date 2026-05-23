@@ -2,7 +2,7 @@
   "include": ["src"],
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "dist",
+    "outDir": "esm",
     "target": "esnext",
     "lib": ["esnext"],
     "types": ["node"],
@@ -10,6 +10,7 @@
     "moduleResolution": "nodenext",
     "module": "nodenext",
     "sourceMap": true,
+    "inlineSources": true,
     "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,

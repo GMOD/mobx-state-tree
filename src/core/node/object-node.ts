@@ -6,9 +6,9 @@ import {
   reaction
 } from "mobx"
 
+import { BaseNode } from "./BaseNode.ts"
+import { ComplexType } from "../type/type.ts"
 import {
-  BaseNode,
-  ComplexType,
   EMPTY_OBJECT,
   EventHandlers,
   Hook,

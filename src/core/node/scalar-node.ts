@@ -1,11 +1,11 @@
 import { action } from "mobx"
 
+import { BaseNode } from "./BaseNode.ts"
+import { SimpleType } from "../type/type.ts"
 import {
   type AnyObjectNode,
-  BaseNode,
   Hook,
   NodeLifeCycle,
-  SimpleType,
   devMode,
   fail,
   freeze

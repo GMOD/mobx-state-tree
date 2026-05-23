@@ -14,10 +14,10 @@ import {
   values
 } from "mobx"
 
+import { ComplexType } from "../../core/type/type.ts"
 import {
   type AnyNode,
   type AnyObjectNode,
-  ComplexType,
   EMPTY_OBJECT,
   type ExtractCSTWithSTN,
   type IAnyModelType,

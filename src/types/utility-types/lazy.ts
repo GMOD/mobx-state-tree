@@ -1,12 +1,12 @@
 import { type IObservableArray, action, observable, when } from "mobx"
 
+import { SimpleType } from "../../core/type/type.ts"
 import {
   type AnyNode,
   type AnyObjectNode,
   type IType,
   type IValidationContext,
   type IValidationResult,
-  SimpleType,
   TypeFlags,
   createScalarNode,
   deepFreeze,

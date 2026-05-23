@@ -11,10 +11,10 @@ import {
   observe
 } from "mobx"
 
+import { ComplexType } from "../../core/type/type.ts"
 import {
   type AnyNode,
   type AnyObjectNode,
-  ComplexType,
   EMPTY_ARRAY,
   EMPTY_OBJECT,
   type ExtractCSTWithSTN,
