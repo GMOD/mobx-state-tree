@@ -4,7 +4,8 @@ const config = (outFile, format) => ({
   input: "./dist/index.js",
   output: {
     file: path.join("./dist", outFile),
-    format
+    format,
+    sourcemap: true
   },
   external: ["mobx"]
 })
