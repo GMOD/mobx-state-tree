@@ -1,35 +1,11 @@
-import {
-  EMPTY_ARRAY,
-  ObjectNode,
-  ScalarNode,
-  assertArg,
-  fail,
-  joinJsonPath,
-  splitJsonPath
-} from "../../internal.ts"
+import { assertArg, EMPTY_ARRAY, fail } from "../../utils.ts"
+import { joinJsonPath, splitJsonPath } from "../json-patch.ts"
+import type { IAnyComplexType, IAnyType, Instance, IType, STNValue } from "../type/type.ts"
+import type { AnyNode } from "./BaseNode.ts"
+import { type AnyObjectNode, type IChildNodesMap, ObjectNode } from "./object-node.ts"
+import { ScalarNode } from "./scalar-node.ts"
 
-import type {
-  AnyNode,
-  AnyObjectNode,
-  IAnyComplexType,
-  IAnyType,
-  IChildNodesMap,
-  IType,
-  Instance,
-  STNValue
-} from "../../internal.ts"
-
-/**
- * @internal
- * @hidden
- */
-export enum NodeLifeCycle {
-  INITIALIZING, // setting up
-  CREATED, // afterCreate has run
-  FINALIZED, // afterAttach has run
-  DETACHING, // being detached from the tree
-  DEAD // no coming back from this one
-}
+export { NodeLifeCycle } from "./NodeLifeCycle.ts"
 
 /** @hidden */
 declare const $stateTreeNodeType: unique symbol

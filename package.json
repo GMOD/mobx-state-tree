@@ -8,26 +8,31 @@
     "url": "git+https://github.com/GMOD/mobx-state-tree.git"
   },
   "type": "module",
-  "main": "dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "import": "./esm/index.js",
-    "require": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "author": "Michel Weststrate",
   "files": [
-    "esm",
     "dist"
   ],
   "scripts": {
-    "clean": "rimraf esm dist",
+    "clean": "rimraf build dist",
     "format": "prettier --write .",
     "lint": "eslint --report-unused-disable-directives --max-warnings 0",
     "prebuild": "pnpm clean",
-    "build:esm": "tsc --outDir esm",
-    "build:es5": "tsc --module commonjs --moduleResolution bundler --outDir dist",
-    "postbuild:es5": "echo '{\"type\": \"commonjs\"}' > dist/package.json",
-    "build": "pnpm build:esm && pnpm build:es5",
+    "build:tsc": "tsc",
+    "build:bundle": "rollup -c",
+    "build:dts": "node scripts/copy-dts.mjs",
+    "build": "pnpm build:tsc && pnpm build:bundle && pnpm build:dts",
     "test": "vitest",
     "test-ci": "pnpm test:dev --run && pnpm test:prod --run",
     "test:dev": "NODE_ENV=development vitest",
@@ -40,11 +45,13 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.1",
+    "dts-bundle-generator": "^9.5.1",
     "eslint": "^10.4.0",
     "eslint-plugin-import": "^2.32.0",
     "mobx": "^6.15.3",
     "prettier": "^3.8.3",
     "rimraf": "^6.0.1",
+    "rollup": "^4.60.4",
     "spec.ts": "^1.1.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",

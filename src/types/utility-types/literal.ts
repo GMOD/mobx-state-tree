@@ -1,17 +1,9 @@
 import { SimpleType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ISimpleType,
-  type IValidationContext,
-  type IValidationResult,
-  type Primitives,
-  TypeFlags,
-  createScalarNode,
-  isPrimitive,
-  isType,
-  typeCheckFailure,
-  typeCheckSuccess
-} from "../../internal.ts"
+import { createScalarNode } from "../../core/node/create-node.ts"
+import type { AnyObjectNode } from "../../core/node/object-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { type ISimpleType, isType, type Primitives, TypeFlags } from "../../core/type/type.ts"
+import { isPrimitive } from "../../utils.ts"
 import { assertArg } from "../../utils.ts"
 
 /**

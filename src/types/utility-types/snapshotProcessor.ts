@@ -1,24 +1,11 @@
 import { BaseType, ComplexType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ExtractNodeType,
-  type IAnyType,
-  type Instance,
-  type IType,
-  type IValidationContext,
-  type IValidationResult,
-  ObjectNode,
-  TypeFlags,
-  assertIsType,
-  devMode,
-  fail,
-  getSnapshot,
-  isStateTreeNode,
-  isType,
-  isUnionType,
-  typeCheckFailure
-} from "../../internal.ts"
-
+import { getSnapshot } from "../../core/mst-operations.ts"
+import { isStateTreeNode } from "../../core/node/node-utils.ts"
+import { type AnyObjectNode, ObjectNode } from "../../core/node/object-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckFailure } from "../../core/type/type-checker.ts"
+import { assertIsType, type ExtractNodeType, type IAnyType, type Instance, isType, type IType, TypeFlags } from "../../core/type/type.ts"
+import { devMode, fail } from "../../utils.ts"
+import { isUnionType } from "./union.ts"
 /** @hidden */
 declare const $mstNotCustomized: unique symbol
 

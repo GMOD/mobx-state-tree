@@ -15,47 +15,19 @@ import {
 } from "mobx"
 
 import { ComplexType } from "../../core/type/type.ts"
-import {
-  type AnyNode,
-  type AnyObjectNode,
-  EMPTY_OBJECT,
-  type ExtractCSTWithSTN,
-  type IAnyModelType,
-  type IAnyStateTreeNode,
-  type IAnyType,
-  type IChildNodesMap,
-  type IHooksGetter,
-  type IJsonPatch,
-  type IType,
-  type IValidationContext,
-  type IValidationResult,
-  ModelType,
-  ObjectNode,
-  TypeFlags,
-  addHiddenFinalProp,
-  addHiddenWritableProp,
-  asArray,
-  cannotDetermineSubtype,
-  createActionInvoker,
-  createObjectNode,
-  devMode,
-  escapeJsonPath,
-  fail,
-  getContextForPath,
-  getSnapshot,
-  getStateTreeNode,
-  isMutable,
-  isPlainObject,
-  isStateTreeNode,
-  isType,
-  isValidIdentifier,
-  normalizeIdentifier,
-  popContext,
-  typeCheckFailure,
-  typeCheckSuccess,
-  typecheckInternal
-} from "../../internal.ts"
-
+import { createActionInvoker } from "../../core/action.ts"
+import { escapeJsonPath, type IJsonPatch } from "../../core/json-patch.ts"
+import { getSnapshot } from "../../core/mst-operations.ts"
+import type { AnyNode } from "../../core/node/BaseNode.ts"
+import { createObjectNode } from "../../core/node/create-node.ts"
+import type { IHooksGetter } from "../../core/node/Hook.ts"
+import { getStateTreeNode, type IAnyStateTreeNode, isStateTreeNode } from "../../core/node/node-utils.ts"
+import { type AnyObjectNode, type IChildNodesMap, ObjectNode } from "../../core/node/object-node.ts"
+import { getContextForPath, type IValidationContext, type IValidationResult, popContext, typeCheckFailure, typecheckInternal, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { cannotDetermineSubtype, type ExtractCSTWithSTN, type IAnyType, isType, type IType, TypeFlags } from "../../core/type/type.ts"
+import { addHiddenFinalProp, addHiddenWritableProp, asArray, devMode, EMPTY_OBJECT, fail, isMutable, isPlainObject } from "../../utils.ts"
+import { isValidIdentifier, normalizeIdentifier } from "../utility-types/identifier-utils.ts"
+import { type IAnyModelType, ModelType } from "./model.ts"
 /** @hidden */
 export interface IMapType<IT extends IAnyType> extends IType<
   IKeyValueMap<IT["CreationType"]> | undefined,

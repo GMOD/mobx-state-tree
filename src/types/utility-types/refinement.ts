@@ -1,18 +1,8 @@
 import { BaseType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ExtractNodeType,
-  type IAnyType,
-  type IValidationContext,
-  type IValidationResult,
-  TypeFlags,
-  assertIsType,
-  getStateTreeNode,
-  isStateTreeNode,
-  isType,
-  typeCheckFailure,
-  typeCheckSuccess
-} from "../../internal.ts"
+import { getStateTreeNode, isStateTreeNode } from "../../core/node/node-utils.ts"
+import type { AnyObjectNode } from "../../core/node/object-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { assertIsType, type ExtractNodeType, type IAnyType, isType, TypeFlags } from "../../core/type/type.ts"
 import { assertIsFunction, assertIsString } from "../../utils.ts"
 
 class Refinement<IT extends IAnyType> extends BaseType<

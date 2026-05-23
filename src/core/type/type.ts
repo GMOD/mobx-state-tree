@@ -1,39 +1,21 @@
 import { action } from "mobx"
 
-import {
-  BaseNode,
-  assertArg,
-  fail,
-  getStateTreeNode,
-  getStateTreeNodeSafe,
-  getType,
-  isMutable,
-  isStateTreeNode,
-  normalizeIdentifier,
-  typeCheckFailure,
-  typeCheckSuccess,
-  typecheckInternal
-} from "../../internal.ts"
-
+import type { ModelPrimitive } from "../../types/complex-types/model.ts"
+import { normalizeIdentifier } from "../../types/utility-types/identifier-utils.ts"
+import { assertArg, fail, isMutable } from "../../utils.ts"
+import type { IJsonPatch } from "../json-patch.ts"
+import { getType } from "../mst-operations.ts"
+import { type AnyNode, BaseNode } from "../node/BaseNode.ts"
+import { getStateTreeNode, getStateTreeNodeSafe, isStateTreeNode, type IStateTreeNode } from "../node/node-utils.ts"
+import type { AnyObjectNode, IChildNodesMap, ObjectNode } from "../node/object-node.ts"
+import type { ScalarNode } from "../node/scalar-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckFailure, typecheckInternal, typeCheckSuccess } from "./type-checker.ts"
 // Cache for validation results to avoid re-validating the same object against the same type
 // Uses WeakMap so cached objects can be garbage collected
 const validationCache = new WeakMap<
   object,
   WeakMap<BaseType<any, any, any, any>, IValidationResult>
 >()
-
-import type {
-  AnyNode,
-  AnyObjectNode,
-  IChildNodesMap,
-  IJsonPatch,
-  IStateTreeNode,
-  IValidationContext,
-  IValidationResult,
-  ModelPrimitive,
-  ObjectNode,
-  ScalarNode
-} from "../../internal.ts"
 
 /**
  * @internal

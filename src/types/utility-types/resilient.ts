@@ -1,18 +1,9 @@
 import { BaseType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ExtractNodeType,
-  type IAnyType,
-  type IType,
-  type IValidationContext,
-  type IValidationResult,
-  assertIsType,
-  fail,
-  isStateTreeNode,
-  isType,
-  typeCheckSuccess
-} from "../../internal.ts"
-
+import { isStateTreeNode } from "../../core/node/node-utils.ts"
+import type { AnyObjectNode } from "../../core/node/object-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { assertIsType, type ExtractNodeType, type IAnyType, isType, type IType } from "../../core/type/type.ts"
+import { fail } from "../../utils.ts"
 class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
   IT["CreationType"] | FT["CreationType"],
   IT["SnapshotType"] | FT["SnapshotType"],

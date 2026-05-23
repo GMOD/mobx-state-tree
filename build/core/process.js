@@ -1,0 +1,36 @@
+import { deprecated } from "../utils.js";
+import { createFlowSpawner, flow } from "./flow.js";
+// based on: https://github.com/mobxjs/mobx-utils/blob/master/src/async-action.ts
+/*
+    All contents of this file are deprecated.
+
+    The term `process` has been replaced with `flow` to avoid conflicts with the
+    global `process` object.
+
+    Refer to `flow.ts` for any further changes to this implementation.
+*/
+const DEPRECATION_MESSAGE = "See https://github.com/mobxjs/mobx-state-tree/issues/399 for more information. " +
+    "Note that the middleware event types starting with `process` now start with `flow`.";
+/**
+ * @hidden
+ *
+ * @deprecated has been renamed to `flow()`.
+ * See https://github.com/mobxjs/mobx-state-tree/issues/399 for more information.
+ * Note that the middleware event types starting with `process` now start with `flow`.
+ *
+ * @returns {Promise}
+ */
+export function process(asyncAction) {
+    deprecated("process", "`process()` has been renamed to `flow()`. " + DEPRECATION_MESSAGE);
+    return flow(asyncAction);
+}
+/**
+ * @internal
+ * @hidden
+ */
+export function createProcessSpawner(name, generator) {
+    deprecated("process", "`createProcessSpawner()` has been renamed to `createFlowSpawner()`. " +
+        DEPRECATION_MESSAGE);
+    return createFlowSpawner(name, generator);
+}
+//# sourceMappingURL=process.js.map

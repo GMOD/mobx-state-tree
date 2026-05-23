@@ -12,45 +12,16 @@ import {
 } from "mobx"
 
 import { ComplexType } from "../../core/type/type.ts"
-import {
-  type AnyNode,
-  type AnyObjectNode,
-  EMPTY_ARRAY,
-  EMPTY_OBJECT,
-  type ExtractCSTWithSTN,
-  type IAnyStateTreeNode,
-  type IAnyType,
-  type IChildNodesMap,
-  type IHooksGetter,
-  type IJsonPatch,
-  type IStateTreeNode,
-  type IType,
-  type IValidationContext,
-  type IValidationResult,
-  ObjectNode,
-  TypeFlags,
-  addHiddenFinalProp,
-  addHiddenWritableProp,
-  assertIsType,
-  convertChildNodesToArray,
-  createActionInvoker,
-  createObjectNode,
-  devMode,
-  fail,
-  getContextForPath,
-  getStateTreeNode,
-  isArray,
-  isNode,
-  isPlainObject,
-  isStateTreeNode,
-  isType,
-  mobxShallow,
-  popContext,
-  typeCheckFailure,
-  typeCheckSuccess,
-  typecheckInternal
-} from "../../internal.ts"
-
+import { createActionInvoker } from "../../core/action.ts"
+import type { IJsonPatch } from "../../core/json-patch.ts"
+import type { AnyNode } from "../../core/node/BaseNode.ts"
+import { createObjectNode, isNode } from "../../core/node/create-node.ts"
+import type { IHooksGetter } from "../../core/node/Hook.ts"
+import { convertChildNodesToArray, getStateTreeNode, type IAnyStateTreeNode, isStateTreeNode, type IStateTreeNode } from "../../core/node/node-utils.ts"
+import { type AnyObjectNode, type IChildNodesMap, ObjectNode } from "../../core/node/object-node.ts"
+import { getContextForPath, type IValidationContext, type IValidationResult, popContext, typeCheckFailure, typecheckInternal, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { assertIsType, type ExtractCSTWithSTN, type IAnyType, isType, type IType, TypeFlags } from "../../core/type/type.ts"
+import { addHiddenFinalProp, addHiddenWritableProp, devMode, EMPTY_ARRAY, EMPTY_OBJECT, fail, isArray, isPlainObject, mobxShallow } from "../../utils.ts"
 /** @hidden */
 export interface IMSTArray<IT extends IAnyType> extends IObservableArray<
   IT["Type"]

@@ -1,20 +1,11 @@
 import { SimpleType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ISimpleType,
-  type IValidationContext,
-  type IValidationResult,
-  ModelType,
-  type ScalarNode,
-  TypeFlags,
-  assertArg,
-  createScalarNode,
-  fail,
-  isType,
-  typeCheckFailure,
-  typeCheckSuccess
-} from "../../internal.ts"
-
+import { createScalarNode } from "../../core/node/create-node.ts"
+import type { AnyObjectNode } from "../../core/node/object-node.ts"
+import type { ScalarNode } from "../../core/node/scalar-node.ts"
+import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { type ISimpleType, isType, TypeFlags } from "../../core/type/type.ts"
+import { fail } from "../../utils.ts"
+import { ModelType } from "../complex-types/model.ts"
 abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
   readonly flags = TypeFlags.Identifier
 
@@ -151,34 +142,9 @@ export function isIdentifierType<
   return isType(type) && (type.flags & TypeFlags.Identifier) > 0
 }
 
-/**
- * Valid types for identifiers.
- */
-export type ReferenceIdentifier = string | number
-
-/**
- * @internal
- * @hidden
- */
-export function normalizeIdentifier(id: ReferenceIdentifier): string {
-  return "" + id
-}
-
-/**
- * @internal
- * @hidden
- */
-export function isValidIdentifier(id: any): id is ReferenceIdentifier {
-  return typeof id === "string" || typeof id === "number"
-}
-
-/**
- * @internal
- * @hidden
- */
-export function assertIsValidIdentifier(
-  id: ReferenceIdentifier,
-  argNumber: number | number[]
-) {
-  assertArg(id, isValidIdentifier, "string or number (identifier)", argNumber)
-}
+export {
+  assertIsValidIdentifier,
+  isValidIdentifier,
+  normalizeIdentifier,
+  type ReferenceIdentifier
+} from "./identifier-utils.ts"

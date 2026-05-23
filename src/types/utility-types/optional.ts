@@ -1,21 +1,9 @@
 import { BaseType } from "../../core/type/type.ts"
-import {
-  type AnyObjectNode,
-  type ExtractCSTWithSTN,
-  type IAnyType,
-  type IType,
-  type IValidationContext,
-  type IValidationResult,
-  TypeFlags,
-  assertIsType,
-  devMode,
-  fail,
-  isStateTreeNode,
-  isType,
-  typeCheckSuccess,
-  typecheckInternal
-} from "../../internal.ts"
-
+import { isStateTreeNode } from "../../core/node/node-utils.ts"
+import type { AnyObjectNode } from "../../core/node/object-node.ts"
+import { type IValidationContext, type IValidationResult, typecheckInternal, typeCheckSuccess } from "../../core/type/type-checker.ts"
+import { assertIsType, type ExtractCSTWithSTN, type IAnyType, isType, type IType, TypeFlags } from "../../core/type/type.ts"
+import { devMode, fail } from "../../utils.ts"
 type IFunctionReturn<T> = () => T
 
 type IOptionalValue<C, T> = C | IFunctionReturn<C | T>

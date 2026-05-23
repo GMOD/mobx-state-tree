@@ -1,5 +1,4 @@
-import { fail, stringStartsWith } from "../internal.ts"
-
+import { fail, stringStartsWith } from "../utils.ts"
 /**
  * https://tools.ietf.org/html/rfc6902
  * http://jsonpatch.com/
