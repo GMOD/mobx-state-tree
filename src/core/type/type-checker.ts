@@ -1,21 +1,15 @@
-import { EMPTY_ARRAY, fail, isPrimitive, isTypeCheckingEnabled } from "../../utils.ts"
-import { getStateTreeNode, isStateTreeNode } from "../node/node-utils.ts"
-import { type ExtractCSTWithSTN, type IAnyType, TypeFlags } from "./type.ts"
+import {
+  EMPTY_ARRAY,
+  type ExtractCSTWithSTN,
+  type IAnyType,
+  fail,
+  getStateTreeNode,
+  isPrimitive,
+  isPrimitiveType,
+  isStateTreeNode,
+  isTypeCheckingEnabled
+} from "../../internal.ts"
 
-// Computed lazily because TypeFlags lives in type.ts and type.ts is in an
-// (otherwise benign) load-order cycle with this file — reading the enum
-// at module init would TDZ.
-function isPrimitiveTypeFlags(type: IAnyType) {
-  return (
-    (type.flags &
-      (TypeFlags.String |
-        TypeFlags.Number |
-        TypeFlags.Integer |
-        TypeFlags.Boolean |
-        TypeFlags.Date)) >
-    0
-  )
-}
 /** Validation context entry, this is, where the validation should run against which type */
 export interface IValidationContextEntry {
   /** Subpath where the validation should be run, or an empty string to validate it all */
@@ -108,7 +102,7 @@ function toErrorString(error: IValidationError): string {
     }` +
     (error.message ? ` (${error.message})` : "") +
     (type
-      ? isPrimitiveTypeFlags(type) || isPrimitive(value)
+      ? isPrimitiveType(type) || isPrimitive(value)
         ? `.`
         : `, expected an instance of \`${(type as IAnyType).name}\` or a snapshot like \`${shortenPrintValue(
             (type as IAnyType).describe()

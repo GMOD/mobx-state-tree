@@ -1,10 +1,20 @@
-import { SimpleType } from "../../core/type/type.ts"
-import { createScalarNode } from "../../core/node/create-node.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { type IAnyType, isType, type IType, TypeFlags } from "../../core/type/type.ts"
-import { deepFreeze, isSerializable } from "../../utils.ts"
-import { optional } from "./optional.ts"
+import {
+  type AnyObjectNode,
+  type IAnyType,
+  type IType,
+  type IValidationContext,
+  type IValidationResult,
+  SimpleType,
+  TypeFlags,
+  createScalarNode,
+  deepFreeze,
+  isSerializable,
+  isType,
+  optional,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 /**
  * @internal
  * @hidden

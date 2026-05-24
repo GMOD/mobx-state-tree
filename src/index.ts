@@ -1,156 +1,100 @@
 /* all code is initially loaded through internal, to avoid circular dep issues */
 export type {
+  CustomTypeOptions,
+  IActionContext,
+  IActionRecorder,
+  IActionTrackingMiddleware2Call,
+  IActionTrackingMiddleware2Hooks,
+  IActionTrackingMiddlewareHooks,
+  IAnyComplexType,
+  IAnyModelType,
+  IAnyStateTreeNode,
+  IAnyType,
+  IArrayType,
+  IComplexType,
+  IDisposer,
+  IJsonPatch,
+  IMSTArray,
+  IMSTMap,
+  IMapType,
+  IMaybe,
+  IMaybeIType,
+  IMaybeNull,
   IMiddlewareEvent,
   IMiddlewareEventType,
-  IMiddlewareHandler
-} from "./core/action.ts"
-export type {
-  IActionContext
-} from "./core/actionContext.ts"
-export type {
-  IJsonPatch,
-  IReversibleJsonPatch
-} from "./core/json-patch.ts"
-export type {
+  IMiddlewareHandler,
   IModelReflectionData,
   IModelReflectionPropertiesData,
-  IPatchRecorder,
-  TypeOrStateTreeNodeToStateTreeNode
-} from "./core/mst-operations.ts"
-export type {
-  LivelinessMode,
-  LivelynessMode
-} from "./core/node/livelinessChecking.ts"
-export type {
-  IAnyStateTreeNode,
-  IStateTreeNode,
-  TypeOfValue
-} from "./core/node/node-utils.ts"
-export type {
-  IAnyComplexType,
-  IAnyType,
-  IComplexType,
-  ISimpleType,
-  IType,
-  Instance,
-  SnapshotIn,
-  SnapshotOrInstance,
-  SnapshotOut
-} from "./core/type/type.ts"
-export type {
-  IActionTrackingMiddlewareHooks
-} from "./middlewares/create-action-tracking-middleware.ts"
-export type {
-  IActionTrackingMiddleware2Call,
-  IActionTrackingMiddleware2Hooks
-} from "./middlewares/createActionTrackingMiddleware2.ts"
-export type {
-  IActionRecorder,
-  ISerializedActionCall
-} from "./middlewares/on-action.ts"
-export type {
-  IArrayType,
-  IMSTArray
-} from "./types/complex-types/array.ts"
-export type {
-  IMSTMap,
-  IMapType
-} from "./types/complex-types/map.ts"
-export type {
-  ExtractCFromProps,
-  IAnyModelType,
   IModelType,
+  IOptionalIType,
+  IPatchRecorder,
+  IReferenceType,
+  IReversibleJsonPatch,
+  ISerializedActionCall,
+  ISimpleType,
+  ISnapshotProcessor,
+  ISnapshotProcessors,
+  IStateTreeNode,
+  IType,
+  ITypeUnion,
+  Instance,
+  LivelinessMode,
+  LivelynessMode,
   ModelActions,
-  ModelCreationType,
   ModelCreationType2,
+  ModelCreationType,
   ModelInstanceType,
   ModelInstanceTypeProps,
   ModelPrimitive,
   ModelProperties,
   ModelPropertiesDeclaration,
   ModelPropertiesDeclarationToProperties,
-  ModelSnapshotType,
   ModelSnapshotType2,
-  NonEmptyObject,
-  _CustomJoin
-} from "./types/complex-types/model.ts"
-export type {
-  CustomTypeOptions
-} from "./types/utility-types/custom.ts"
-export type {
-  UnionStringArray
-} from "./types/utility-types/enumeration.ts"
-export type {
-  ReferenceIdentifier
-} from "./types/utility-types/identifier-utils.ts"
-export type {
-  IMaybe,
-  IMaybeIType,
-  IMaybeNull
-} from "./types/utility-types/maybe.ts"
-export type {
-  IOptionalIType,
-  OptionalDefaultValueOrFunction,
-  ValidOptionalValue,
-  ValidOptionalValues
-} from "./types/utility-types/optional.ts"
-export type {
-  IReferenceType,
+  ModelSnapshotType,
   OnReferenceInvalidated,
   OnReferenceInvalidatedEvent,
+  OptionalDefaultValueOrFunction,
+  ReferenceIdentifier,
   ReferenceOptions,
   ReferenceOptionsGetSet,
-  ReferenceOptionsOnInvalidated
-} from "./types/utility-types/reference.ts"
-export type {
-  ISnapshotProcessor,
-  ISnapshotProcessors,
+  ReferenceOptionsOnInvalidated,
+  SnapshotIn,
+  SnapshotOrInstance,
+  SnapshotOut,
+  TypeOfValue,
+  TypeOrStateTreeNodeToStateTreeNode,
+  UnionOptions,
+  UnionStringArray,
+  ValidOptionalValue,
+  ValidOptionalValues,
+  _CustomCSProcessor,
+  _CustomJoin,
   _CustomOrOther,
   _NotCustomized
-} from "./types/utility-types/snapshotProcessor.ts"
-export type {
-  ITypeUnion,
-  UnionOptions,
-  _CustomCSProcessor
-} from "./types/utility-types/union.ts"
-export type {
-  IDisposer
-} from "./utils.ts"
+} from "./internal.ts"
 
 export {
-  addMiddleware,
-  decorate
-} from "./core/action.ts"
-export {
-  getRunningActionContext,
-  isActionContextChildOf,
-  isActionContextThisOrChildOf
-} from "./core/actionContext.ts"
-export {
-  castFlowReturn,
-  flow,
-  toGenerator,
-  toGeneratorFunction
-} from "./core/flow.ts"
-export {
-  escapeJsonPath,
-  joinJsonPath,
-  splitJsonPath,
-  unescapeJsonPath
-} from "./core/json-patch.ts"
-export {
   addDisposer,
+  addMiddleware,
+  applyAction,
   applyPatch,
   applySnapshot,
   cast,
+  castFlowReturn,
   castToReferenceSnapshot,
   castToSnapshot,
   clone,
+  createActionTrackingMiddleware2,
+  createActionTrackingMiddleware,
+  decorate,
   destroy,
   detach,
+  escapeJsonPath,
+  flow,
   getChildType,
   getEnv,
   getIdentifier,
+  getLivelinessChecking,
   getMembers,
   getNodeId,
   getParent,
@@ -160,93 +104,53 @@ export {
   getPropertyMembers,
   getRelativePath,
   getRoot,
+  getRunningActionContext,
   getSnapshot,
   getType,
   hasParent,
   hasParentOfType,
+  isActionContextChildOf,
+  isActionContextThisOrChildOf,
   isAlive,
+  isArrayType,
+  isFrozenType,
+  isIdentifierType,
+  isLateType,
+  isLiteralType,
+  isMapType,
+  isModelType,
+  isOptionalType,
+  isPrimitiveType,
   isProtected,
+  isReferenceType,
+  isRefinementType,
   isRoot,
+  isStateTreeNode,
+  isType,
+  isUnionType,
   isValidReference,
+  joinJsonPath,
+  onAction,
   onPatch,
   onSnapshot,
+  process,
   protect,
+  recordActions,
   recordPatches,
   resolveIdentifier,
   resolvePath,
+  setLivelinessChecking,
+  setLivelynessChecking,
+  splitJsonPath,
+  toGenerator,
+  toGeneratorFunction,
   tryReference,
   tryResolve,
-  unprotect,
-  walk
-} from "./core/mst-operations.ts"
-export {
-  getLivelinessChecking,
-  setLivelinessChecking,
-  setLivelynessChecking
-} from "./core/node/livelinessChecking.ts"
-export {
-  isStateTreeNode
-} from "./core/node/node-utils.ts"
-export {
-  process
-} from "./core/process.ts"
-export {
-  typecheck
-} from "./core/type/type-checker.ts"
-export {
-  isType
-} from "./core/type/type.ts"
-export {
-  createActionTrackingMiddleware
-} from "./middlewares/create-action-tracking-middleware.ts"
-export {
-  createActionTrackingMiddleware2
-} from "./middlewares/createActionTrackingMiddleware2.ts"
-export {
-  applyAction,
-  onAction,
-  recordActions
-} from "./middlewares/on-action.ts"
-export {
-  isArrayType
-} from "./types/complex-types/array.ts"
-export {
-  isMapType
-} from "./types/complex-types/map.ts"
-export {
-  isModelType
-} from "./types/complex-types/model.ts"
-export {
+  typecheck,
   types,
-  types as t
-} from "./types/index.ts"
-export {
-  isPrimitiveType
-} from "./types/primitives.ts"
-export {
-  isFrozenType
-} from "./types/utility-types/frozen.ts"
-export {
-  isIdentifierType
-} from "./types/utility-types/identifier.ts"
-export {
-  isLateType
-} from "./types/utility-types/late.ts"
-export {
-  isLiteralType
-} from "./types/utility-types/literal.ts"
-export {
-  isOptionalType
-} from "./types/utility-types/optional.ts"
-export {
-  isReferenceType
-} from "./types/utility-types/reference.ts"
-export {
-  isRefinementType
-} from "./types/utility-types/refinement.ts"
-export {
-  isUnionType
-} from "./types/utility-types/union.ts"
-export {
+  types as t,
+  unescapeJsonPath,
+  unprotect,
+  walk,
   setDevMode
-} from "./utils.ts"
+} from "./internal.ts"

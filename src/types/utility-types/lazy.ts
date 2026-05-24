@@ -1,12 +1,20 @@
 import { type IObservableArray, action, observable, when } from "mobx"
 
-import { SimpleType } from "../../core/type/type.ts"
-import type { AnyNode } from "../../core/node/BaseNode.ts"
-import { createScalarNode } from "../../core/node/create-node.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { type IType, TypeFlags } from "../../core/type/type.ts"
-import { deepFreeze, isSerializable } from "../../utils.ts"
+import {
+  type AnyNode,
+  type AnyObjectNode,
+  type IType,
+  type IValidationContext,
+  type IValidationResult,
+  SimpleType,
+  TypeFlags,
+  createScalarNode,
+  deepFreeze,
+  isSerializable,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 interface LazyOptions<T extends IType<any, any, any>, U> {
   loadType: () => Promise<T>
   shouldLoadPredicate: (parent: U) => boolean

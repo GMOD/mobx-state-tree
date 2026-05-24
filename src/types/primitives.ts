@@ -1,10 +1,27 @@
-import { SimpleType } from "../core/type/type.ts"
-import type { AnyNode } from "../core/node/BaseNode.ts"
-import { createScalarNode } from "../core/node/create-node.ts"
-import type { AnyObjectNode } from "../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../core/type/type-checker.ts"
-import { type ISimpleType, isType, type IType, TypeFlags } from "../core/type/type.ts"
-import { fail, identity, isFinite, isFloat, isInteger, isPrimitive } from "../utils.ts"
+import {
+  SimpleType,
+  TypeFlags,
+  createScalarNode,
+  fail,
+  identity,
+  isFinite,
+  isFloat,
+  isInteger,
+  isPrimitive,
+  isType,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../internal.ts"
+
+import type {
+  AnyNode,
+  AnyObjectNode,
+  ISimpleType,
+  IType,
+  IValidationContext,
+  IValidationResult
+} from "../internal.ts"
+
 // TODO: implement CoreType using types.custom ?
 /**
  * @internal

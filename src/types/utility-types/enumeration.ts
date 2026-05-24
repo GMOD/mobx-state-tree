@@ -1,7 +1,11 @@
-import type { ISimpleType } from "../../core/type/type.ts"
-import { assertIsString, devMode } from "../../utils.ts"
-import { literal } from "./literal.ts"
-import { union } from "./union.ts"
+import {
+  type ISimpleType,
+  assertIsString,
+  devMode,
+  literal,
+  union
+} from "../../internal.ts"
+
 /** @hidden */
 export type UnionStringArray<T extends readonly string[]> = T[number]
 

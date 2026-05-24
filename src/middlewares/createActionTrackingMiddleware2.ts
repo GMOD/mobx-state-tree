@@ -1,5 +1,9 @@
-import type { IMiddlewareEvent, IMiddlewareHandler } from "../core/action.ts"
-import type { IActionContext } from "../core/actionContext.ts"
+import {
+  type IActionContext,
+  type IMiddlewareEvent,
+  type IMiddlewareHandler
+} from "../internal.ts"
+
 export interface IActionTrackingMiddleware2Call<
   TEnv
 > extends Readonly<IActionContext> {

@@ -1,5 +1,5 @@
-import { deprecated } from "../utils.ts"
-import { createFlowSpawner, flow } from "./flow.ts"
+import { createFlowSpawner, deprecated, flow } from "../internal.ts"
+
 // based on: https://github.com/mobxjs/mobx-utils/blob/master/src/async-action.ts
 /*
     All contents of this file are deprecated.

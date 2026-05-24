@@ -1,11 +1,21 @@
 import { action as mobxAction } from "mobx"
 
-import { devMode, fail, type IDisposer, warnError } from "../utils.ts"
-import type { IActionContext } from "./actionContext.ts"
-import { getRoot } from "./mst-operations.ts"
-import { Hook } from "./node/Hook.ts"
-import { getStateTreeNode, type IAnyStateTreeNode } from "./node/node-utils.ts"
-import type { AnyObjectNode } from "./node/object-node.ts"
+import {
+  Hook,
+  devMode,
+  fail,
+  getRoot,
+  getStateTreeNode,
+  warnError
+} from "../internal.ts"
+
+import type {
+  AnyObjectNode,
+  IActionContext,
+  IAnyStateTreeNode,
+  IDisposer
+} from "../internal.ts"
+
 export type IMiddlewareEventType =
   | "action"
   | "flow_spawn"

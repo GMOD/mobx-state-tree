@@ -1,4 +1,5 @@
-import type { IMiddlewareEvent, IMiddlewareHandler } from "../core/action.ts"
+import { type IMiddlewareEvent, type IMiddlewareHandler } from "../internal.ts"
+
 const runningActions = new Map<
   number,
   { async: boolean; call: IMiddlewareEvent; context: any }

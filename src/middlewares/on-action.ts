@@ -1,11 +1,32 @@
 import { runInAction } from "mobx"
 
-import { addMiddleware } from "../core/action.ts"
-import { getRunningActionContext, type IActionContext } from "../core/actionContext.ts"
-import { applyPatch, applySnapshot, getType, isProtected, isRoot, tryResolve } from "../core/mst-operations.ts"
-import type { AnyNode } from "../core/node/BaseNode.ts"
-import { assertIsStateTreeNode, getRelativePathBetweenNodes, getStateTreeNode, type IAnyStateTreeNode, isStateTreeNode } from "../core/node/node-utils.ts"
-import { asArray, assertArg, devMode, fail, type IDisposer, isArray, isPlainObject, isPrimitive, warnError } from "../utils.ts"
+import {
+  type AnyNode,
+  type IActionContext,
+  type IAnyStateTreeNode,
+  type IDisposer,
+  addMiddleware,
+  applyPatch,
+  applySnapshot,
+  asArray,
+  assertArg,
+  assertIsStateTreeNode,
+  devMode,
+  fail,
+  getRelativePathBetweenNodes,
+  getRunningActionContext,
+  getStateTreeNode,
+  getType,
+  isArray,
+  isPlainObject,
+  isPrimitive,
+  isProtected,
+  isRoot,
+  isStateTreeNode,
+  tryResolve,
+  warnError
+} from "../internal.ts"
+
 export interface ISerializedActionCall {
   name: string
   path?: string

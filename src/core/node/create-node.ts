@@ -1,9 +1,14 @@
-import { fail } from "../../utils.ts"
-import { ComplexType, SimpleType } from "../type/type.ts"
-import type { AnyNode } from "./BaseNode.ts"
-import { getStateTreeNodeSafe } from "./node-utils.ts"
-import { type AnyObjectNode, ObjectNode } from "./object-node.ts"
-import { ScalarNode } from "./scalar-node.ts"
+import {
+  type AnyNode,
+  type AnyObjectNode,
+  ComplexType,
+  ObjectNode,
+  ScalarNode,
+  SimpleType,
+  fail,
+  getStateTreeNodeSafe
+} from "../../internal.ts"
+
 /**
  * @internal
  * @hidden

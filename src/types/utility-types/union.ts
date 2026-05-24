@@ -1,11 +1,32 @@
-import { BaseType } from "../../core/type/type.ts"
-import { isStateTreeNode } from "../../core/node/node-utils.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { flattenTypeErrors, type IValidationContext, type IValidationError, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { assertIsType, type IAnyType, isType, type IType, TypeFlags } from "../../core/type/type.ts"
-import { assertArg, devMode, fail, isPlainObject, isTypeCheckingEnabled } from "../../utils.ts"
-import { type IModelType, type ModelCreationType2, type ModelInstanceType, type ModelProperties, type ModelSnapshotType2, ModelType } from "../complex-types/model.ts"
-import type { _NotCustomized } from "./snapshotProcessor.ts"
+import {
+  type AnyObjectNode,
+  BaseType,
+  type IAnyType,
+  type IModelType,
+  type IType,
+  type IValidationContext,
+  type IValidationError,
+  type IValidationResult,
+  type ModelCreationType2,
+  type ModelInstanceType,
+  type ModelProperties,
+  type ModelSnapshotType2,
+  ModelType,
+  TypeFlags,
+  type _NotCustomized,
+  assertArg,
+  assertIsType,
+  devMode,
+  fail,
+  flattenTypeErrors,
+  isPlainObject,
+  isStateTreeNode,
+  isType,
+  isTypeCheckingEnabled,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 export type ITypeDispatcher = (snapshot: any) => IAnyType
 
 export interface UnionOptions {

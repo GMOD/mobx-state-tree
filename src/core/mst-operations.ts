@@ -1,14 +1,43 @@
 import { isComputedProp, isObservableProp } from "mobx"
 
-import { type IAnyModelType, isModelType } from "../types/complex-types/model.ts"
-import { assertIsValidIdentifier, normalizeIdentifier, type ReferenceIdentifier } from "../types/utility-types/identifier-utils.ts"
-import { InvalidReferenceError } from "../types/utility-types/reference.ts"
-import { asArray, assertArg, assertIsFunction, assertIsNumber, assertIsString, EMPTY_OBJECT, fail, freeze, type IDisposer } from "../utils.ts"
-import { getRunningActionContext, type IActionContext } from "./actionContext.ts"
-import { type IJsonPatch, splitJsonPath } from "./json-patch.ts"
-import { assertIsStateTreeNode, getRelativePathBetweenNodes, getStateTreeNode, type IAnyStateTreeNode, isStateTreeNode, type IStateTreeNode, resolveNodeByPath, type TypeOfValue } from "./node/node-utils.ts"
-import type { AnyObjectNode } from "./node/object-node.ts"
-import { assertIsType, type IAnyComplexType, type IAnyType, type IType } from "./type/type.ts"
+import {
+  EMPTY_OBJECT,
+  InvalidReferenceError,
+  asArray,
+  assertArg,
+  assertIsFunction,
+  assertIsNumber,
+  assertIsStateTreeNode,
+  assertIsString,
+  assertIsType,
+  assertIsValidIdentifier,
+  fail,
+  freeze,
+  getRelativePathBetweenNodes,
+  getRunningActionContext,
+  getStateTreeNode,
+  isModelType,
+  isStateTreeNode,
+  normalizeIdentifier,
+  resolveNodeByPath,
+  splitJsonPath
+} from "../internal.ts"
+
+import type {
+  AnyObjectNode,
+  IActionContext,
+  IAnyComplexType,
+  IAnyModelType,
+  IAnyStateTreeNode,
+  IAnyType,
+  IDisposer,
+  IJsonPatch,
+  IStateTreeNode,
+  IType,
+  ReferenceIdentifier,
+  TypeOfValue
+} from "../internal.ts"
+
 /** @hidden */
 export type TypeOrStateTreeNodeToStateTreeNode<
   T extends IAnyType | IAnyStateTreeNode

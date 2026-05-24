@@ -14,22 +14,52 @@ import {
   set
 } from "mobx"
 
-import { ComplexType } from "../../core/type/type.ts"
-import { createActionInvoker, type FunctionWithFlag } from "../../core/action.ts"
-import { escapeJsonPath, type IJsonPatch } from "../../core/json-patch.ts"
-import type { AnyNode } from "../../core/node/BaseNode.ts"
-import { createObjectNode } from "../../core/node/create-node.ts"
-import { Hook } from "../../core/node/Hook.ts"
-import { getStateTreeNode, isStateTreeNode, type IStateTreeNode } from "../../core/node/node-utils.ts"
-import type { AnyObjectNode, IChildNodesMap } from "../../core/node/object-node.ts"
-import { getContextForPath, type IValidationContext, type IValidationResult, popContext, typeCheckFailure, typecheckInternal, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { type IAnyType, type Instance, isType, type IType, TypeFlags } from "../../core/type/type.ts"
-import { addHiddenFinalProp, addHiddenWritableProp, assertArg, assertIsString, devMode, EMPTY_ARRAY, EMPTY_OBJECT, fail, freeze, isPlainObject, isPrimitive, mobxShallow } from "../../utils.ts"
-import { getPrimitiveFactoryFromValue } from "../primitives.ts"
-import { optional } from "../utility-types/optional.ts"
-import type { _CustomOrOther, _NotCustomized } from "../utility-types/snapshotProcessor.ts"
-import { ArrayType } from "./array.ts"
-import { MapType } from "./map.ts"
+import {
+  type AnyNode,
+  type AnyObjectNode,
+  ArrayType,
+  ComplexType,
+  EMPTY_ARRAY,
+  EMPTY_OBJECT,
+  type FunctionWithFlag,
+  Hook,
+  type IAnyType,
+  type IChildNodesMap,
+  type IJsonPatch,
+  type IStateTreeNode,
+  type IType,
+  type IValidationContext,
+  type IValidationResult,
+  type Instance,
+  MapType,
+  TypeFlags,
+  type _CustomOrOther,
+  type _NotCustomized,
+  addHiddenFinalProp,
+  addHiddenWritableProp,
+  assertArg,
+  assertIsString,
+  createActionInvoker,
+  createObjectNode,
+  devMode,
+  escapeJsonPath,
+  fail,
+  freeze,
+  getContextForPath,
+  getPrimitiveFactoryFromValue,
+  getStateTreeNode,
+  isPlainObject,
+  isPrimitive,
+  isStateTreeNode,
+  isType,
+  mobxShallow,
+  optional,
+  popContext,
+  typeCheckFailure,
+  typeCheckSuccess,
+  typecheckInternal
+} from "../../internal.ts"
+
 const PRE_PROCESS_SNAPSHOT = "preProcessSnapshot"
 const POST_PROCESS_SNAPSHOT = "postProcessSnapshot"
 

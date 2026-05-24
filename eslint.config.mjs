@@ -7,9 +7,11 @@ export default defineConfig(
   {
     ignores: [
       "dist/*",
+      "esm/*",
       "eslint.config.mjs",
-      "rollup.config.mjs",
+      "rollup.config.js",
       "scripts/*",
+      "lib/*",
       "vitest.config.ts",
       "__tests__/*"
     ]

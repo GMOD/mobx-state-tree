@@ -1,8 +1,13 @@
 import { type IObservableArray, entries, observable, values } from "mobx"
 
-import { fail, mobxShallow } from "../../utils.ts"
-import type { IAnyComplexType } from "../type/type.ts"
-import { type AnyObjectNode, ObjectNode } from "./object-node.ts"
+import {
+  type AnyObjectNode,
+  type IAnyComplexType,
+  ObjectNode,
+  fail,
+  mobxShallow
+} from "../../internal.ts"
+
 let identifierCacheId = 0
 
 /**

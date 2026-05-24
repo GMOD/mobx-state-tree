@@ -6,20 +6,48 @@ import {
   reaction
 } from "mobx"
 
-import { BaseNode } from "./BaseNode.ts"
-import { ComplexType } from "../type/type.ts"
-import { normalizeIdentifier, type ReferenceIdentifier } from "../../types/utility-types/identifier-utils.ts"
-import { addHiddenFinalProp, type ArgumentTypes, devMode, EMPTY_OBJECT, EventHandlers, extend, fail, freeze, type IDisposer, warnError } from "../../utils.ts"
-import { createActionInvoker, getCurrentActionContext, type IMiddleware, type IMiddlewareEvent, type IMiddlewareHandler } from "../action.ts"
-import { escapeJsonPath, type IJsonPatch, type IReversibleJsonPatch, splitJsonPath, splitPatch } from "../json-patch.ts"
-import { getPath } from "../mst-operations.ts"
-import type { IAnyType, IType } from "../type/type.ts"
-import type { AnyNode } from "./BaseNode.ts"
-import { Hook } from "./Hook.ts"
-import { IdentifierCache } from "./identifier-cache.ts"
-import { getLivelinessChecking } from "./livelinessChecking.ts"
-import { NodeLifeCycle } from "./NodeLifeCycle.ts"
-import { convertChildNodesToArray, type IStateTreeNode, resolveNodeByPathParts, toJSON } from "./node-utils.ts"
+import {
+  BaseNode,
+  ComplexType,
+  EMPTY_OBJECT,
+  EventHandlers,
+  Hook,
+  IdentifierCache,
+  NodeLifeCycle,
+  addHiddenFinalProp,
+  convertChildNodesToArray,
+  createActionInvoker,
+  devMode,
+  escapeJsonPath,
+  extend,
+  fail,
+  freeze,
+  getCurrentActionContext,
+  getLivelinessChecking,
+  getPath,
+  normalizeIdentifier,
+  resolveNodeByPathParts,
+  splitJsonPath,
+  splitPatch,
+  toJSON,
+  warnError
+} from "../../internal.ts"
+
+import type {
+  AnyNode,
+  ArgumentTypes,
+  IAnyType,
+  IDisposer,
+  IJsonPatch,
+  IMiddleware,
+  IMiddlewareEvent,
+  IMiddlewareHandler,
+  IReversibleJsonPatch,
+  IStateTreeNode,
+  IType,
+  ReferenceIdentifier
+} from "../../internal.ts"
+
 let nextNodeId = 1
 
 const enum ObservableInstanceLifecycle {

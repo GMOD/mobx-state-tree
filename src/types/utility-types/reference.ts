@@ -1,16 +1,36 @@
-import { SimpleType } from "../../core/type/type.ts"
-import { applyPatch, getIdentifier } from "../../core/mst-operations.ts"
-import type { AnyNode } from "../../core/node/BaseNode.ts"
-import { createScalarNode } from "../../core/node/create-node.ts"
-import { Hook } from "../../core/node/Hook.ts"
-import { getStateTreeNode, type IAnyStateTreeNode, isStateTreeNode, type IStateTreeNode, NodeLifeCycle } from "../../core/node/node-utils.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { assertIsType, type IAnyComplexType, type IAnyType, type IType, TypeFlags } from "../../core/type/type.ts"
-import { devMode, fail, type IDisposer } from "../../utils.ts"
-import { isModelType } from "../complex-types/model.ts"
-import { isValidIdentifier, normalizeIdentifier, type ReferenceIdentifier } from "./identifier-utils.ts"
-import { type IMaybe, maybe } from "./maybe.ts"
+import {
+  type AnyNode,
+  type AnyObjectNode,
+  Hook,
+  type IAnyComplexType,
+  type IAnyStateTreeNode,
+  type IAnyType,
+  type IDisposer,
+  type IMaybe,
+  type IStateTreeNode,
+  type IType,
+  type IValidationContext,
+  type IValidationResult,
+  NodeLifeCycle,
+  type ReferenceIdentifier,
+  SimpleType,
+  TypeFlags,
+  applyPatch,
+  assertIsType,
+  createScalarNode,
+  devMode,
+  fail,
+  getIdentifier,
+  getStateTreeNode,
+  isModelType,
+  isStateTreeNode,
+  isValidIdentifier,
+  maybe,
+  normalizeIdentifier,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 export type OnReferenceInvalidatedEvent<STN extends IAnyStateTreeNode> = {
   parent: IAnyStateTreeNode
   invalidTarget: STN | undefined

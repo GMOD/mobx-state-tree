@@ -1,8 +1,18 @@
-import { BaseType } from "../../core/type/type.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { cannotDetermineSubtype, type ExtractNodeType, type IAnyType, isType, TypeFlags } from "../../core/type/type.ts"
-import { devMode, fail } from "../../utils.ts"
+import {
+  type AnyObjectNode,
+  BaseType,
+  type ExtractNodeType,
+  type IAnyType,
+  type IValidationContext,
+  type IValidationResult,
+  TypeFlags,
+  cannotDetermineSubtype,
+  devMode,
+  fail,
+  isType,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 class Late<IT extends IAnyType> extends BaseType<
   IT["CreationType"],
   IT["SnapshotType"],

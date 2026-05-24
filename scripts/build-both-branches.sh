@@ -22,14 +22,14 @@ rm -rf dist_branch1 dist_branch2
 # Build first branch (current optimized branch)
 echo "=== Building $BRANCH1 ==="
 git checkout "$BRANCH1"
-pnpm build
+yarn build
 mv dist dist_branch1
 echo "$BRANCH1" >dist_branch1/.branch_name
 
 # Build second branch (main/baseline)
 echo "=== Building $BRANCH2 ==="
 git checkout "$BRANCH2"
-pnpm build
+yarn build
 mv dist dist_branch2
 echo "$BRANCH2" >dist_branch2/.branch_name
 

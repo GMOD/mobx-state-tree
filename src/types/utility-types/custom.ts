@@ -1,8 +1,15 @@
-import { SimpleType } from "../../core/type/type.ts"
-import { createScalarNode } from "../../core/node/create-node.ts"
-import type { AnyObjectNode } from "../../core/node/object-node.ts"
-import { type IValidationContext, type IValidationResult, typeCheckFailure, typeCheckSuccess } from "../../core/type/type-checker.ts"
-import { type IType, TypeFlags } from "../../core/type/type.ts"
+import {
+  type AnyObjectNode,
+  type IType,
+  type IValidationContext,
+  type IValidationResult,
+  SimpleType,
+  TypeFlags,
+  createScalarNode,
+  typeCheckFailure,
+  typeCheckSuccess
+} from "../../internal.ts"
+
 export interface CustomTypeOptions<S, T> {
   /** Friendly name */
   name: string

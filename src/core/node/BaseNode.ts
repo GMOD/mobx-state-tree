@@ -1,11 +1,17 @@
 import { type IAtom, createAtom } from "mobx"
 
-import { devMode, EventHandlers, fail, type IDisposer } from "../../utils.ts"
-import { escapeJsonPath } from "../json-patch.ts"
-import type { IAnyType } from "../type/type.ts"
-import { Hook } from "./Hook.ts"
-import { NodeLifeCycle } from "./NodeLifeCycle.ts"
-import type { AnyObjectNode } from "./object-node.ts"
+import {
+  type AnyObjectNode,
+  EventHandlers,
+  Hook,
+  type IAnyType,
+  type IDisposer,
+  NodeLifeCycle,
+  devMode,
+  escapeJsonPath,
+  fail
+} from "../../internal.ts"
+
 type HookSubscribers = {
   [Hook.afterAttach]: (node: AnyNode, hook: Hook) => void
   [Hook.afterCreate]: (node: AnyNode, hook: Hook) => void
