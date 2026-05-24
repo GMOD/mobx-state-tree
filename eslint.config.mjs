@@ -9,7 +9,7 @@ export default defineConfig(
       "dist/*",
       "esm/*",
       "eslint.config.mjs",
-      "rollup.config.js",
+      "rollup.config.mjs",
       "scripts/*",
       "lib/*",
       "vitest.config.ts",
