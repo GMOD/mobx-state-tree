@@ -9,16 +9,16 @@
   "scripts": {
     "lint": "eslint --report-unused-disable-directives --max-warnings 0",
     "clean": "rimraf dist",
-    "prebuild": "yarn clean",
-    "format": "yarn prettier --write .",
+    "prebuild": "pnpm clean",
+    "format": "pnpm prettier --write .",
     "build": "tsc && cpr lib dist --filter=\\.js$ && rollup -c",
     "test": "vitest",
-    "test-ci": "yarn test:dev --run && yarn test:prod --run",
+    "test-ci": "pnpm test:dev --run && pnpm test:prod --run",
     "test:dev": "cross-env NODE_ENV=development vitest",
     "test:prod": "cross-env NODE_ENV=production vitest",
     "prebench": "./scripts/build-both-branches.sh",
     "bench": "cross-env NODE_ENV=production vitest bench --run",
-    "preversion": "yarn build && yarn test-ci",
+    "preversion": "pnpm build && pnpm test-ci",
     "postversion": "git push --follow-tags"
   },
   "repository": {
