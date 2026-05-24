@@ -51,6 +51,7 @@ export type {
   ModelPropertiesDeclarationToProperties,
   ModelSnapshotType2,
   ModelSnapshotType,
+  NonEmptyObject,
   OnReferenceInvalidated,
   OnReferenceInvalidatedEvent,
   OptionalDefaultValueOrFunction,
