@@ -288,7 +288,7 @@ function runMiddleWares(
     }
 
     // skip hooks if asked to
-    if (!middleware!.includeHooks && (Hook as any)[call.name]) {
+    if (!middleware!.includeHooks && call.name in Hook) {
       return runNextMiddleware(call)
     }
 
