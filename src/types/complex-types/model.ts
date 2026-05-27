@@ -129,14 +129,6 @@ type DefinablePropsNames<T> = {
 }[keyof T]
 
 /** @hidden */
-export declare const $nonEmptyObject: unique symbol
-
-/** @hidden */
-export interface NonEmptyObject {
-  [$nonEmptyObject]?: any
-}
-
-/** @hidden */
 export type ExtractCFromProps<P extends ModelProperties> = {
   [k in keyof P]: P[k]["CreationType"]
 }
@@ -144,8 +136,7 @@ export type ExtractCFromProps<P extends ModelProperties> = {
 /** @hidden */
 export type ModelCreationType<PC> = {
   [P in DefinablePropsNames<PC>]: PC[P]
-} & Partial<PC> &
-  NonEmptyObject
+} & Partial<PC>
 
 /** @hidden */
 export type ModelCreationType2<
@@ -163,9 +154,11 @@ export type ModelCreationType2<
   : _CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>
 
 /** @hidden */
-export type ModelSnapshotType<P extends ModelProperties> = {
-  [K in keyof P]: P[K]["SnapshotType"]
-} & NonEmptyObject
+export type ModelSnapshotType<P extends ModelProperties> = keyof P extends never
+  ? Record<PropertyKey, never>
+  : {
+      [K in keyof P]: P[K]["SnapshotType"]
+    }
 
 /** @hidden */
 export type ModelSnapshotType2<
@@ -179,7 +172,7 @@ export type ModelSnapshotType2<
  */
 export type ModelInstanceTypeProps<P extends ModelProperties> = {
   [K in keyof P]: P[K]["Type"]
-} & NonEmptyObject
+}
 
 /**
  * @hidden

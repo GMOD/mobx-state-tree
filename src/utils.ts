@@ -281,7 +281,7 @@ export function addHiddenWritableProp(
  * @internal
  * @hidden
  */
-export type ArgumentTypes<F extends Function> = F extends (
+export type ArgumentTypes<F extends (...args: any[]) => any> = F extends (
   ...args: infer A
 ) => any
   ? A
@@ -291,7 +291,7 @@ export type ArgumentTypes<F extends Function> = F extends (
  * @internal
  * @hidden
  */
-class EventHandler<F extends Function> {
+class EventHandler<F extends (...args: any[]) => any> {
   private handlers: F[] = []
   private emitting = false
   private pendingUnregisters: F[] | null = null

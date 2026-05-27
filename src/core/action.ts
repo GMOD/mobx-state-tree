@@ -40,7 +40,7 @@ export interface IMiddlewareEvent extends IActionContext {
   readonly allParentIds: number[]
 }
 
-export interface FunctionWithFlag extends Function {
+export type FunctionWithFlag = ((...args: any[]) => any) & {
   _isMSTAction?: boolean
   _isFlowAction?: boolean
 }
@@ -208,7 +208,7 @@ export function addMiddleware(
  * @param includeHooks
  * @returns The original function
  */
-export function decorate<T extends Function>(
+export function decorate<T extends (...args: any[]) => any>(
   handler: IMiddlewareHandler,
   fn: T,
   includeHooks = true

@@ -21,7 +21,6 @@ import {
   ModelPropertiesDeclaration,
   SnapshotOut
 } from "../../src"
-import { $nonEmptyObject } from "../../src/internal"
 
 const createTestFactories = () => {
   const Box = types.model({
@@ -1151,7 +1150,6 @@ test("maybe / optional type inference verification", () => {
   assert(
     _ as ITC,
     _ as {
-      [$nonEmptyObject]?: any
       a: string
       b?: string
       c?: string | undefined
@@ -1163,7 +1161,6 @@ test("maybe / optional type inference verification", () => {
   assert(
     _ as ITS,
     _ as {
-      [$nonEmptyObject]?: any
       a: string
       b: string
       c: string | undefined
