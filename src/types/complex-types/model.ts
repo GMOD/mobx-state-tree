@@ -643,47 +643,45 @@ export class ModelType<
     observe(instance, this.didChange)
   }
 
-  private willChange(chg: IObjectWillChange): IObjectWillChange | null {
-    // TODO: mobx typings don't seem to take into account that newValue can be set even when removing a prop
-    const change = chg as IObjectWillChange & { newValue?: any }
-
+  private willChange(change: IObjectWillChange): IObjectWillChange | null {
     const node = getStateTreeNode(change.object)
     const subpath = change.name as string
     node.assertWritable({ subpath })
-    const childType = (node.type as this).properties[subpath]
-    // only properties are typed, state are stored as-is references
-    if (childType) {
-      typecheckInternal(childType, change.newValue)
-      change.newValue = childType.reconcile(
-        node.getChildNode(subpath),
-        change.newValue,
-        node,
-        subpath
-      )
+    // MST's removeChild sets the property to undefined rather than deleting it,
+    // so mobx only ever delivers "update"/"add" changes here, never "remove".
+    if (change.type !== "remove") {
+      const childType = (node.type as this).properties[subpath]
+      // only properties are typed, state are stored as-is references
+      if (childType) {
+        typecheckInternal(childType, change.newValue)
+        change.newValue = childType.reconcile(
+          node.getChildNode(subpath),
+          change.newValue,
+          node,
+          subpath
+        )
+      }
     }
     return change
   }
 
-  private didChange(chg: IObjectDidChange) {
-    // TODO: mobx typings don't seem to take into account that newValue can be set even when removing a prop
-    const change = chg as IObjectWillChange & { newValue?: any; oldValue?: any }
-
+  private didChange(change: IObjectDidChange) {
     const childNode = getStateTreeNode(change.object)
     const childType = (childNode.type as this).properties[change.name as string]
-    if (!childType) {
-      // don't emit patches for volatile state
-      return
+    // skip volatile state (no childType) and never-actually-occurring "remove" changes
+    if (childType && change.type !== "remove") {
+      const oldChildValue =
+        change.type === "update" ? change.oldValue.snapshot : undefined
+      childNode.emitPatch(
+        {
+          op: "replace",
+          path: escapeJsonPath(change.name as string),
+          value: change.newValue.snapshot,
+          oldValue: oldChildValue
+        },
+        childNode
+      )
     }
-    const oldChildValue = change.oldValue ? change.oldValue.snapshot : undefined
-    childNode.emitPatch(
-      {
-        op: "replace",
-        path: escapeJsonPath(change.name as string),
-        value: change.newValue.snapshot,
-        oldValue: oldChildValue
-      },
-      childNode
-    )
   }
 
   getChildren(node: this["N"]): ReadonlyArray<AnyNode> {
