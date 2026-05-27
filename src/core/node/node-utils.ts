@@ -31,9 +31,6 @@ export enum NodeLifeCycle {
   DEAD // no coming back from this one
 }
 
-/** @hidden */
-declare const $stateTreeNodeType: unique symbol
-
 /**
  * Common interface that represents a node instance.
  * @hidden
@@ -46,7 +43,7 @@ export interface IStateTreeNode<IT extends IAnyType = IAnyType> {
 
   // fake, will never be present, just for typing
   // we use this weird trick to solve an issue with reference types
-  readonly [$stateTreeNodeType]?: [IT] | [any]
+  readonly $__mstStateTreeNodeType__?: [IT] | [any]
 }
 
 /** @hidden */

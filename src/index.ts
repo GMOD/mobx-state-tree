@@ -1,5 +1,6 @@
 /* all code is initially loaded through internal, to avoid circular dep issues */
 export type {
+  $EmptyObjectBrand,
   CustomTypeOptions,
   IActionContext,
   IActionRecorder,
