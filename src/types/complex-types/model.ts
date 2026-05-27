@@ -459,11 +459,9 @@ export class ModelType<
 
       // the goal of this is to make sure actions using "this" can call themselves,
       // while still allowing the middlewares to register them
-      const middlewares = (action2 as any).$mst_middleware // make sure middlewares are not lost
-      const boundAction = action2.bind(actions)
-      boundAction._isFlowAction =
-        (action2 as FunctionWithFlag)._isFlowAction || false
-      boundAction.$mst_middleware = middlewares
+      const boundAction = action2.bind(actions) as FunctionWithFlag
+      boundAction._isFlowAction = action2._isFlowAction ?? false
+      boundAction.$mst_middleware = action2.$mst_middleware
       const actionInvoker = createActionInvoker(self as any, name, boundAction)
       actions[name] = actionInvoker
 
