@@ -131,7 +131,10 @@ export function process(asyncAction: any): any {
  * @internal
  * @hidden
  */
-export function createProcessSpawner(name: string, generator: Function) {
+export function createProcessSpawner(
+  name: string,
+  generator: (...args: any[]) => any
+) {
   deprecated(
     "process",
     "`createProcessSpawner()` has been renamed to `createFlowSpawner()`. " +

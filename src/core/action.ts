@@ -40,9 +40,10 @@ export interface IMiddlewareEvent extends IActionContext {
   readonly allParentIds: number[]
 }
 
-export interface FunctionWithFlag extends Function {
+export type FunctionWithFlag = ((...args: any[]) => any) & {
   _isMSTAction?: boolean
   _isFlowAction?: boolean
+  $mst_middleware?: IMiddleware[]
 }
 
 /**
@@ -84,7 +85,10 @@ export function getNextActionId() {
  * @internal
  * @hidden
  */
-export function runWithActionContext(context: IMiddlewareEvent, fn: Function) {
+export function runWithActionContext(
+  context: IMiddlewareEvent,
+  fn: (...args: any[]) => any
+) {
   const node = getStateTreeNode(context.context)
 
   if (context.type === "action") {
@@ -208,14 +212,17 @@ export function addMiddleware(
  * @param includeHooks
  * @returns The original function
  */
-export function decorate<T extends Function>(
+export function decorate<T extends (...args: any[]) => any>(
   handler: IMiddlewareHandler,
   fn: T,
   includeHooks = true
 ): T {
   const middleware: IMiddleware = { handler, includeHooks }
-  ;(fn as any).$mst_middleware = (fn as any).$mst_middleware || []
-  ;(fn as any).$mst_middleware.push(middleware)
+  const f = fn as FunctionWithFlag
+  if (!f.$mst_middleware) {
+    f.$mst_middleware = []
+  }
+  f.$mst_middleware.push(middleware)
   return fn
 }
 
@@ -224,10 +231,11 @@ class CollectedMiddlewares {
   private inArrayIndex = 0
   private middlewares: IMiddleware[][] = []
 
-  constructor(node: AnyObjectNode, fn: Function) {
+  constructor(node: AnyObjectNode, fn: (...args: any[]) => any) {
     // we just push middleware arrays into an array of arrays to avoid making copies
-    if ((fn as any).$mst_middleware) {
-      this.middlewares.push((fn as any).$mst_middleware)
+    const mw = (fn as FunctionWithFlag).$mst_middleware
+    if (mw) {
+      this.middlewares.push(mw)
     }
     let n: AnyObjectNode | null = node
     // Find all middlewares. Optimization: cache this?
@@ -261,7 +269,7 @@ class CollectedMiddlewares {
 function runMiddleWares(
   node: AnyObjectNode,
   baseCall: IMiddlewareEvent,
-  originalFn: Function
+  originalFn: (...args: any[]) => any
 ): any {
   const middlewares = new CollectedMiddlewares(node, originalFn)
   // Short circuit
