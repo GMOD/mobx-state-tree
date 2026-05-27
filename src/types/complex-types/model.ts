@@ -26,7 +26,6 @@ import {
   type IAnyType,
   type IChildNodesMap,
   type IJsonPatch,
-  type IStateTreeNode,
   type IType,
   type IValidationContext,
   type IValidationResult,
@@ -128,13 +127,13 @@ type DefinablePropsNames<T> = {
   [K in keyof T]: IsOptionalValue<T[K], never, K>
 }[keyof T]
 
-/** @hidden */
-export declare const $nonEmptyObject: unique symbol
+// Brand applied to the truly-empty object type so it doesn't structurally collapse to `{}`,
+// which TypeScript treats as "any non-nullish value". Kept internal; never exported.
+declare const $emptyObject: unique symbol
+type EmptyObject = { [$emptyObject]?: never }
 
 /** @hidden */
-export interface NonEmptyObject {
-  [$nonEmptyObject]?: any
-}
+export type MaybeEmpty<T> = keyof T extends never ? EmptyObject : T
 
 /** @hidden */
 export type ExtractCFromProps<P extends ModelProperties> = {
@@ -142,30 +141,21 @@ export type ExtractCFromProps<P extends ModelProperties> = {
 }
 
 /** @hidden */
-export type ModelCreationType<PC> = {
+export type ModelCreationType<PC> = MaybeEmpty<{
   [P in DefinablePropsNames<PC>]: PC[P]
-} & Partial<PC> &
-  NonEmptyObject
+}> &
+  Partial<PC>
 
 /** @hidden */
 export type ModelCreationType2<
   P extends ModelProperties,
   CustomC
-> = keyof P extends never
-  ? // When there are no props, we want to prevent passing in any object. We have two objects we want to allow:
-    //  1. The empty object
-    //  2. An instance of this model
-    //
-    // The `IStateTreeNode` interface allows both. For (1), these props are optional so an empty object is allowed.
-    // For (2), an instance will contain these two props, including the "secret" `$stateTreeNodeType` prop. TypeScript's
-    // excess property checking will then ensure no other props are passed in.
-    IStateTreeNode
-  : _CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>
+> = MaybeEmpty<_CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>>
 
 /** @hidden */
-export type ModelSnapshotType<P extends ModelProperties> = {
+export type ModelSnapshotType<P extends ModelProperties> = MaybeEmpty<{
   [K in keyof P]: P[K]["SnapshotType"]
-} & NonEmptyObject
+}>
 
 /** @hidden */
 export type ModelSnapshotType2<
@@ -179,7 +169,7 @@ export type ModelSnapshotType2<
  */
 export type ModelInstanceTypeProps<P extends ModelProperties> = {
   [K in keyof P]: P[K]["Type"]
-} & NonEmptyObject
+}
 
 /**
  * @hidden

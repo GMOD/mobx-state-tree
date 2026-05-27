@@ -21,7 +21,6 @@ import {
   ModelPropertiesDeclaration,
   SnapshotOut
 } from "../../src"
-import { $nonEmptyObject } from "../../src/internal"
 
 const createTestFactories = () => {
   const Box = types.model({
@@ -1151,7 +1150,6 @@ test("maybe / optional type inference verification", () => {
   assert(
     _ as ITC,
     _ as {
-      [$nonEmptyObject]?: any
       a: string
       b?: string
       c?: string | undefined
@@ -1163,7 +1161,6 @@ test("maybe / optional type inference verification", () => {
   assert(
     _ as ITS,
     _ as {
-      [$nonEmptyObject]?: any
       a: string
       b: string
       c: string | undefined
@@ -1171,4 +1168,28 @@ test("maybe / optional type inference verification", () => {
       e: string
     }
   )
+})
+
+test("#2186 substitutability for model types extending a common base", () => {
+  const BaseType = types.model()
+  const SubTypeOptional = BaseType.props({ a: "" })
+  const SubTypeRequired = BaseType.props({ a: types.string })
+  const SubTypeRequiredWithAnotherOptional = SubTypeRequired.props({
+    a: types.string,
+    b: 5
+  })
+
+  // a derived type with only-optional props should be assignable where the empty base is expected
+  true || ((t: typeof BaseType) => t.create())(SubTypeOptional)
+  // adding optional props to a type with required props preserves assignability
+  true ||
+    ((t: typeof SubTypeRequired) => t.create({ a: "123" }))(
+      SubTypeRequiredWithAnotherOptional
+    )
+  // adding a *required* prop breaks assignability to the empty base
+  true ||
+    ((t: typeof BaseType) => t.create())(
+      // @ts-expect-error -- a is required
+      SubTypeRequired
+    )
 })
