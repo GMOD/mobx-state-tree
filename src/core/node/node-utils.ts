@@ -41,8 +41,10 @@ export interface IStateTreeNode<IT extends IAnyType = IAnyType> {
    */
   readonly $treenode?: any
 
-  // fake, will never be present, just for typing
-  // we use this weird trick to solve an issue with reference types
+  // Phantom property — never present at runtime, exists only so TypeScript can infer IT
+  // via `T extends IStateTreeNode<infer IT>`. The [IT] | [any] tuple forces inference on
+  // the concrete type while still allowing widening to IAnyType. A string key is used
+  // instead of a unique symbol so tsgo can name the type in declaration files (TS4058).
   readonly $__mstStateTreeNodeType__?: [IT] | [any]
 }
 
