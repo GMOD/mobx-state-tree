@@ -128,9 +128,12 @@ type DefinablePropsNames<T> = {
 }[keyof T]
 
 // Brand applied to the truly-empty object type so it doesn't structurally collapse to `{}`,
-// which TypeScript treats as "any non-nullish value". Kept internal; never exported.
-declare const $emptyObject: unique symbol
-type EmptyObject = { [$emptyObject]?: never }
+// which TypeScript treats as "any non-nullish value". Exported so TypeScript can name it in
+// declaration files (TS4058) when model snapshot types propagate into exported function returns.
+export interface $EmptyObjectBrand {
+  readonly $__mstEmpty__?: never
+}
+type EmptyObject = $EmptyObjectBrand
 
 /** @hidden */
 export type MaybeEmpty<T> = keyof T extends never ? EmptyObject : T
