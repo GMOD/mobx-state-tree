@@ -22,3 +22,6 @@ Fork of mobx-state-tree v5.4.2 for use in jbrowse
   meaning any value is considered a valid snapshot. Validation is deferred to
   instantiation time, where failures are caught and routed to the fallback
 - removed NonEmptyObject annotation (also at upstream in post v5 versions)
+- replaced `unique symbol` phantom properties (`$emptyObject`, `$stateTreeNodeType`) with
+  exported string-keyed brand interfaces (`$EmptyObjectBrand`, `$__mstStateTreeNodeType__`),
+  fixing tsgo TS4058/TS4023 errors when MST types propagate into exported function return types
