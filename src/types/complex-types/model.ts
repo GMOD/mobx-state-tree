@@ -26,7 +26,6 @@ import {
   type IAnyType,
   type IChildNodesMap,
   type IJsonPatch,
-  type IStateTreeNode,
   type IType,
   type IValidationContext,
   type IValidationResult,
@@ -128,13 +127,13 @@ type DefinablePropsNames<T> = {
   [K in keyof T]: IsOptionalValue<T[K], never, K>
 }[keyof T]
 
-/** @hidden */
-export declare const $nonEmptyObject: unique symbol
+// Brand applied to the truly-empty object type so it doesn't structurally collapse to `{}`,
+// which TypeScript treats as "any non-nullish value". Kept internal; never exported.
+declare const $emptyObject: unique symbol
+type EmptyObject = { [$emptyObject]?: never }
 
 /** @hidden */
-export interface NonEmptyObject {
-  [$nonEmptyObject]?: any
-}
+export type MaybeEmpty<T> = keyof T extends never ? EmptyObject : T
 
 /** @hidden */
 export type ExtractCFromProps<P extends ModelProperties> = {
@@ -142,30 +141,21 @@ export type ExtractCFromProps<P extends ModelProperties> = {
 }
 
 /** @hidden */
-export type ModelCreationType<PC> = {
+export type ModelCreationType<PC> = MaybeEmpty<{
   [P in DefinablePropsNames<PC>]: PC[P]
-} & Partial<PC> &
-  NonEmptyObject
+}> &
+  Partial<PC>
 
 /** @hidden */
 export type ModelCreationType2<
   P extends ModelProperties,
   CustomC
-> = keyof P extends never
-  ? // When there are no props, we want to prevent passing in any object. We have two objects we want to allow:
-    //  1. The empty object
-    //  2. An instance of this model
-    //
-    // The `IStateTreeNode` interface allows both. For (1), these props are optional so an empty object is allowed.
-    // For (2), an instance will contain these two props, including the "secret" `$stateTreeNodeType` prop. TypeScript's
-    // excess property checking will then ensure no other props are passed in.
-    IStateTreeNode
-  : _CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>
+> = MaybeEmpty<_CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>>
 
 /** @hidden */
-export type ModelSnapshotType<P extends ModelProperties> = {
+export type ModelSnapshotType<P extends ModelProperties> = MaybeEmpty<{
   [K in keyof P]: P[K]["SnapshotType"]
-} & NonEmptyObject
+}>
 
 /** @hidden */
 export type ModelSnapshotType2<
@@ -179,7 +169,7 @@ export type ModelSnapshotType2<
  */
 export type ModelInstanceTypeProps<P extends ModelProperties> = {
   [K in keyof P]: P[K]["Type"]
-} & NonEmptyObject
+}
 
 /**
  * @hidden
@@ -469,11 +459,9 @@ export class ModelType<
 
       // the goal of this is to make sure actions using "this" can call themselves,
       // while still allowing the middlewares to register them
-      const middlewares = (action2 as any).$mst_middleware // make sure middlewares are not lost
-      const boundAction = action2.bind(actions)
-      boundAction._isFlowAction =
-        (action2 as FunctionWithFlag)._isFlowAction || false
-      boundAction.$mst_middleware = middlewares
+      const boundAction = action2.bind(actions) as FunctionWithFlag
+      boundAction._isFlowAction = action2._isFlowAction ?? false
+      boundAction.$mst_middleware = action2.$mst_middleware
       const actionInvoker = createActionInvoker(self as any, name, boundAction)
       actions[name] = actionInvoker
 
@@ -632,7 +620,7 @@ export class ModelType<
         objNode,
         name,
         undefined,
-        (initialSnapshot as any)[name]
+        initialSnapshot[name]
       )
     })
     return result
@@ -655,47 +643,45 @@ export class ModelType<
     observe(instance, this.didChange)
   }
 
-  private willChange(chg: IObjectWillChange): IObjectWillChange | null {
-    // TODO: mobx typings don't seem to take into account that newValue can be set even when removing a prop
-    const change = chg as IObjectWillChange & { newValue?: any }
-
+  private willChange(change: IObjectWillChange): IObjectWillChange | null {
     const node = getStateTreeNode(change.object)
     const subpath = change.name as string
     node.assertWritable({ subpath })
-    const childType = (node.type as this).properties[subpath]
-    // only properties are typed, state are stored as-is references
-    if (childType) {
-      typecheckInternal(childType, change.newValue)
-      change.newValue = childType.reconcile(
-        node.getChildNode(subpath),
-        change.newValue,
-        node,
-        subpath
-      )
+    // MST's removeChild sets the property to undefined rather than deleting it,
+    // so mobx only ever delivers "update"/"add" changes here, never "remove".
+    if (change.type !== "remove") {
+      const childType = (node.type as this).properties[subpath]
+      // only properties are typed, state are stored as-is references
+      if (childType) {
+        typecheckInternal(childType, change.newValue)
+        change.newValue = childType.reconcile(
+          node.getChildNode(subpath),
+          change.newValue,
+          node,
+          subpath
+        )
+      }
     }
     return change
   }
 
-  private didChange(chg: IObjectDidChange) {
-    // TODO: mobx typings don't seem to take into account that newValue can be set even when removing a prop
-    const change = chg as IObjectWillChange & { newValue?: any; oldValue?: any }
-
+  private didChange(change: IObjectDidChange) {
     const childNode = getStateTreeNode(change.object)
     const childType = (childNode.type as this).properties[change.name as string]
-    if (!childType) {
-      // don't emit patches for volatile state
-      return
+    // skip volatile state (no childType) and never-actually-occurring "remove" changes
+    if (childType && change.type !== "remove") {
+      const oldChildValue =
+        change.type === "update" ? change.oldValue.snapshot : undefined
+      childNode.emitPatch(
+        {
+          op: "replace",
+          path: escapeJsonPath(change.name as string),
+          value: change.newValue.snapshot,
+          oldValue: oldChildValue
+        },
+        childNode
+      )
     }
-    const oldChildValue = change.oldValue ? change.oldValue.snapshot : undefined
-    childNode.emitPatch(
-      {
-        op: "replace",
-        path: escapeJsonPath(change.name as string),
-        value: change.newValue.snapshot,
-        oldValue: oldChildValue
-      },
-      childNode
-    )
   }
 
   getChildren(node: this["N"]): ReadonlyArray<AnyNode> {
@@ -849,8 +835,6 @@ export function model(...args: any[]): any {
   return new ModelType({ name, properties })
 }
 
-// TODO: this can be simplified in TS3, since we can transform _NotCustomized to unknown, since unkonwn & X = X
-// and then back unknown to _NotCustomized if needed
 /** @hidden */
 export type _CustomJoin<A, B> = A extends _NotCustomized ? B : A & B
 

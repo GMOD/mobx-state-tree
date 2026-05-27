@@ -35,7 +35,6 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
     private readonly initializer: (v: C) => T = identity
   ) {
     super(name)
-    this.flags = flags
   }
 
   describe() {
@@ -77,7 +76,6 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const string: ISimpleType<string> = new CoreType<string, string, string>(
   "string",
   TypeFlags.String,
@@ -96,7 +94,6 @@ export const string: ISimpleType<string> = new CoreType<string, string, string>(
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const number: ISimpleType<number> = new CoreType<number, number, number>(
   "number",
   TypeFlags.Number,
@@ -114,7 +111,6 @@ export const number: ISimpleType<number> = new CoreType<number, number, number>(
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const integer: ISimpleType<number> = new CoreType<
   number,
   number,
@@ -132,7 +128,6 @@ export const integer: ISimpleType<number> = new CoreType<
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const float: ISimpleType<number> = new CoreType<number, number, number>(
   "float",
   TypeFlags.Float,
@@ -150,7 +145,6 @@ export const float: ISimpleType<number> = new CoreType<number, number, number>(
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const finite: ISimpleType<number> = new CoreType<number, number, number>(
   "finite",
   TypeFlags.Finite,
@@ -169,7 +163,6 @@ export const finite: ISimpleType<number> = new CoreType<number, number, number>(
  * })
  * ```
  */
-// tslint:disable-next-line:variable-name
 export const boolean: ISimpleType<boolean> = new CoreType<
   boolean,
   boolean,

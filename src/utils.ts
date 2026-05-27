@@ -204,22 +204,16 @@ export function freeze<T>(value: T): T {
  * Recursively freeze a value (if not in production)
  */
 export function deepFreeze<T>(value: T): T {
-  if (!devMode()) {
-    return value
-  }
-  freeze(value)
-
-  if (isPlainObject(value)) {
-    Object.keys(value).forEach(propKey => {
-      if (
-        !isPrimitive((value as any)[propKey]) &&
-        !Object.isFrozen((value as any)[propKey])
-      ) {
-        deepFreeze((value as any)[propKey])
+  if (devMode()) {
+    freeze(value)
+    if (isPlainObject(value)) {
+      for (const v of Object.values(value as Record<string, unknown>)) {
+        if (!isPrimitive(v) && !Object.isFrozen(v)) {
+          deepFreeze(v)
+        }
       }
-    })
+    }
   }
-
   return value
 }
 
@@ -281,7 +275,7 @@ export function addHiddenWritableProp(
  * @internal
  * @hidden
  */
-export type ArgumentTypes<F extends Function> = F extends (
+export type ArgumentTypes<F extends (...args: any[]) => any> = F extends (
   ...args: infer A
 ) => any
   ? A
@@ -291,7 +285,7 @@ export type ArgumentTypes<F extends Function> = F extends (
  * @internal
  * @hidden
  */
-class EventHandler<F extends Function> {
+class EventHandler<F extends (...args: any[]) => any> {
   private handlers: F[] = []
   private emitting = false
   private pendingUnregisters: F[] | null = null
@@ -361,8 +355,12 @@ class EventHandler<F extends Function> {
  * @internal
  * @hidden
  */
-export class EventHandlers<E extends { [k: string]: Function }> {
-  private eventHandlers?: { [k in keyof E]?: EventHandler<Function> }
+export class EventHandlers<
+  E extends { [k: string]: (...args: any[]) => any }
+> {
+  private eventHandlers?: {
+    [k in keyof E]?: EventHandler<(...args: any[]) => any>
+  }
 
   hasSubscribers(event: keyof E): boolean {
     const handler = this.eventHandlers && this.eventHandlers[event]
@@ -448,7 +446,9 @@ export function stringStartsWith(str: string, beginning: string) {
  * @internal
  * @hidden
  */
-export type DeprecatedFunction = Function & { ids?: { [id: string]: true } }
+export type DeprecatedFunction = ((id: string, message: string) => void) & {
+  ids?: { [id: string]: true }
+}
 
 /**
  * @internal
@@ -536,7 +536,7 @@ export function assertArg<T>(
  * @hidden
  */
 export function assertIsFunction(
-  value: Function,
+  value: (...args: any[]) => any,
   argNumber: number | number[]
 ) {
   assertArg(value, fn => typeof fn === "function", "function", argNumber)

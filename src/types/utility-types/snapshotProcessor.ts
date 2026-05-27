@@ -27,7 +27,6 @@ declare const $mstNotCustomized: unique symbol
 const $preProcessorFailed: unique symbol = Symbol("$preProcessorFailed")
 
 /** @hidden */
-// tslint:disable-next-line:class-name
 export interface _NotCustomized {
   // only for typings
   readonly [$mstNotCustomized]: undefined
