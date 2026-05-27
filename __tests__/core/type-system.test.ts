@@ -1029,6 +1029,16 @@ test("can extract type from complex objects", () => {
   const T2: OriginalType = T
 })
 
+test("TypeOfValue works on reference node instances", () => {
+  const Book = types.model({ id: types.identifier })
+  const Store = types.model({ book: Book, ref: types.reference(Book) })
+  const store = Store.create({ book: { id: "1" }, ref: "1" })
+
+  type RefType = TypeOfValue<typeof store.ref>
+  // ref should carry IReferenceType<Book>, not Book — this is the phantom-property trick
+  const _check: RefType = types.reference(Book)
+})
+
 test("#1268", () => {
   const Book = types.model({
     id: types.identifier
