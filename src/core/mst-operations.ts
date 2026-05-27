@@ -852,7 +852,6 @@ export function walk(
   assertIsFunction(processor, 2)
 
   const node = getStateTreeNode(target)
-  // tslint:disable-next-line:no_unused-variable
   node.getChildren().forEach(child => {
     if (isStateTreeNode(child.storedValue)) {
       walk(child.storedValue, processor)
