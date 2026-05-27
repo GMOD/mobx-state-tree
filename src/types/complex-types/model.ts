@@ -620,7 +620,7 @@ export class ModelType<
         objNode,
         name,
         undefined,
-        (initialSnapshot as any)[name]
+        initialSnapshot[name]
       )
     })
     return result

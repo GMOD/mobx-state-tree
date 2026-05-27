@@ -204,22 +204,16 @@ export function freeze<T>(value: T): T {
  * Recursively freeze a value (if not in production)
  */
 export function deepFreeze<T>(value: T): T {
-  if (!devMode()) {
-    return value
-  }
-  freeze(value)
-
-  if (isPlainObject(value)) {
-    Object.keys(value).forEach(propKey => {
-      if (
-        !isPrimitive((value as any)[propKey]) &&
-        !Object.isFrozen((value as any)[propKey])
-      ) {
-        deepFreeze((value as any)[propKey])
+  if (devMode()) {
+    freeze(value)
+    if (isPlainObject(value)) {
+      for (const v of Object.values(value as Record<string, unknown>)) {
+        if (!isPrimitive(v) && !Object.isFrozen(v)) {
+          deepFreeze(v)
+        }
       }
-    })
+    }
   }
-
   return value
 }
 
