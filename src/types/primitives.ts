@@ -35,7 +35,6 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
     private readonly initializer: (v: C) => T = identity
   ) {
     super(name)
-    this.flags = flags
   }
 
   describe() {
