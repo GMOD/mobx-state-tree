@@ -187,6 +187,91 @@ test("961 - apply snapshot to union should not throw when union keeps models wit
   applySnapshot(u, getSnapshot(Bar.create()))
 })
 
+// `noMatchMessage` is the throw path used in prod builds when `determineType`
+// returns undefined (typecheck is a no-op in NODE_ENV=production, so the
+// detailed "Error while converting" message from typecheck() never runs).
+// Without these diagnostics the prod-only failure is "No matching type for
+// union (…) for snapshot with type 'X'" — useless for debugging which field
+// is actually wrong.
+describe("noMatchMessage diagnostics", () => {
+  const A = types.model("A", {
+    type: types.literal("A"),
+    n: types.number,
+    s: types.maybe(types.string)
+  })
+  const B = types.model("B", {
+    type: types.literal("B"),
+    flag: types.boolean
+  })
+  const Untagged = types.model("Untagged", {
+    width: types.number
+  })
+
+  function noMatchMessage(union: any, snapshot: unknown): string {
+    return union.noMatchMessage(snapshot)
+  }
+
+  test("when snapshot's `type` discriminator picks exactly one candidate, the message lists that candidate's per-property errors", () => {
+    const U = types.union(A, B)
+    const msg = noMatchMessage(U, { type: "A", n: "not-a-number" })
+    expect(msg).toMatch(/No matching type for union .* for snapshot with type "A"/)
+    // Bullets point at the offending property of the matched candidate
+    expect(msg).toContain('at path "/n"')
+    expect(msg).toContain("not-a-number")
+    // And do NOT include B's errors — we filtered to the single candidate
+    expect(msg).not.toContain('at path "/flag"')
+  })
+
+  test("missing required property is reported as the matched candidate's error", () => {
+    const U = types.union(A, B)
+    const msg = noMatchMessage(U, { type: "A" })
+    expect(msg).toMatch(/for snapshot with type "A"/)
+    expect(msg).toContain('at path "/n"')
+  })
+
+  test("when no union member declares a matching literal `type`, falls back to the short message", () => {
+    const U = types.union(A, B)
+    const msg = noMatchMessage(U, { type: "Nope", n: 1 })
+    expect(msg).toMatch(/^No matching type for union .* for snapshot with type "Nope"$/)
+  })
+
+  test("when the snapshot is not a plain object or has no `type` field, falls back to the short message", () => {
+    const U = types.union(A, B)
+    expect(noMatchMessage(U, 42)).toMatch(/^No matching type for union /)
+    expect(noMatchMessage(U, { n: 1 })).toMatch(/^No matching type for union /)
+  })
+
+  test("when the discriminator is ambiguous (two candidates share the literal), falls back to the short message rather than picking arbitrarily", () => {
+    const A1 = types.model("A1", { type: types.literal("A"), x: types.number })
+    const A2 = types.model("A2", { type: types.literal("A"), y: types.string })
+    const U = types.union(A1, A2)
+    const msg = noMatchMessage(U, { type: "A" })
+    expect(msg).toMatch(/^No matching type for union .* for snapshot with type "A"$/)
+  })
+
+  test("union members without a literal `type` property are skipped during candidate selection", () => {
+    const U = types.union(Untagged, A)
+    // Snapshot's `type` matches A's literal, Untagged has no `type` literal.
+    const msg = noMatchMessage(U, { type: "A", n: "bad" })
+    expect(msg).toContain('at path "/n"')
+  })
+
+  if (process.env.NODE_ENV !== "production") {
+    test("the diagnostic message is what gets thrown from instantiate() when determineType returns undefined", () => {
+      const U = types.union(A, B)
+      // Bypass typecheckInternal (which would throw with the dev-mode
+      // "Error while converting" message first) by calling instantiate
+      // directly, mimicking the prod-build code path.
+      expect(() => {
+        ;(U as any).instantiate(null, "", undefined, {
+          type: "A",
+          n: "not-a-number"
+        })
+      }).toThrow(/for snapshot with type "A"[\s\S]*at path "\/n"/)
+    })
+  }
+})
+
 describe("1045 - secondary union types with applySnapshot and ids", () => {
   function initTest(
     useSnapshot: boolean,

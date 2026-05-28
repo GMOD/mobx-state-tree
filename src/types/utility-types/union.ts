@@ -1,6 +1,7 @@
 import {
   type AnyObjectNode,
   BaseType,
+  formatValidationErrorLines,
   type IAnyType,
   type IModelType,
   type IType,
@@ -106,11 +107,62 @@ export class Union extends BaseType<any, any, any> {
   }
 
   private noMatchMessage(value: unknown): string {
-    const discriminator =
-      isPlainObject(value) && typeof (value as any).type === "string"
-        ? ` for snapshot with type "${(value as any).type}"`
-        : ""
-    return `No matching type for union ${this.name}${discriminator}`
+    const base = `No matching type for union ${this.name}`
+    if (!isPlainObject(value)) {
+      return base
+    }
+    const discriminator = (value as { type?: unknown }).type
+    if (typeof discriminator !== "string") {
+      return base
+    }
+    const baseWithDiscriminator = `${base} for snapshot with type "${discriminator}"`
+    // If exactly one union member has a literal `type` property matching the
+    // snapshot's discriminator, run its validate() so we can append the
+    // property-level reasons it didn't match. This converts the bare prod-build
+    // "no matching type" into something diagnosable (e.g. which field was the
+    // wrong type, which required field was missing) without re-bloating the
+    // message back to every-member's full describe() output.
+    const candidate = this._findCandidateByTypeDiscriminator(discriminator)
+    if (!candidate) {
+      return baseWithDiscriminator
+    }
+    const errors = candidate.validate(value as any, [
+      { path: "", type: candidate }
+    ])
+    if (errors.length === 0) {
+      return baseWithDiscriminator
+    }
+    return (
+      `${baseWithDiscriminator}:\n    ` +
+      formatValidationErrorLines(errors).join("\n    ")
+    )
+  }
+
+  private _findCandidateByTypeDiscriminator(
+    discriminator: string
+  ): IAnyType | undefined {
+    let found: IAnyType | undefined
+    for (const t of this._types) {
+      if (!(t instanceof ModelType)) {
+        continue
+      }
+      const typeProp = (t.properties as Record<string, IAnyType | undefined>)
+        .type
+      if (
+        !typeProp ||
+        !(typeProp.flags & TypeFlags.Literal) ||
+        !typeProp.is(discriminator)
+      ) {
+        continue
+      }
+      if (found) {
+        // Ambiguous (two members declare the same `type` literal). Fall back
+        // to the short message rather than picking arbitrarily.
+        return undefined
+      }
+      found = t
+    }
+    return found
   }
 
   determineType(

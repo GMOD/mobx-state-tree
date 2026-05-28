@@ -206,6 +206,25 @@ export function typecheck<IT extends IAnyType>(
 
 const MAX_ERRORS_REPORTED = 10
 
+/**
+ * @internal
+ * @hidden
+ * Format a list of validation errors as bullet-style lines, capped at
+ * MAX_ERRORS_REPORTED entries with an overflow suffix. Shared by typecheck()
+ * and union's `noMatchMessage` so prod-build union failures can include
+ * candidate validation errors using the same formatting.
+ */
+export function formatValidationErrorLines(
+  errors: IValidationError[]
+): string[] {
+  const shown = errors.slice(0, MAX_ERRORS_REPORTED).map(toErrorString)
+  const overflow = errors.length - shown.length
+  if (overflow > 0) {
+    shown.push(`(… and ${overflow} more error${overflow === 1 ? "" : "s"})`)
+  }
+  return shown
+}
+
 function validationErrorsToString<IT extends IAnyType>(
   type: IT,
   value: ExtractCSTWithSTN<IT>,
@@ -214,16 +233,9 @@ function validationErrorsToString<IT extends IAnyType>(
   if (errors.length === 0) {
     return undefined
   }
-
-  const shown = errors.slice(0, MAX_ERRORS_REPORTED).map(toErrorString)
-  const overflow = errors.length - shown.length
-  if (overflow > 0) {
-    shown.push(`(… and ${overflow} more error${overflow === 1 ? "" : "s"})`)
-  }
-
   return (
     `Error while converting ${shortenPrintValue(prettyPrintValue(value))} to \`${
       type.name
-    }\`:\n\n    ` + shown.join("\n    ")
+    }\`:\n\n    ` + formatValidationErrorLines(errors).join("\n    ")
   )
 }
