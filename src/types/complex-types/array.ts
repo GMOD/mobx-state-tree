@@ -90,6 +90,8 @@ export interface IArrayType<IT extends IAnyType> extends IType<
   IMSTArray<IT>
 > {
   hooks(hooks: IHooksGetter<IMSTArray<IAnyType>>): IArrayType<IT>
+  /** the element type of the array */
+  getChildType(): IAnyType
 }
 
 /**

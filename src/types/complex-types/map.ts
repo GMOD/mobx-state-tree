@@ -63,6 +63,8 @@ export interface IMapType<IT extends IAnyType> extends IType<
   IMSTMap<IT>
 > {
   hooks(hooks: IHooksGetter<IMSTMap<IT>>): IMapType<IT>
+  /** the value type of the map */
+  getChildType(): IAnyType
 }
 
 /** @hidden */
