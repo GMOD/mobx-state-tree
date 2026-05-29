@@ -570,3 +570,33 @@ export function union(
 export function isUnionType<IT extends IAnyType>(type: IT): type is IT {
   return (type.flags & TypeFlags.Union) > 0
 }
+
+/**
+ * Returns the member types of a union.
+ *
+ * Wrapper types (`optional`, `refinement`, `late`) inherit the union flag from
+ * the type they wrap, so `isUnionType` is true for e.g. an optional-of-union,
+ * but their `getSubTypes()` reports the single wrapped type rather than the
+ * union's members. This drills through those wrappers until the union's member
+ * array surfaces.
+ *
+ * @param type a type for which `isUnionType` is true
+ * @returns the array of member types of the underlying union
+ */
+export function getUnionSubtypes(type: IAnyType): IAnyType[] {
+  if (!isUnionType(type)) {
+    throw fail("expected a union type")
+  }
+  let subtypes = type.getSubTypes()
+  while (
+    typeof subtypes === "object" &&
+    subtypes !== null &&
+    !Array.isArray(subtypes)
+  ) {
+    subtypes = subtypes.getSubTypes()
+  }
+  if (!Array.isArray(subtypes)) {
+    throw fail("could not extract subtypes from union type")
+  }
+  return subtypes
+}

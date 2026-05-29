@@ -141,7 +141,9 @@ export interface IOptionalIType<
   IT["CreationType"] | OptionalVals[number],
   IT["SnapshotType"],
   IT["TypeWithoutSTN"]
-> {}
+> {
+  getDefaultInstanceOrSnapshot(): IT["CreationType"] | IT["SnapshotType"]
+}
 
 function checkOptionalPreconditions<IT extends IAnyType>(
   type: IAnyType,

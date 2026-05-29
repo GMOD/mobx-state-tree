@@ -108,6 +108,7 @@ export {
   getRunningActionContext,
   getSnapshot,
   getType,
+  getUnionSubtypes,
   hasParent,
   hasParentOfType,
   isActionContextChildOf,

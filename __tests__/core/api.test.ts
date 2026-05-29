@@ -26,6 +26,7 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     getLivelinessChecking,
     getType,
     getChildType,
+    getUnionSubtypes,
     onPatch,
     onSnapshot,
     applyPatch,
@@ -162,6 +163,7 @@ test("all methods mentioned in API docs", () => {
   expect(missing).toEqual([
     "types.lazy",
     "types.resilient",
+    "getUnionSubtypes",
     "types",
     "setDevMode"
   ])
