@@ -24,3 +24,4 @@ Fork of mobx-state-tree v5.4.2 for use in jbrowse
 - replaced `unique symbol` phantom properties (`$emptyObject`, `$stateTreeNodeType`) with
   exported string-keyed brand interfaces (`$EmptyObjectBrand`, `$__mstStateTreeNodeType__`),
   fixing tsgo TS4058/TS4023 errors when MST types propagate into exported function return types
+- add reflection api getChildType

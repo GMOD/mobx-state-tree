@@ -215,7 +215,9 @@ describe("noMatchMessage diagnostics", () => {
   test("when snapshot's `type` discriminator picks exactly one candidate, the message lists that candidate's per-property errors", () => {
     const U = types.union(A, B)
     const msg = noMatchMessage(U, { type: "A", n: "not-a-number" })
-    expect(msg).toMatch(/No matching type for union .* for snapshot with type "A"/)
+    expect(msg).toMatch(
+      /No matching type for union .* for snapshot with type "A"/
+    )
     // Bullets point at the offending property of the matched candidate
     expect(msg).toContain('at path "/n"')
     expect(msg).toContain("not-a-number")
@@ -233,7 +235,9 @@ describe("noMatchMessage diagnostics", () => {
   test("when no union member declares a matching literal `type`, falls back to the short message", () => {
     const U = types.union(A, B)
     const msg = noMatchMessage(U, { type: "Nope", n: 1 })
-    expect(msg).toMatch(/^No matching type for union .* for snapshot with type "Nope"$/)
+    expect(msg).toMatch(
+      /^No matching type for union .* for snapshot with type "Nope"$/
+    )
   })
 
   test("when the snapshot is not a plain object or has no `type` field, falls back to the short message", () => {
@@ -247,7 +251,9 @@ describe("noMatchMessage diagnostics", () => {
     const A2 = types.model("A2", { type: types.literal("A"), y: types.string })
     const U = types.union(A1, A2)
     const msg = noMatchMessage(U, { type: "A" })
-    expect(msg).toMatch(/^No matching type for union .* for snapshot with type "A"$/)
+    expect(msg).toMatch(
+      /^No matching type for union .* for snapshot with type "A"$/
+    )
   })
 
   test("union members without a literal `type` property are skipped during candidate selection", () => {

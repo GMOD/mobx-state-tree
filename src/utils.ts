@@ -355,9 +355,7 @@ class EventHandler<F extends (...args: any[]) => any> {
  * @internal
  * @hidden
  */
-export class EventHandlers<
-  E extends { [k: string]: (...args: any[]) => any }
-> {
+export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   private eventHandlers?: {
     [k in keyof E]?: EventHandler<(...args: any[]) => any>
   }

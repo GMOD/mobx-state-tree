@@ -150,10 +150,9 @@ export type ModelCreationType<PC> = MaybeEmpty<{
   Partial<PC>
 
 /** @hidden */
-export type ModelCreationType2<
-  P extends ModelProperties,
-  CustomC
-> = MaybeEmpty<_CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>>
+export type ModelCreationType2<P extends ModelProperties, CustomC> = MaybeEmpty<
+  _CustomOrOther<CustomC, ModelCreationType<ExtractCFromProps<P>>>
+>
 
 /** @hidden */
 export type ModelSnapshotType<P extends ModelProperties> = MaybeEmpty<{

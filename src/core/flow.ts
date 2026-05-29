@@ -121,11 +121,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
 
     const spawnerWithMw = spawner as FunctionWithFlag
 
-    function wrap(
-      fn: FunctionWithFlag,
-      type: IMiddlewareEventType,
-      arg: any
-    ) {
+    function wrap(fn: FunctionWithFlag, type: IMiddlewareEventType, arg: any) {
       fn.$mst_middleware = spawnerWithMw.$mst_middleware // pick up any middleware attached to the flow
       return runWithActionContext(
         {
@@ -139,9 +135,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
 
     return new Promise(function (resolve, reject) {
       let gen: Generator<PromiseLike<unknown>, unknown, unknown>
-      const init = function asyncActionInit(
-        ...initArgs: any[]
-      ) {
+      const init = function asyncActionInit(...initArgs: any[]) {
         gen = generator(...initArgs)
         onFulfilled(undefined) // kick off the flow
       } as FunctionWithFlag
