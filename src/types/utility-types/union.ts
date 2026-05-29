@@ -35,6 +35,31 @@ export interface UnionOptions {
   dispatcher?: ITypeDispatcher
 }
 
+// Drill through single-subtype wrappers — optional(), refinement(),
+// snapshotProcessor(), late() — to the underlying ModelType. Discriminated-
+// union scoping keys on a member's literal `type` property, but real-world
+// members are rarely bare models (jbrowse config schemas, for instance, are
+// always optional(model) or optional(snapshotProcessor(model))). Without this
+// the scoping never engages and every failure prints every member's full
+// structure. Wrappers expose their child as `_subtype` (optional/refinement/
+// snapshotProcessor) or via `getSubType()` (late); bounded to avoid cycles.
+function resolveModelType(
+  type: IAnyType | undefined
+): ModelType<any, any, any, any, any> | undefined {
+  let current = type
+  for (let depth = 0; current && depth < 20; depth++) {
+    if (current instanceof ModelType) {
+      return current
+    }
+    const wrapper = current as {
+      _subtype?: IAnyType
+      getSubType?: (mustSucceed: boolean) => IAnyType | undefined
+    }
+    current = wrapper._subtype ?? wrapper.getSubType?.(false)
+  }
+  return undefined
+}
+
 /**
  * @internal
  * @hidden
@@ -143,11 +168,13 @@ export class Union extends BaseType<any, any, any> {
   ): IAnyType | undefined {
     let found: IAnyType | undefined
     for (const t of this._types) {
-      if (!(t instanceof ModelType)) {
+      const model = resolveModelType(t)
+      if (!model) {
         continue
       }
-      const typeProp = (t.properties as Record<string, IAnyType | undefined>)
-        .type
+      const typeProp = (
+        model.properties as Record<string, IAnyType | undefined>
+      ).type
       if (
         !typeProp ||
         !(typeProp.flags & TypeFlags.Literal) ||
@@ -160,9 +187,30 @@ export class Union extends BaseType<any, any, any> {
         // to the short message rather than picking arbitrarily.
         return undefined
       }
+      // Return the original (possibly wrapped) member, not the unwrapped
+      // model, so validate()/is() still apply optional defaults and any
+      // snapshotProcessor pre-processing.
       found = t
     }
     return found
+  }
+
+  // True when every member resolves to a model carrying a literal `type`
+  // discriminator — i.e. a fully discriminated union, where a snapshot's `type`
+  // uniquely identifies the intended member and no untagged catch-all member
+  // could also accept it. Cached: membership is fixed at construction.
+  private _allMembersDiscriminated?: boolean
+  private allMembersDiscriminated(): boolean {
+    if (this._allMembersDiscriminated === undefined) {
+      this._allMembersDiscriminated = this._types.every(t => {
+        const model = resolveModelType(t)
+        const typeProp =
+          model &&
+          (model.properties as Record<string, IAnyType | undefined>).type
+        return !!typeProp && (typeProp.flags & TypeFlags.Literal) !== 0
+      })
+    }
+    return this._allMembersDiscriminated
   }
 
   determineType(
@@ -267,11 +315,14 @@ export class Union extends BaseType<any, any, any> {
 
   private snapshotLooksLikeType(value: any, type: IAnyType): boolean {
     // for model types, check if snapshot has all the required property keys
-    // and that any literal-typed properties match exactly
-    if (type instanceof ModelType) {
-      const props = type.properties
+    // and that any literal-typed properties match exactly. Unwrap optional() /
+    // snapshotProcessor() / refinement() / late() so wrapped members (e.g.
+    // jbrowse config schemas, which are always optional(model)) still match.
+    const model = resolveModelType(type)
+    if (model) {
+      const props = model.properties
       // use cached propertyNames from ModelType instead of Object.keys()
-      for (const key of type.propertyNames) {
+      for (const key of model.propertyNames) {
         const propType = props[key]!
         const isOptional = propType.flags & TypeFlags.Optional
         const propValue = value[key]
@@ -303,6 +354,29 @@ export class Union extends BaseType<any, any, any> {
   ): IValidationResult {
     if (this._dispatcher) {
       return this._dispatcher(value).validate(value, context)
+    }
+
+    // For plain-object snapshots carrying a `type` discriminator, validate only
+    // the single member whose literal `type` matches.
+    // - Clean validation short-circuits to success only when it is sound to skip
+    //   the other members: an eager union (first match wins) or a fully
+    //   discriminated one (no untagged catch-all could also match). A non-eager
+    //   union with a catch-all must still fall through so ambiguity is counted.
+    // - A failure is the definitive, scoped error only when every member is
+    //   discriminated; otherwise a catch-all could still accept the value, so
+    //   fall through to full validation.
+    if (isPlainObject(value) && !isStateTreeNode(value)) {
+      const discriminator = (value as { type?: unknown }).type
+      if (typeof discriminator === "string") {
+        const candidate = this._findCandidateByTypeDiscriminator(discriminator)
+        if (candidate) {
+          const errors = candidate.validate(value, context)
+          const cleanAndUnique = errors.length === 0 && this._eager
+          if (cleanAndUnique || this.allMembersDiscriminated()) {
+            return errors
+          }
+        }
+      }
     }
 
     // for plain-object snapshots, prefer union members whose literal-typed

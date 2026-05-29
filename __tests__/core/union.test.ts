@@ -9,7 +9,8 @@ import {
   getType,
   setLivelinessChecking,
   SnapshotIn,
-  Instance
+  Instance,
+  IAnyType
 } from "../../src"
 
 const createTestFactories = () => {
@@ -270,6 +271,196 @@ describe("noMatchMessage diagnostics", () => {
       }).toThrow(/for snapshot with type "A"[\s\S]*at path "\/n"/)
     })
   }
+})
+
+// Real-world discriminated unions rarely hold bare models: jbrowse config
+// schemas are always optional(model) or optional(snapshotProcessor(model)).
+// resolveModelType() drills through those wrappers so the `type` discriminator
+// still scopes both the create()-time validation error and the prod-build
+// noMatchMessage to the single intended member.
+describe("discriminated-union scoping through optional/snapshotProcessor wrappers", () => {
+  const A = types.optional(
+    types.model("A", { type: types.literal("A"), n: types.number }),
+    { type: "A", n: 0 }
+  )
+  const B = types.optional(
+    types.model("B", { type: types.literal("B"), flag: types.boolean }),
+    { type: "B", flag: false }
+  )
+
+  function createError(union: any, snapshot: unknown): string {
+    try {
+      union.create(snapshot)
+    } catch (e) {
+      return String(e)
+    }
+    throw new Error("expected create() to throw")
+  }
+
+  // create()-time validation only runs when type checking is enabled, which is
+  // off in NODE_ENV=production builds (the repo's test:prod run). Gate the
+  // throw-asserting cases the same way the rest of this file does.
+  test("create() error is scoped to the member matching the `type` discriminator", () => {
+    if (process.env.NODE_ENV !== "production") {
+      const U = types.union(A, B)
+      const msg = createError(U, { type: "A", n: "not-a-number" })
+      expect(msg).toContain('at path "/n"')
+      expect(msg).toContain("not-a-number")
+      // The wall — every member's full structure + "No type is applicable" — is
+      // exactly what wrapped members used to produce. It must be gone.
+      expect(msg).not.toContain("No type is applicable for the union")
+      expect(msg).not.toContain('at path "/flag"')
+    }
+  })
+
+  test("scoping also drills through snapshotProcessor wrappers", () => {
+    if (process.env.NODE_ENV !== "production") {
+      const P = types.optional(
+        types.snapshotProcessor(
+          types.model("P", { type: types.literal("P"), n: types.number }),
+          { preProcessor: (sn: any) => sn }
+        ),
+        { type: "P", n: 0 }
+      )
+      const Q = types.optional(
+        types.model("Q", { type: types.literal("Q"), s: types.string }),
+        { type: "Q", s: "" }
+      )
+      const U = types.union(P, Q)
+      const msg = createError(U, { type: "P", n: "not-a-number" })
+      expect(msg).toContain('at path "/n"')
+      expect(msg).not.toContain("No type is applicable for the union")
+    }
+  })
+
+  test("a valid snapshot for the discriminated member still succeeds", () => {
+    const U = types.union(A, B)
+    expect(() => U.create({ type: "B", flag: true })).not.toThrow()
+  })
+
+  test("non-eager union still detects ambiguity when a catch-all also matches", () => {
+    if (process.env.NODE_ENV !== "production") {
+      // Catch carries a non-literal `type`, so { type: "A", n: 0 } validates
+      // clean for BOTH A and Catch. A non-eager union must report that as
+      // ambiguous rather than short-circuiting to A on the discriminator match.
+      const Catch = types.optional(
+        types.model("Catch", { type: types.string, n: types.number }),
+        { type: "", n: 0 }
+      )
+      const U = types.union({ eager: false }, A, Catch)
+      expect(() => U.create({ type: "A", n: 0 })).toThrow(
+        "No type is applicable for the union"
+      )
+    }
+  })
+
+  test("an untagged catch-all member is not pre-empted by a failed discriminator match", () => {
+    // C carries no literal `type`, so it can legitimately absorb { type: "A" }
+    // shapes that A rejects. The union is not fully discriminated, so a failed
+    // A-match must fall through rather than short-circuit to A's errors.
+    const C = types.optional(
+      types.model("C", { type: types.string, extra: types.string }),
+      { type: "", extra: "" }
+    )
+    const U = types.union(A, C)
+    expect(() =>
+      U.create({ type: "A", n: "bad", extra: "ok" } as any)
+    ).not.toThrow()
+  })
+})
+
+// End-to-end simulation of the real jbrowse-components setup that motivated the
+// scoping fix. jbrowse's ConfigurationSchema(name, slots, {explicitlyTyped})
+// returns types.optional(model, default) where the model carries
+// `type: types.optional(types.literal(name), name)` and always has a
+// postProcessSnapshot (and sometimes a preProcessSnapshot) baked in. A union of
+// those is what backs `pluginManager.pluggableConfigSchemaType('display')` etc.
+// Unpatched, the optional()/processor wrappers fail the `instanceof ModelType`
+// gate, so a single bad slot dumped every member's full structure. These tests
+// assert the error is scoped to the one member the `type` discriminator names.
+describe("jbrowse ConfigurationSchema union scoping (end-to-end simulation)", () => {
+  function ConfigurationSchema(
+    name: string,
+    slots: Record<string, IAnyType>,
+    opts: { preProcessor?: (s: any) => any } = {}
+  ): IAnyType {
+    let model: any = types.model(name, {
+      type: types.optional(types.literal(name), name),
+      ...slots
+    })
+    // jbrowse applies postProcessSnapshot to every schema unconditionally
+    model = model.postProcessSnapshot((snap: any) => snap)
+    if (opts.preProcessor) {
+      model = model.preProcessSnapshot(opts.preProcessor)
+    }
+    return types.optional(model, { type: name })
+  }
+
+  const Wiggle = ConfigurationSchema("LinearWiggleDisplay", {
+    height: types.optional(types.number, 100),
+    color: types.optional(types.string, "blue")
+  })
+  const Basic = ConfigurationSchema("LinearBasicDisplay", {
+    height: types.optional(types.number, 100),
+    trackLabel: types.optional(types.string, "")
+  })
+  const Alignments = ConfigurationSchema("LinearAlignmentsDisplay", {
+    height: types.optional(types.number, 100),
+    showSoftClipping: types.optional(types.boolean, false)
+  })
+  // mirrors a schema with a preProcessSnapshot (e.g. the showLabels slot)
+  const Snp = ConfigurationSchema(
+    "LinearSNPCoverageDisplay",
+    { height: types.optional(types.number, 100) },
+    { preProcessor: (s: any) => s }
+  )
+  const DisplayUnion = types.union(Wiggle, Basic, Alignments, Snp)
+
+  test("a bad slot is scoped to the member named by `type`, not a wall", () => {
+    if (process.env.NODE_ENV !== "production") {
+      let msg = "NO THROW"
+      try {
+        DisplayUnion.create({
+          type: "LinearWiggleDisplay",
+          height: "tall"
+        } as any)
+      } catch (e) {
+        msg = String(e)
+      }
+      // the one real reason, scoped to the right member
+      expect(msg).toContain('at path "/height"')
+      expect(msg).toContain("is not assignable to type: `number`")
+      // the wall must be gone: no "No type is applicable", and no other
+      // member's structure leaking into the message
+      expect(msg).not.toContain("No type is applicable for the union")
+      expect(msg).not.toContain("trackLabel")
+      expect(msg).not.toContain("showSoftClipping")
+    }
+  })
+
+  test("scoping holds for a member wrapped with a preProcessSnapshot", () => {
+    if (process.env.NODE_ENV !== "production") {
+      let msg = "NO THROW"
+      try {
+        DisplayUnion.create({
+          type: "LinearSNPCoverageDisplay",
+          height: "tall"
+        } as any)
+      } catch (e) {
+        msg = String(e)
+      }
+      expect(msg).toContain('at path "/height"')
+      expect(msg).not.toContain("No type is applicable for the union")
+    }
+  })
+
+  test("a valid display snapshot resolves to the discriminated member", () => {
+    const node = DisplayUnion.create({
+      type: "LinearAlignmentsDisplay",
+      showSoftClipping: true
+    })
+    expect((node as { type: string }).type).toBe("LinearAlignmentsDisplay")
+  })
 })
 
 describe("1045 - secondary union types with applySnapshot and ids", () => {
