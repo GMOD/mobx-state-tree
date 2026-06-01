@@ -233,8 +233,14 @@ export interface IModelType<
   ): IModelType<PROPS, OTHERS & A & V & VS, CustomC, CustomS>
 
   preProcessSnapshot<NewC = ModelCreationType2<PROPS, CustomC>>(
-    fn: (snapshot: NewC) => ModelCreationType2<PROPS, CustomC>
-  ): IModelType<PROPS, OTHERS, NewC, CustomS>
+    // The preprocessor may return the loose input snapshot (`NewC`) as well as
+    // the strict creation type: migrations commonly massage an untyped record
+    // and rely on the model's property defaults to fill the rest. Note the
+    // result keeps `CustomC` (not `NewC`) as the creation type, so annotating
+    // the preprocessor's parameter to accept legacy snapshots does not loosen
+    // the type that `.create()` callers must satisfy.
+    fn: (snapshot: NewC) => ModelCreationType2<PROPS, CustomC> | NewC
+  ): IModelType<PROPS, OTHERS, CustomC, CustomS>
 
   postProcessSnapshot<NewS = ModelSnapshotType2<PROPS, CustomS>>(
     fn: (snapshot: ModelSnapshotType2<PROPS, CustomS>) => NewS
