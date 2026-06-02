@@ -74,7 +74,7 @@ export interface IMSTMap<IT extends IAnyType> {
   clear(): void
   delete(key: string): boolean
   forEach(
-    callbackfn: (value: IT["Type"], key: string | number, map: this) => void,
+    callbackfn: (value: IT["Type"], key: string, map: this) => void,
     thisArg?: any
   ): void
   get(key: string | number): IT["Type"] | undefined
