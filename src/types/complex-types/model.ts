@@ -127,9 +127,15 @@ type DefinablePropsNames<T> = {
   [K in keyof T]: IsOptionalValue<T[K], never, K>
 }[keyof T]
 
-// Brand applied to the truly-empty object type so it doesn't structurally collapse to `{}`,
-// which TypeScript treats as "any non-nullish value". Exported so TypeScript can name it in
-// declaration files (TS4058) when model snapshot types propagate into exported function returns.
+// Weak brand applied to the truly-empty *creation* type so it doesn't structurally collapse to
+// `{}` (which TypeScript treats as "any non-nullish value"), which would let
+// `types.model().create({ anything })` through. It must be a weak type (only an optional prop) so
+// it can be intersected with `Partial<PC>` in ModelCreationType without rejecting valid props.
+//
+// Deliberately NOT applied to the snapshot type (see ModelSnapshotType): a weak brand there is a
+// "no properties in common" type that breaks substitutability of derived models with extra
+// optional props onto their base (issue #2186). Exported so TypeScript can name it in declaration
+// files (TS4058) when the creation type propagates into exported function signatures.
 export interface $EmptyObjectBrand {
   readonly $__mstEmpty__?: never
 }
@@ -155,9 +161,9 @@ export type ModelCreationType2<P extends ModelProperties, CustomC> = MaybeEmpty<
 >
 
 /** @hidden */
-export type ModelSnapshotType<P extends ModelProperties> = MaybeEmpty<{
+export type ModelSnapshotType<P extends ModelProperties> = {
   [K in keyof P]: P[K]["SnapshotType"]
-}>
+}
 
 /** @hidden */
 export type ModelSnapshotType2<

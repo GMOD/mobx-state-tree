@@ -6,6 +6,7 @@
     "lib": ["es2017", "dom"],
     "target": "es6",
     "sourceMap": false,
+    "inlineSources": false,
     "noEmit": true
   },
   "include": ["**/*.ts"]
