@@ -63,10 +63,7 @@ function serializeArgument(
   }
   if (typeof arg === "object" && !isPlainObject(arg) && !isArray(arg)) {
     return serializeTheUnserializable(
-      `[object ${
-        (arg && (arg as any).constructor && (arg as any).constructor.name) ||
-        "Complex Object"
-      }]`
+      `[object ${arg?.constructor?.name || "Complex Object"}]`
     )
   }
   try {
@@ -75,7 +72,7 @@ function serializeArgument(
     JSON.stringify(arg) // or throws
     return arg
   } catch (e) {
-    return serializeTheUnserializable("" + e)
+    return serializeTheUnserializable(`${e}`)
   }
 }
 

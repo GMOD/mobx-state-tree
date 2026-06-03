@@ -41,7 +41,7 @@ export type IDisposer = () => void
  * @hidden
  */
 export function fail(message = "Illegal state"): Error {
-  return new Error("[mobx-state-tree] " + message)
+  return new Error(`[mobx-state-tree] ${message}`)
 }
 
 /**
@@ -129,13 +129,7 @@ export function extend(a: any, ...b: any[]): any
  * @hidden
  */
 export function extend(a: any, ...b: any[]) {
-  for (let i = 0; i < b.length; i++) {
-    const current = b[i]
-    for (const key in current) {
-      a[key] = current[key]
-    }
-  }
-  return a
+  return Object.assign(a, ...b)
 }
 
 /**
@@ -306,7 +300,7 @@ class EventHandler<F extends (...args: any[]) => any> {
   }
 
   has(fn: F): boolean {
-    return this.handlers.indexOf(fn) >= 0
+    return this.handlers.includes(fn)
   }
 
   unregister(fn: F) {
@@ -361,8 +355,7 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   }
 
   hasSubscribers(event: keyof E): boolean {
-    const handler = this.eventHandlers && this.eventHandlers[event]
-    return !!handler && handler!.hasSubscribers
+    return this.eventHandlers?.[event]?.hasSubscribers ?? false
   }
 
   register<N extends keyof E>(
@@ -381,14 +374,13 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   }
 
   has<N extends keyof E>(event: N, fn: E[N]): boolean {
-    const handler = this.eventHandlers && this.eventHandlers[event]
-    return !!handler && handler!.has(fn)
+    return this.eventHandlers?.[event]?.has(fn) ?? false
   }
 
   unregister<N extends keyof E>(event: N, fn: E[N]) {
-    const handler = this.eventHandlers && this.eventHandlers[event]
+    const handler = this.eventHandlers?.[event]
     if (handler) {
-      handler!.unregister(fn)
+      handler.unregister(fn)
     }
   }
 
@@ -403,9 +395,9 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   }
 
   emit<N extends keyof E>(event: N, ...args: ArgumentTypes<E[N]>) {
-    const handler = this.eventHandlers && this.eventHandlers[event]
+    const handler = this.eventHandlers?.[event]
     if (handler) {
-      ;(handler!.emit as any)(...args)
+      ;(handler.emit as any)(...args)
     }
   }
 }
@@ -418,26 +410,6 @@ const prototypeHasOwnProperty = Object.prototype.hasOwnProperty
  */
 export function hasOwnProperty(object: object, propName: string) {
   return prototypeHasOwnProperty.call(object, propName)
-}
-
-/**
- * @internal
- * @hidden
- */
-export function argsToArray(args: IArguments): any[] {
-  const res = new Array(args.length)
-  for (let i = 0; i < args.length; i++) {
-    res[i] = args[i]
-  }
-  return res
-}
-
-/**
- * @internal
- * @hidden
- */
-export function stringStartsWith(str: string, beginning: string) {
-  return str.indexOf(beginning) === 0
 }
 
 /**
@@ -462,7 +434,7 @@ export const deprecated: DeprecatedFunction = function (
   }
   // warn if hasn't been warned before
   if (deprecated.ids && !deprecated.ids.hasOwnProperty(id)) {
-    warnError("Deprecation warning: " + message)
+    warnError(`Deprecation warning: ${message}`)
   }
   // mark as warned to avoid duplicate warn message
   if (deprecated.ids) {
@@ -478,16 +450,30 @@ deprecated.ids = {}
 export function warnError(msg: string) {
   console.warn(new Error(`[mobx-state-tree] ${msg}`))
 }
+let _typeChecking: boolean | undefined
+
+/**
+ * Forces full run-time type-checking on or off, overriding the dev-mode and
+ * `ENABLE_TYPE_CHECK` env-var defaults. Pass `true` to get better error messages
+ * in production builds without relying on an environment variable, `false` to
+ * force it off, or `undefined` to restore the default behavior.
+ */
+export function setTypeChecking(enabled: boolean | undefined) {
+  _typeChecking = enabled
+}
+
 /**
  * @internal
  * @hidden
  */
 export function isTypeCheckingEnabled() {
+  // an explicit setTypeChecking() override (incl. `false`) wins over the
+  // dev-mode / env-var default, hence ?? rather than ||
   return (
-    devMode() ||
-    (typeof process !== "undefined" &&
-      process.env &&
-      process.env.ENABLE_TYPE_CHECK === "true")
+    _typeChecking ??
+    (devMode() ||
+      (typeof process !== "undefined" &&
+        process.env?.ENABLE_TYPE_CHECK === "true"))
   )
 }
 

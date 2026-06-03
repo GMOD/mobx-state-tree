@@ -1,4 +1,4 @@
-import { fail, stringStartsWith } from "../internal.ts"
+import { fail } from "../internal.ts"
 
 /**
  * https://tools.ietf.org/html/rfc6902
@@ -67,22 +67,12 @@ function invertPatch(patch: IReversibleJsonPatch): IJsonPatch {
 }
 
 /**
- * Simple simple check to check it is a number.
- */
-function isNumber(x: string): boolean {
-  return typeof x === "number"
-}
-
-/**
  * Escape slashes and backslashes.
  *
  * http://tools.ietf.org/html/rfc6901
  */
 export function escapeJsonPath(path: string): string {
-  if (isNumber(path) === true) {
-    return "" + path
-  }
-  if (path.indexOf("/") === -1 && path.indexOf("~") === -1) {
+  if (!path.includes("/") && !path.includes("~")) {
     return path
   }
   return path.replace(/~/g, "~0").replace(/\//g, "~1")
@@ -113,7 +103,7 @@ export function joinJsonPath(path: string[]): string {
     return getPathStr(path)
   } else {
     // absolute
-    return "/" + getPathStr(path)
+    return `/${getPathStr(path)}`
   }
 }
 
@@ -131,9 +121,9 @@ export function splitJsonPath(path: string): string[] {
     path === "" ||
     path === "." ||
     path === ".." ||
-    stringStartsWith(path, "/") ||
-    stringStartsWith(path, "./") ||
-    stringStartsWith(path, "../")
+    path.startsWith("/") ||
+    path.startsWith("./") ||
+    path.startsWith("../")
   if (!valid) {
     throw fail(
       `a json path must be either rooted, empty or relative, but got '${path}'`
