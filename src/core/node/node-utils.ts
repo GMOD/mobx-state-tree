@@ -69,7 +69,7 @@ export interface IAnyStateTreeNode extends STNValue<any, IAnyType> {}
 export function isStateTreeNode<IT extends IAnyComplexType = IAnyComplexType>(
   value: any
 ): value is STNValue<Instance<IT>, IT> {
-  return !!(value && value.$treenode)
+  return !!value?.$treenode
 }
 
 /**
@@ -102,7 +102,7 @@ export function getStateTreeNode(value: IAnyStateTreeNode): AnyObjectNode {
 export function getStateTreeNodeSafe(
   value: IAnyStateTreeNode
 ): AnyObjectNode | null {
-  return (value && value.$treenode) || null
+  return value?.$treenode || null
 }
 
 /**
@@ -152,7 +152,7 @@ export function getRelativePathBetweenNodes(
 export function resolveNodeByPath(
   base: AnyObjectNode,
   path: string,
-  failIfResolveFails: boolean = true
+  failIfResolveFails = true
 ): AnyNode | undefined {
   return resolveNodeByPathParts(base, splitJsonPath(path), failIfResolveFails)
 }
@@ -164,7 +164,7 @@ export function resolveNodeByPath(
 export function resolveNodeByPathParts(
   base: AnyObjectNode,
   pathParts: string[],
-  failIfResolveFails: boolean = true
+  failIfResolveFails = true
 ): AnyNode | undefined {
   let current: AnyNode | null = base
   try {

@@ -161,19 +161,19 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
 
   get(key: string): IT["Type"] | undefined {
     // maybe this is over-enthousiastic? normalize numeric keys to strings
-    return super.get("" + key)
+    return super.get(`${key}`)
   }
 
   has(key: string) {
-    return super.has("" + key)
+    return super.has(`${key}`)
   }
 
   delete(key: string) {
-    return super.delete("" + key)
+    return super.delete(`${key}`)
   }
 
   set(key: string, value: ExtractCSTWithSTN<IT>): this {
-    return super.set("" + key, value)
+    return super.set(`${key}`, value)
   }
 
   put(value: ExtractCSTWithSTN<IT>): IT["Type"] {
@@ -353,9 +353,9 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   }
 
   getChildNode(node: this["N"], key: string): AnyNode {
-    const childNode = node.storedValue.get("" + key)
+    const childNode = node.storedValue.get(`${key}`)
     if (!childNode) {
-      throw fail("Not a child " + key)
+      throw fail(`Not a child ${key}`)
     }
     return childNode
   }
@@ -496,7 +496,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
       // Don't use target.replace, as it will throw away all existing items first
       for (const key in snapshot) {
         target.set(key, snapshot[key])
-        currentKeys["" + key] = true
+        currentKeys[`${key}`] = true
       }
     }
     Object.keys(currentKeys).forEach(key => {

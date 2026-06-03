@@ -138,7 +138,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     const subType = (objNode.type as this)._subType
     const result: IChildNodesMap = {}
     snapshot.forEach((item, index) => {
-      const subpath = "" + index
+      const subpath = `${index}`
       result[subpath] = subType.instantiate(objNode, subpath, undefined, item)
     })
     return result
@@ -190,14 +190,14 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     if (index < node.storedValue.length) {
       return node.storedValue[index]
     }
-    throw fail("Not a child: " + key)
+    throw fail(`Not a child: ${key}`)
   }
 
   willChange(
     change: IArrayWillChange<AnyNode> | IArrayWillSplice<AnyNode>
   ): IArrayWillChange<AnyNode> | IArrayWillSplice<AnyNode> | null {
     const node = getStateTreeNode(change.object as IStateTreeNode<this>)
-    node.assertWritable({ subpath: "" + change.index })
+    node.assertWritable({ subpath: `${change.index}` })
     const subType = (node.type as this)._subType
     const childNodes = node.getChildren()
 
@@ -239,10 +239,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
 
           // update paths of remaining items
           for (let i = index + removedCount; i < childNodes.length; i++) {
-            childNodes[i].setParent(
-              node,
-              "" + (i + added.length - removedCount)
-            )
+            childNodes[i].setParent(node, `${i + added.length - removedCount}`)
           }
         }
         break
@@ -269,7 +266,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
         return void node.emitPatch(
           {
             op: "replace",
-            path: "" + change.index,
+            path: `${change.index}`,
             value: change.newValue.snapshot,
             oldValue: change.oldValue ? change.oldValue.snapshot : undefined
           },
@@ -280,7 +277,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
           node.emitPatch(
             {
               op: "remove",
-              path: "" + (change.index + i),
+              path: `${change.index + i}`,
               oldValue: change.removed[i].snapshot
             },
             node
@@ -290,8 +287,8 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
           node.emitPatch(
             {
               op: "add",
-              path: "" + (change.index + i),
-              value: node.getChildNode("" + (change.index + i)).snapshot,
+              path: `${change.index + i}`,
+              value: node.getChildNode(`${change.index + i}`).snapshot,
               oldValue: undefined
             },
             node
@@ -336,7 +333,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     }
 
     for (let i = 0; i < value.length; i++) {
-      getContextForPath(context, "" + i, this._subType)
+      getContextForPath(context, `${i}`, this._subType)
       const errors = this._subType.validate(value[i], context)
       popContext(context)
       if (errors.length > 0) {
@@ -398,7 +395,7 @@ function reconcileArrayChildren<TT>(
     const hasNewNode = i <= newValues.length - 1
     const oldNode = oldNodes[i]
     let newValue = hasNewNode ? newValues[i] : undefined
-    const newPath = "" + newPaths[i]
+    const newPath = `${newPaths[i]}`
 
     // for some reason, instead of newValue we got a node, fallback to the storedValue
     // TODO: https://github.com/mobxjs/mobx-state-tree/issues/340#issuecomment-325581681

@@ -101,8 +101,7 @@ class StoredReference<IT extends IAnyType> {
     const lastCacheModification =
       root.identifierCache!.getLastCacheModificationPerId(normalizedId)
     if (
-      !this.resolvedReference ||
-      this.resolvedReference.lastCacheModification !== lastCacheModification
+      this.resolvedReference?.lastCacheModification !== lastCacheModification
     ) {
       const { targetType } = this
       // reference was initialized with the identifier of the target
@@ -117,7 +116,7 @@ class StoredReference<IT extends IAnyType> {
 
       this.resolvedReference = {
         node: target!,
-        lastCacheModification: lastCacheModification
+        lastCacheModification
       }
     }
   }
@@ -191,7 +190,7 @@ export abstract class BaseReferenceType<
     // since it is a scalar value (immutable-ish) and we need to change it
     // from the parent
     const storedRefParentNode = storedRefNode.parent
-    if (!storedRefParentNode || !storedRefParentNode.isAlive) {
+    if (!storedRefParentNode?.isAlive) {
       return
     }
     const storedRefParentValue = storedRefParentNode.storedValue
@@ -284,8 +283,7 @@ export abstract class BaseReferenceType<
 
       // make sure the target node is actually there and initialized
       const storedRefParentNode = storedRefNode.parent
-      const storedRefParentValue =
-        storedRefParentNode && storedRefParentNode.storedValue
+      const storedRefParentValue = storedRefParentNode?.storedValue
       if (
         storedRefParentNode &&
         storedRefParentNode.isAlive &&

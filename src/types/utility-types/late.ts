@@ -150,8 +150,9 @@ export function late(nameOrType: any, maybeType?: () => IAnyType): IAnyType {
   if (devMode()) {
     if (!(typeof type === "function" && type.length === 0)) {
       throw fail(
-        "Invalid late type, expected a function with zero arguments that returns a type, got: " +
+        `Invalid late type, expected a function with zero arguments that returns a type, got: ${
           type
+        }`
       )
     }
   }

@@ -66,7 +66,7 @@ function safeStringify(value: any) {
  */
 export function prettyPrintValue(value: any) {
   return typeof value === "function"
-    ? `<function${value.name ? " " + value.name : ""}>`
+    ? `<function${value.name ? ` ${value.name}` : ""}>`
     : isStateTreeNode(value)
       ? `<${value}>`
       : `\`${safeStringify(value)}\``
@@ -96,22 +96,21 @@ function toErrorString(error: IValidationError): string {
   const isSnapshotCompatible =
     type && isStateTreeNode(value) && type.is(getStateTreeNode(value).snapshot)
 
-  return (
-    `${pathPrefix}${currentTypename} ${shortenPrintValue(prettyPrintValue(value))} is not assignable ${
-      type ? `to type: \`${type.name}\`` : ``
-    }` +
-    (error.message ? ` (${error.message})` : "") +
-    (type
+  return `${pathPrefix}${currentTypename} ${shortenPrintValue(prettyPrintValue(value))} is not assignable ${
+    type ? `to type: \`${type.name}\`` : ``
+  }${error.message ? ` (${error.message})` : ""}${
+    type
       ? isPrimitiveType(type) || isPrimitive(value)
         ? `.`
         : `, expected an instance of \`${(type as IAnyType).name}\` or a snapshot like \`${shortenPrintValue(
             (type as IAnyType).describe()
-          )}\` instead.` +
-          (isSnapshotCompatible
-            ? " (Note that a snapshot of the provided value is compatible with the targeted type)"
-            : "")
-      : `.`)
-  )
+          )}\` instead.${
+            isSnapshotCompatible
+              ? " (Note that a snapshot of the provided value is compatible with the targeted type)"
+              : ""
+          }`
+      : `.`
+  }`
 }
 
 /**
@@ -233,9 +232,7 @@ function validationErrorsToString<IT extends IAnyType>(
   if (errors.length === 0) {
     return undefined
   }
-  return (
-    `Error while converting ${shortenPrintValue(prettyPrintValue(value))} to \`${
-      type.name
-    }\`:\n\n    ` + formatValidationErrorLines(errors).join("\n    ")
-  )
+  return `Error while converting ${shortenPrintValue(prettyPrintValue(value))} to \`${
+    type.name
+  }\`:\n\n    ${formatValidationErrorLines(errors).join("\n    ")}`
 }

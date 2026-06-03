@@ -93,8 +93,8 @@ export function createActionTrackingMiddleware2<TEnv = any>(
       const newCall: IActionTrackingMiddleware2Call<TEnv> = {
         ...call,
         // make a shallow copy of the parent action env
-        env: parentRunningAction && parentRunningAction.call.env,
-        parentCall: parentRunningAction && parentRunningAction.call
+        env: parentRunningAction?.call.env,
+        parentCall: parentRunningAction?.call
       }
 
       const passesFilter =

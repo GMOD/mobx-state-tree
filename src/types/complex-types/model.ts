@@ -720,12 +720,12 @@ export class ModelType<
 
   getChildNode(node: this["N"], key: string): AnyNode {
     if (!(key in this.properties)) {
-      throw fail("Not a value property: " + key)
+      throw fail(`Not a value property: ${key}`)
     }
     const adm = _getAdministration(node.storedValue, key)
     const childNode = adm.raw?.()
     if (!childNode) {
-      throw fail("Node not available for property " + key)
+      throw fail(`Node not available for property ${key}`)
     }
     return childNode
   }
@@ -818,13 +818,9 @@ export class ModelType<
 
   describe() {
     // optimization: cache
-    return (
-      "{ " +
-      this.propertyNames
-        .map(key => key + ": " + this.properties[key].describe())
-        .join("; ") +
-      " }"
-    )
+    return `{ ${this.propertyNames
+      .map(key => `${key}: ${this.properties[key].describe()}`)
+      .join("; ")} }`
   }
 
   getDefaultSnapshot(): this["C"] {
@@ -938,7 +934,7 @@ export function compose(...args: any[]): any {
   return args
     .reduce((prev, cur) =>
       prev.cloneAndEnhance({
-        name: prev.name + "_" + cur.name,
+        name: `${prev.name}_${cur.name}`,
         properties: cur.properties,
         initializers: cur.initializers,
         preProcessor: (snapshot: any) =>

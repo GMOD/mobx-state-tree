@@ -100,9 +100,7 @@ export class Union extends BaseType<any, any, any> {
   }
 
   describe() {
-    return (
-      "(" + this._types.map(factory => factory.describe()).join(" | ") + ")"
-    )
+    return `(${this._types.map(factory => factory.describe()).join(" | ")})`
   }
 
   instantiate(
@@ -157,10 +155,9 @@ export class Union extends BaseType<any, any, any> {
     if (errors.length === 0) {
       return baseWithDiscriminator
     }
-    return (
-      `${baseWithDiscriminator}:\n    ` +
-      formatValidationErrorLines(errors).join("\n    ")
-    )
+    return `${baseWithDiscriminator}:\n    ${formatValidationErrorLines(
+      errors
+    ).join("\n    ")}`
   }
 
   private _findCandidateByTypeDiscriminator(
@@ -542,7 +539,7 @@ export function union(
   const types = isType(optionsOrType)
     ? [optionsOrType, ...otherTypes]
     : otherTypes
-  const name = "(" + types.map(type => type.name).join(" | ") + ")"
+  const name = `(${types.map(type => type.name).join(" | ")})`
 
   // check all options
   if (devMode()) {

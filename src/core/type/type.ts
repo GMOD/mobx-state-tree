@@ -1,7 +1,7 @@
 import { action } from "mobx"
 
 import {
-  BaseNode,
+  type BaseNode,
   assertArg,
   fail,
   getStateTreeNode,
@@ -12,7 +12,17 @@ import {
   normalizeIdentifier,
   typeCheckFailure,
   typeCheckSuccess,
-  typecheckInternal
+  typecheckInternal,
+  type AnyNode,
+  type AnyObjectNode,
+  type IChildNodesMap,
+  type IJsonPatch,
+  type IStateTreeNode,
+  type IValidationContext,
+  type IValidationResult,
+  type ModelPrimitive,
+  type ObjectNode,
+  type ScalarNode
 } from "../../internal.ts"
 
 // Cache for validation results to avoid re-validating the same object against the same type
@@ -21,19 +31,6 @@ const validationCache = new WeakMap<
   object,
   WeakMap<BaseType<any, any, any, any>, IValidationResult>
 >()
-
-import type {
-  AnyNode,
-  AnyObjectNode,
-  IChildNodesMap,
-  IJsonPatch,
-  IStateTreeNode,
-  IValidationContext,
-  IValidationResult,
-  ModelPrimitive,
-  ObjectNode,
-  ScalarNode
-} from "../../internal.ts"
 
 /**
  * @internal
@@ -631,7 +628,7 @@ export abstract class SimpleType<C, S, T> extends BaseType<
  * @returns `true` if the value is a type.
  */
 export function isType(value: any): value is IAnyType {
-  return typeof value === "object" && value && value.isType === true
+  return typeof value === "object" && value?.isType === true
 }
 
 /**

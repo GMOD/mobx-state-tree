@@ -3,9 +3,9 @@ import { action } from "mobx"
 import {
   type AnyObjectNode,
   BaseNode,
-  Hook,
+  type Hook,
   NodeLifeCycle,
-  SimpleType,
+  type SimpleType,
   devMode,
   fail,
   freeze

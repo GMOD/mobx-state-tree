@@ -48,7 +48,7 @@ export function enumeration(
       assertIsString(option, i + 1)
     })
   }
-  const type = union(...realOptions.map(option => literal("" + option)))
+  const type = union(...realOptions.map(option => literal(`${option}`)))
   if (typeof name === "string") {
     type.name = name
   }

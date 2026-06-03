@@ -133,9 +133,7 @@ export abstract class BaseNode<C, S, T> {
     if (this._escapedSubpath === undefined) {
       this._escapedSubpath = !this._subpath ? "" : escapeJsonPath(this._subpath)
     }
-    return (
-      this.parent.getEscapedPath(reportObserved) + "/" + this._escapedSubpath
-    )
+    return `${this.parent.getEscapedPath(reportObserved)}/${this._escapedSubpath}`
   }
 
   get isRoot(): boolean {

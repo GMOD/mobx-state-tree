@@ -3,7 +3,7 @@ import { type IObservableArray, entries, observable, values } from "mobx"
 import {
   type AnyObjectNode,
   type IAnyComplexType,
-  ObjectNode,
+  type ObjectNode,
   fail,
   mobxShallow
 } from "../../internal.ts"
@@ -50,7 +50,7 @@ export class IdentifierCache {
         )
       }
       const set = this.cache.get(identifier)!
-      if (set.indexOf(node) !== -1) {
+      if (set.includes(node)) {
         throw fail(`Already registered`)
       }
       set.push(node)
@@ -88,12 +88,12 @@ export class IdentifierCache {
     // The slash is added here so we only match children of the splitNode. In version 5.1.8 and
     // earlier there was no trailing slash, so non children that started with the same path string
     // were being matched incorrectly.
-    const basePath = splitNode.path + "/"
+    const basePath = `${splitNode.path}/`
     entries(this.cache).forEach(([id, nodes]) => {
       let modified = false
       for (let i = nodes.length - 1; i >= 0; i--) {
         const node = nodes[i]
-        if (node === splitNode || node.path.indexOf(basePath) === 0) {
+        if (node === splitNode || node.path.startsWith(basePath)) {
           newCache.addNodeToCache(node, false) // no need to update lastUpdated since it is a whole new cache
           nodes.splice(i, 1)
           // remove empty sets from cache

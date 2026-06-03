@@ -54,7 +54,7 @@ export class OptionalValue<
   }
 
   describe() {
-    return this._subtype.describe() + "?"
+    return `${this._subtype.describe()}?`
   }
 
   instantiate(
@@ -63,7 +63,7 @@ export class OptionalValue<
     environment: any,
     initialValue: this["C"] | this["T"]
   ): this["N"] {
-    if (this.optionalValues.indexOf(initialValue) >= 0) {
+    if (this.optionalValues.includes(initialValue)) {
       const defaultInstanceOrSnapshot = this.getDefaultInstanceOrSnapshot()
       return this._subtype.instantiate(
         parent,
@@ -83,7 +83,7 @@ export class OptionalValue<
   ): this["N"] {
     return this._subtype.reconcile(
       current,
-      this.optionalValues.indexOf(newValue) < 0 && this._subtype.is(newValue)
+      !this.optionalValues.includes(newValue) && this._subtype.is(newValue)
         ? newValue
         : this.getDefaultInstanceOrSnapshot(),
       parent,
@@ -111,7 +111,7 @@ export class OptionalValue<
     context: IValidationContext
   ): IValidationResult {
     // defaulted values can be skipped
-    if (this.optionalValues.indexOf(value) >= 0) {
+    if (this.optionalValues.includes(value)) {
       return typeCheckSuccess()
     }
     // bounce validation to the sub-type
