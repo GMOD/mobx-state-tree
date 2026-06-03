@@ -222,8 +222,13 @@ export interface ISnapshotProcessor<
 export interface ISnapshotProcessors<IT extends IAnyType, CustomC, CustomS> {
   /**
    * Function that transforms an input snapshot.
+   *
+   * The processor may return the loose input (`CustomC`) as well as the strict
+   * creation type: migrations commonly massage an untyped legacy record and
+   * rely on MST's runtime revalidation/defaults to fill the rest. This mirrors
+   * the lenient return type of `IModelType.preProcessSnapshot`.
    */
-  preProcessor?(snapshot: CustomC): IT["CreationType"]
+  preProcessor?(snapshot: CustomC): IT["CreationType"] | CustomC
   /**
    * Function that transforms an output snapshot.
    * @param snapshot
