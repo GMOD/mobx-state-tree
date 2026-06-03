@@ -47,7 +47,23 @@ export default defineConfig(
       ],
       curly: "error",
       "import/extensions": ["error", "ignorePackages"],
-      "import/no-unresolved": "off"
+      "import/no-unresolved": "off",
+
+      // modernization
+      "no-var": "error",
+      "prefer-const": "error",
+      "object-shorthand": "error",
+      "prefer-template": "error",
+      "no-useless-concat": "error",
+      "@typescript-eslint/prefer-includes": "error",
+      "@typescript-eslint/prefer-string-starts-ends-with": "error",
+      "@typescript-eslint/prefer-optional-chain": "error",
+      "@typescript-eslint/prefer-for-of": "error",
+      "@typescript-eslint/no-inferrable-types": "error",
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { fixStyle: "inline-type-imports" }
+      ]
     }
   }
 )

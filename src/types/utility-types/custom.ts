@@ -123,10 +123,7 @@ export class CustomType<S, T> extends SimpleType<S | T, S, T> {
   ): this["N"] {
     const valueToStore: T = this.options.isTargetType(initialValue)
       ? (initialValue as T)
-      : this.options.fromSnapshot(
-          initialValue as S,
-          parent && parent.root.environment
-        )
+      : this.options.fromSnapshot(initialValue as S, parent?.root.environment)
     return createScalarNode(this, parent, subpath, environment, valueToStore)
   }
 

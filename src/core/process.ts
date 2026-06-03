@@ -122,7 +122,7 @@ export function process<A1, A2, A3, A4, A5, A6, A7, A8>(
 export function process(asyncAction: any): any {
   deprecated(
     "process",
-    "`process()` has been renamed to `flow()`. " + DEPRECATION_MESSAGE
+    `\`process()\` has been renamed to \`flow()\`. ${DEPRECATION_MESSAGE}`
   )
   return flow(asyncAction)
 }
@@ -137,8 +137,9 @@ export function createProcessSpawner(
 ) {
   deprecated(
     "process",
-    "`createProcessSpawner()` has been renamed to `createFlowSpawner()`. " +
+    `\`createProcessSpawner()\` has been renamed to \`createFlowSpawner()\`. ${
       DEPRECATION_MESSAGE
+    }`
   )
   return createFlowSpawner(name, generator)
 }

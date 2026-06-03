@@ -176,7 +176,7 @@ export function createActionInvoker<T extends FunctionWithFlag>(
 export function addMiddleware(
   target: IAnyStateTreeNode,
   handler: IMiddlewareHandler,
-  includeHooks: boolean = true
+  includeHooks = true
 ): IDisposer {
   const node = getStateTreeNode(target)
   if (devMode()) {
@@ -281,7 +281,7 @@ function runMiddleWares(
 
   function runNextMiddleware(call: IMiddlewareEvent): any {
     const middleware = middlewares.getNextMiddleware()
-    const handler = middleware && middleware.handler
+    const handler = middleware?.handler
 
     if (!handler) {
       return mobxAction(originalFn)(...call.args)

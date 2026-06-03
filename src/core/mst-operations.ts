@@ -375,10 +375,7 @@ export function getSnapshot<S>(
  * @param depth How far should we look upward? 1 by default.
  * @returns
  */
-export function hasParent(
-  target: IAnyStateTreeNode,
-  depth: number = 1
-): boolean {
+export function hasParent(target: IAnyStateTreeNode, depth = 1): boolean {
   // check all arguments
   assertIsStateTreeNode(target, 1)
   assertIsNumber(depth, 2, 0)

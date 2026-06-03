@@ -8,7 +8,7 @@ import {
 
 import {
   BaseNode,
-  ComplexType,
+  type ComplexType,
   EMPTY_OBJECT,
   EventHandlers,
   Hook,
@@ -19,7 +19,6 @@ import {
   createActionInvoker,
   devMode,
   escapeJsonPath,
-  extend,
   fail,
   freeze,
   getCurrentActionContext,
@@ -30,22 +29,19 @@ import {
   splitJsonPath,
   splitPatch,
   toJSON,
-  warnError
-} from "../../internal.ts"
-
-import type {
-  AnyNode,
-  ArgumentTypes,
-  IAnyType,
-  IDisposer,
-  IJsonPatch,
-  IMiddleware,
-  IMiddlewareEvent,
-  IMiddlewareHandler,
-  IReversibleJsonPatch,
-  IStateTreeNode,
-  IType,
-  ReferenceIdentifier
+  warnError,
+  type AnyNode,
+  type ArgumentTypes,
+  type IAnyType,
+  type IDisposer,
+  type IJsonPatch,
+  type IMiddleware,
+  type IMiddlewareEvent,
+  type IMiddlewareHandler,
+  type IReversibleJsonPatch,
+  type IStateTreeNode,
+  type IType,
+  type ReferenceIdentifier
 } from "../../internal.ts"
 
 let nextNodeId = 1
@@ -215,9 +211,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // this is done to avoid traversing the whole tree to the root when using
     // the same reference again
     while (
-      parent &&
-      parent._observableInstanceState ===
-        ObservableInstanceLifecycle.UNINITIALIZED
+      parent?._observableInstanceState ===
+      ObservableInstanceLifecycle.UNINITIALIZED
     ) {
       parentChain.unshift(parent)
       parent = parent.parent
@@ -453,13 +448,10 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     }
 
     let actionFullPath = ""
-    if (actionContext && actionContext.name != null) {
+    if (actionContext?.name != null) {
       // try to use the context, and if it not available use the node one
       const actionPath =
-        (actionContext &&
-          actionContext.context &&
-          getPath(actionContext.context)) ||
-        escapedPath
+        (actionContext.context && getPath(actionContext.context)) || escapedPath
       actionFullPath = `${actionPath}.${actionContext.name}()`
     }
 
@@ -650,9 +642,10 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   emitPatch(basePatch: IReversibleJsonPatch, source: AnyNode): void {
     if (this._internalEventsHasSubscribers(InternalEvents.Patch)) {
-      const localizedPatch: IReversibleJsonPatch = extend({}, basePatch, {
-        path: source.path.substr(this.path.length) + "/" + basePatch.path // calculate the relative path of the patch
-      })
+      const localizedPatch: IReversibleJsonPatch = {
+        ...basePatch,
+        path: `${source.path.substr(this.path.length)}/${basePatch.path}` // calculate the relative path of the patch
+      }
       const [patch, reversePatch] = splitPatch(localizedPatch)
       this._internalEventsEmit(InternalEvents.Patch, patch, reversePatch)
     }
@@ -693,10 +686,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     }
   }
 
-  addMiddleWare(
-    handler: IMiddlewareHandler,
-    includeHooks: boolean = true
-  ): IDisposer {
+  addMiddleWare(handler: IMiddlewareHandler, includeHooks = true): IDisposer {
     const middleware = { handler, includeHooks }
     if (!this.middlewares) {
       this.middlewares = [middleware]

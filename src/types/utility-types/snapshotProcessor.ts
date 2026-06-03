@@ -143,7 +143,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return node
   }
 
-  getSnapshot(node: this["N"], applyPostProcess: boolean = true): this["S"] {
+  getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const sn = this._subtype.getSnapshot(node)
     return applyPostProcess ? this.postProcessSnapshot(sn, node) : sn
   }

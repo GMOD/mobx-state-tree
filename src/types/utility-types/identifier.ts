@@ -161,7 +161,7 @@ export type ReferenceIdentifier = string | number
  * @hidden
  */
 export function normalizeIdentifier(id: ReferenceIdentifier): string {
-  return "" + id
+  return `${id}`
 }
 
 /**

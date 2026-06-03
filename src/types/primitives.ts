@@ -228,7 +228,7 @@ export function getPrimitiveFactoryFromValue(value: any): ISimpleType<any> {
         return DatePrimitive
       }
   }
-  throw fail("Cannot determine primitive type from value " + value)
+  throw fail(`Cannot determine primitive type from value ${value}`)
 }
 
 /**

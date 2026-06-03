@@ -84,7 +84,8 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     isActionContextThisOrChildOf,
     toGeneratorFunction,
     toGenerator,
-    setDevMode
+    setDevMode,
+    setTypeChecking
 `)
 
 const DEPRECATED_METHODS_AND_INTERNAL_TYPES = stringToArray(`
@@ -165,7 +166,8 @@ test("all methods mentioned in API docs", () => {
     "types.resilient",
     "getUnionSubtypes",
     "types",
-    "setDevMode"
+    "setDevMode",
+    "setTypeChecking"
   ])
 })
 

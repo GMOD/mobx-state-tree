@@ -154,5 +154,6 @@ export {
   unescapeJsonPath,
   unprotect,
   walk,
-  setDevMode
+  setDevMode,
+  setTypeChecking
 } from "./internal.ts"

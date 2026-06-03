@@ -1,10 +1,10 @@
 import {
   type AnyNode,
   type AnyObjectNode,
-  ComplexType,
+  type ComplexType,
   ObjectNode,
   ScalarNode,
-  SimpleType,
+  type SimpleType,
   fail,
   getStateTreeNodeSafe
 } from "../../internal.ts"
