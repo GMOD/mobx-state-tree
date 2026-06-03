@@ -111,9 +111,7 @@ export interface IType<C, S, T> {
    * @returns An instance of that type.
    */
   create(
-    ...args: {} extends C
-      ? [snapshot?: C, env?: any]
-      : [snapshot: C, env?: any]
+    ...args: {} extends C ? [snapshot?: C, env?: any] : [snapshot: C, env?: any]
   ): this["Type"]
 
   /**
