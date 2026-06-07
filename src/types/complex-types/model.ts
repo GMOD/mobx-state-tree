@@ -53,6 +53,7 @@ import {
   isType,
   mobxShallow,
   optional,
+  shouldStripChildFromSnapshot,
   popContext,
   typeCheckFailure,
   typeCheckSuccess,
@@ -732,7 +733,7 @@ export class ModelType<
 
   getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const res = {} as any
-    this.forAllProps((name, _type) => {
+    this.forAllProps((name, type) => {
       try {
         // TODO: FIXME, make sure the observable ref is used!
         const atom = getAtom(node.storedValue, name)
@@ -740,7 +741,11 @@ export class ModelType<
       } catch (_e) {
         throw fail(`${name} property is declared twice`)
       }
-      res[name] = this.getChildNode(node, name).snapshot
+      const snapshot = this.getChildNode(node, name).snapshot
+      // strip-default optionals omit their key when equal to the default
+      if (!shouldStripChildFromSnapshot(type, snapshot)) {
+        res[name] = snapshot
+      }
     })
     if (applyPostProcess) {
       return this.applySnapshotPostProcessor(res)
@@ -751,7 +756,13 @@ export class ModelType<
   processInitialSnapshot(childNodes: IChildNodesMap): this["S"] {
     const processed = {} as any
     Object.keys(childNodes).forEach(key => {
-      processed[key] = childNodes[key].getSnapshot()
+      const snapshot = childNodes[key].getSnapshot()
+      // strip-default optionals omit their key when equal to the default; this
+      // mirrors getSnapshot for nodes serialized before they become observable
+      // instances (e.g. array/map children that were never accessed)
+      if (!shouldStripChildFromSnapshot(this.properties[key], snapshot)) {
+        processed[key] = snapshot
+      }
     })
     return this.applySnapshotPostProcessor(processed)
   }

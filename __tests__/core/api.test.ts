@@ -110,6 +110,7 @@ const TYPES = stringToArray(`
     safeReference,
     union,
     optional,
+    stripDefault,
     literal,
     maybe,
     maybeNull,
@@ -164,6 +165,7 @@ test("all methods mentioned in API docs", () => {
   expect(missing).toEqual([
     "types.lazy",
     "types.resilient",
+    "types.stripDefault",
     "getUnionSubtypes",
     "types",
     "setDevMode",

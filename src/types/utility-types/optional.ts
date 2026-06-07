@@ -253,3 +253,96 @@ const undefinedAsOptionalValues: [undefined] = [undefined]
 export function isOptionalType<IT extends IAnyType>(type: IT): type is IT {
   return isType(type) && (type.flags & TypeFlags.Optional) > 0
 }
+
+/**
+ * Compare a child snapshot to a stripped-default's reference snapshot. Mirrors
+ * the legacy hand-rolled comparison: identity for primitives, structural for
+ * objects/arrays.
+ */
+function defaultSnapshotEquals(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true
+  }
+  if (
+    typeof a === "object" &&
+    a !== null &&
+    typeof b === "object" &&
+    b !== null
+  ) {
+    return JSON.stringify(a) === JSON.stringify(b)
+  }
+  return false
+}
+
+/**
+ * An optional type that additionally omits its key from a parent model's
+ * snapshot when the value equals the (snapshotted) default. The comparison is
+ * against the default *snapshot* — i.e. the subtype is instantiated with the
+ * default once and its post-processed snapshot is cached — so a default whose
+ * normalized form gains fields (e.g. a fileLocation gaining `locationType`)
+ * still strips correctly.
+ *
+ * @hidden
+ * @internal
+ */
+export class StripDefaultValue<
+  IT extends IAnyType,
+  OptionalVals extends ValidOptionalValues
+> extends OptionalValue<IT, OptionalVals> {
+  private _defaultSnapshot?: { value: IT["SnapshotType"] }
+
+  shouldStripFromSnapshot(snapshot: IT["SnapshotType"]): boolean {
+    if (!this._defaultSnapshot) {
+      // instantiate the subtype detached with the default and read the node's
+      // snapshot, which normalizes (fills model defaults, applies the subtype's
+      // own postProcess). Cached on the (singleton) type after first use.
+      const node = this.getSubTypes().instantiate(
+        null,
+        "",
+        undefined,
+        this.getDefaultInstanceOrSnapshot()
+      )
+      this._defaultSnapshot = { value: node.snapshot }
+    }
+    return defaultSnapshotEquals(snapshot, this._defaultSnapshot.value)
+  }
+}
+
+/**
+ * Whether `type` is a strip-default optional whose current child `snapshot`
+ * equals its default and should therefore be omitted from the parent model's
+ * snapshot. Used by `ModelType.getSnapshot`.
+ *
+ * @hidden
+ * @internal
+ */
+export function shouldStripChildFromSnapshot(
+  type: IAnyType,
+  snapshot: unknown
+): boolean {
+  return (
+    type instanceof StripDefaultValue && type.shouldStripFromSnapshot(snapshot)
+  )
+}
+
+/**
+ * `types.stripDefault` - Like `types.optional`, but the property is omitted from
+ * a parent model's snapshot entirely when its value equals the default (instead
+ * of being serialized with the default value). Lets a model produce minimal
+ * snapshots without a bespoke `postProcessSnapshot`.
+ *
+ * @param type
+ * @param defaultValueOrFunction
+ * @returns
+ */
+export function stripDefault<IT extends IAnyType>(
+  type: IT,
+  defaultValueOrFunction: OptionalDefaultValueOrFunction<IT>
+): IOptionalIType<IT, [undefined]> {
+  checkOptionalPreconditions(type, defaultValueOrFunction)
+  return new StripDefaultValue(
+    type,
+    defaultValueOrFunction,
+    undefinedAsOptionalValues
+  )
+}
