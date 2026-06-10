@@ -28,12 +28,12 @@ crashing the entire state tree.
 const PluginWidget = types.resilient(
   KnownWidget,
   UnknownWidget,
-  (error, originalSnapshot) => ({ kind: "unknown", raw: originalSnapshot }),
+  (error, originalSnapshot) => ({ kind: "unknown", raw: originalSnapshot })
 )
 
 // Arrays of plugins stay alive even if one entry is unrecognized
 const Store = types.model({
-  widgets: types.array(PluginWidget),
+  widgets: types.array(PluginWidget)
 })
 ```
 
@@ -66,11 +66,11 @@ creating a model:
 
 ```ts
 const Settings = types.model({
-  theme: types.optional(types.string, "light"),
+  theme: types.optional(types.string, "light")
 })
 
-const s = Settings.create()   // theme is "light"
-getSnapshot(s)                // { theme: "light" }
+const s = Settings.create() // theme is "light"
+getSnapshot(s) // { theme: "light" }
 ```
 
 Even though `"light"` is just the default, it always appears in the snapshot. If you store
@@ -84,17 +84,17 @@ equals the default:
 
 ```ts
 const Settings = types.model({
-  theme: types.stripDefault(types.string, "light"),
+  theme: types.stripDefault(types.string, "light")
 })
 
 const s = Settings.create()
-getSnapshot(s)                // {}  ← key omitted because value equals default
+getSnapshot(s) // {}  ← key omitted because value equals default
 
 s.theme = "dark"
-getSnapshot(s)                // { theme: "dark" }
+getSnapshot(s) // { theme: "dark" }
 
 s.theme = "light"
-getSnapshot(s)                // {}  ← omitted again
+getSnapshot(s) // {}  ← omitted again
 ```
 
 #### Why this matters
@@ -132,7 +132,7 @@ ignored (all children share one element type).
 const Box = types.model({ x: types.number, y: types.number })
 const box = Box.create({ x: 1, y: 2 })
 
-getChildType(box, "x").name  // "number"
+getChildType(box, "x").name // "number"
 ```
 
 **`getUnionSubtypes(type)`** — given a `types.union` type, returns the array of its member
@@ -141,7 +141,7 @@ types. Useful when you need to enumerate what a union can hold.
 ```ts
 const Shape = types.union(Circle, Square, Triangle)
 
-getUnionSubtypes(Shape)  // [Circle, Square, Triangle]
+getUnionSubtypes(Shape) // [Circle, Square, Triangle]
 ```
 
 **`getDefaultInstanceOrSnapshot(optionalType)`** — returns the default value (or snapshot)
@@ -151,5 +151,5 @@ default without having to create a model instance.
 ```ts
 const t = types.optional(types.string, "hello")
 
-t.getDefaultInstanceOrSnapshot()  // "hello"
+t.getDefaultInstanceOrSnapshot() // "hello"
 ```
