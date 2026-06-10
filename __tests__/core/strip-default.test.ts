@@ -72,6 +72,24 @@ test("reloads a stripped snapshot back to the default", () => {
   expect(inst.color).toBe("black")
 })
 
+test("array/object size short-circuit: differently-sized values are kept", () => {
+  // a non-empty value vs an empty default differs in size, so it is kept
+  // without a full structural compare of the (potentially large) snapshot
+  const M = types.model({
+    arr: types.stripDefault(types.array(types.number), []),
+    mp: types.stripDefault(types.map(types.number), {})
+  })
+  expect(getSnapshot(M.create())).toEqual({})
+  expect(getSnapshot(M.create({ arr: [1, 2, 3] }))).toEqual({ arr: [1, 2, 3] })
+  expect(getSnapshot(M.create({ mp: { a: 1 } }))).toEqual({ mp: { a: 1 } })
+  // same-size, same-content still strips (falls through to the equality check)
+  const N = types.model({
+    arr: types.stripDefault(types.array(types.number), [7])
+  })
+  expect(getSnapshot(N.create({ arr: [7] }))).toEqual({})
+  expect(getSnapshot(N.create({ arr: [8] }))).toEqual({ arr: [8] })
+})
+
 test("strips defaults for array/map element models (lazy snapshot path)", () => {
   // array/map children are serialized via processInitialSnapshot before they
   // become observable instances, a different path from ModelType.getSnapshot;

@@ -269,6 +269,18 @@ function defaultSnapshotEquals(a: unknown, b: unknown): boolean {
     typeof b === "object" &&
     b !== null
   ) {
+    // Cheap structural short-circuit before the full stringify compare: a
+    // value of a different size can't equal the default, so the common strip
+    // case (non-empty value vs an empty `[]`/`{}` default) avoids stringifying
+    // a potentially large snapshot on every getSnapshot.
+    if (Array.isArray(a) !== Array.isArray(b)) {
+      return false
+    }
+    const aSize = Array.isArray(a) ? a.length : Object.keys(a).length
+    const bSize = Array.isArray(b) ? b.length : Object.keys(b).length
+    if (aSize !== bSize) {
+      return false
+    }
     return JSON.stringify(a) === JSON.stringify(b)
   }
   return false
