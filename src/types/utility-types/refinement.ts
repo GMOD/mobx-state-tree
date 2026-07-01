@@ -53,7 +53,7 @@ class Refinement<IT extends IAnyType> extends BaseType<
     ) as any
   }
 
-  isAssignableFrom(type: IAnyType) {
+  override isAssignableFrom(type: IAnyType) {
     return this._subtype.isAssignableFrom(type)
   }
 

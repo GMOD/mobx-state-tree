@@ -137,7 +137,7 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
     return typeCheckSuccess()
   }
 
-  reconcile(
+  override reconcile(
     current: this["N"],
     value: T,
     parent: AnyObjectNode,

@@ -111,7 +111,7 @@ class Late<IT extends IAnyType> extends BaseType<
     return t.validate(value, context)
   }
 
-  isAssignableFrom(type: IAnyType) {
+  override isAssignableFrom(type: IAnyType) {
     const t = this.getSubType(false)
     return t ? t.isAssignableFrom(type) : false
   }

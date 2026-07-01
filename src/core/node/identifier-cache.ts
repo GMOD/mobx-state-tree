@@ -92,7 +92,7 @@ export class IdentifierCache {
     entries(this.cache).forEach(([id, nodes]) => {
       let modified = false
       for (let i = nodes.length - 1; i >= 0; i--) {
-        const node = nodes[i]
+        const node = nodes[i]!
         if (node === splitNode || node.path.startsWith(basePath)) {
           newCache.addNodeToCache(node, false) // no need to update lastUpdated since it is a whole new cache
           nodes.splice(i, 1)
@@ -137,7 +137,7 @@ export class IdentifierCache {
       case 0:
         return null
       case 1:
-        return matches[0]
+        return matches[0]!
       default:
         throw fail(
           `Cannot resolve a reference to type '${

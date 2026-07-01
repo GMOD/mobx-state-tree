@@ -2,9 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "../",
-    "module": "commonjs",
-    "lib": ["es2017", "dom"],
-    "target": "es6",
+    "types": ["node"],
+    "verbatimModuleSyntax": false,
+    "noUncheckedIndexedAccess": false,
     "sourceMap": false,
     "inlineSources": false,
     "noEmit": true

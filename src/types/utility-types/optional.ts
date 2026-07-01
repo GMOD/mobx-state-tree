@@ -118,7 +118,7 @@ export class OptionalValue<
     return this._subtype.validate(value, context)
   }
 
-  isAssignableFrom(type: IAnyType) {
+  override isAssignableFrom(type: IAnyType) {
     return this._subtype.isAssignableFrom(type)
   }
 

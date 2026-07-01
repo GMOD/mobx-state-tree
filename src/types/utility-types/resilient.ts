@@ -153,7 +153,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     return typeCheckSuccess()
   }
 
-  is(thing: any): thing is any {
+  override is(thing: any): thing is any {
     if (isType(thing)) {
       return (
         this._subtype.isAssignableFrom(thing) ||
@@ -174,7 +174,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     }
   }
 
-  isAssignableFrom(type: IAnyType) {
+  override isAssignableFrom(type: IAnyType) {
     return (
       this._subtype.isAssignableFrom(type) ||
       this._fallbackType.isAssignableFrom(type)
@@ -185,7 +185,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     return [this._subtype, this._fallbackType]
   }
 
-  getSnapshot(node: this["N"]): this["S"] {
+  override getSnapshot(node: this["N"]): this["S"] {
     return node.snapshot
   }
 }

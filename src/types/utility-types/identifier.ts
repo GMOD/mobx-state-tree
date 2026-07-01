@@ -40,7 +40,7 @@ abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
     return createScalarNode(this, parent, subpath, environment, initialValue)
   }
 
-  reconcile(
+  override reconcile(
     current: this["N"],
     newValue: this["C"],
     parent: AnyObjectNode,
@@ -76,7 +76,7 @@ abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
  * @hidden
  */
 export class IdentifierType extends BaseIdentifierType<string> {
-  readonly flags = TypeFlags.Identifier
+  override readonly flags = TypeFlags.Identifier
 
   constructor() {
     super(`identifier`, "string")
@@ -96,7 +96,7 @@ export class IdentifierNumberType extends BaseIdentifierType<number> {
     super("identifierNumber", "number")
   }
 
-  getSnapshot(node: ScalarNode<number, number, number>): number {
+  override getSnapshot(node: ScalarNode<number, number, number>): number {
     return node.storedValue
   }
 

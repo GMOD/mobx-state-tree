@@ -472,7 +472,7 @@ export class ModelType<
         )
       }
 
-      let action2 = actions[name]
+      let action2 = actions[name]!
 
       // apply hook composition
       const baseAction = (self as any)[name]
@@ -731,7 +731,7 @@ export class ModelType<
     return childNode
   }
 
-  getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
+  override getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const res = {} as any
     this.forAllProps((name, type) => {
       try {
@@ -756,11 +756,11 @@ export class ModelType<
   processInitialSnapshot(childNodes: IChildNodesMap): this["S"] {
     const processed = {} as any
     Object.keys(childNodes).forEach(key => {
-      const snapshot = childNodes[key].getSnapshot()
+      const snapshot = childNodes[key]!.getSnapshot()
       // strip-default optionals omit their key when equal to the default; this
       // mirrors getSnapshot for nodes serialized before they become observable
       // instances (e.g. array/map children that were never accessed)
-      if (!shouldStripChildFromSnapshot(this.properties[key], snapshot)) {
+      if (!shouldStripChildFromSnapshot(this.properties[key]!, snapshot)) {
         processed[key] = snapshot
       }
     })
@@ -798,7 +798,7 @@ export class ModelType<
   getChildType(propertyName: string): IAnyType {
     assertIsString(propertyName, 1)
 
-    return this.properties[propertyName]
+    return this.properties[propertyName]!
   }
 
   isValidSnapshot(
@@ -824,13 +824,13 @@ export class ModelType<
   }
 
   private forAllProps(fn: (name: string, type: IAnyType) => void) {
-    this.propertyNames.forEach(key => fn(key, this.properties[key]))
+    this.propertyNames.forEach(key => fn(key, this.properties[key]!))
   }
 
   describe() {
     // optimization: cache
     return `{ ${this.propertyNames
-      .map(key => `${key}: ${this.properties[key].describe()}`)
+      .map(key => `${key}: ${this.properties[key]!.describe()}`)
       .join("; ")} }`
   }
 

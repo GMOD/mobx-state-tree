@@ -159,20 +159,20 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
     super(initialData, (observable.ref as any).enhancer, name)
   }
 
-  get(key: string): IT["Type"] | undefined {
+  override get(key: string): IT["Type"] | undefined {
     // maybe this is over-enthousiastic? normalize numeric keys to strings
     return super.get(`${key}`)
   }
 
-  has(key: string) {
+  override has(key: string) {
     return super.has(`${key}`)
   }
 
-  delete(key: string) {
+  override delete(key: string) {
     return super.delete(`${key}`)
   }
 
-  set(key: string, value: ExtractCSTWithSTN<IT>): this {
+  override set(key: string, value: ExtractCSTWithSTN<IT>): this {
     return super.set(`${key}`, value)
   }
 
@@ -417,7 +417,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
     }
   }
 
-  getSnapshot(node: this["N"]): this["S"] {
+  override getSnapshot(node: this["N"]): this["S"] {
     const res: any = {}
     node.getChildren().forEach(childNode => {
       res[childNode.subpath] = childNode.snapshot
@@ -428,7 +428,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   processInitialSnapshot(childNodes: IChildNodesMap): this["S"] {
     const processed: any = {}
     Object.keys(childNodes).forEach(key => {
-      processed[key] = childNodes[key].getSnapshot()
+      processed[key] = childNodes[key]!.getSnapshot()
     })
     return processed
   }

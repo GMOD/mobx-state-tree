@@ -163,7 +163,7 @@ export abstract class BaseReferenceType<
     return this.name
   }
 
-  isAssignableFrom(type: IAnyType): boolean {
+  override isAssignableFrom(type: IAnyType): boolean {
     return this.targetType.isAssignableFrom(type)
   }
 
@@ -360,7 +360,7 @@ export class IdentifierReferenceType<
     super(targetType, onInvalidated)
   }
 
-  getValue(storedRefNode: this["N"]) {
+  override getValue(storedRefNode: this["N"]) {
     if (!storedRefNode.isAlive) {
       return undefined
     }
@@ -368,7 +368,7 @@ export class IdentifierReferenceType<
     return storedRef.resolvedValue as any
   }
 
-  getSnapshot(storedRefNode: this["N"]) {
+  override getSnapshot(storedRefNode: this["N"]) {
     const ref: StoredReference<IT> = storedRefNode.storedValue
     return ref.identifier
   }
@@ -399,7 +399,7 @@ export class IdentifierReferenceType<
     return storedRefNode
   }
 
-  reconcile(
+  override reconcile(
     current: this["N"],
     newValue: this["C"] | this["T"],
     parent: AnyObjectNode,
@@ -437,7 +437,7 @@ export class CustomReferenceType<
     super(targetType, onInvalidated)
   }
 
-  getValue(storedRefNode: this["N"]) {
+  override getValue(storedRefNode: this["N"]) {
     if (!storedRefNode.isAlive) {
       return undefined as any
     }
@@ -448,7 +448,7 @@ export class CustomReferenceType<
     return referencedNode
   }
 
-  getSnapshot(storedRefNode: this["N"]) {
+  override getSnapshot(storedRefNode: this["N"]) {
     return storedRefNode.storedValue
   }
 
@@ -476,7 +476,7 @@ export class CustomReferenceType<
     return storedRefNode
   }
 
-  reconcile(
+  override reconcile(
     current: this["N"],
     newValue: this["C"] | this["T"],
     parent: AnyObjectNode,

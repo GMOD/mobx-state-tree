@@ -405,7 +405,7 @@ export const deprecated: DeprecatedFunction = function (
     return
   }
   // warn if hasn't been warned before
-  if (deprecated.ids && !deprecated.ids.hasOwnProperty(id)) {
+  if (deprecated.ids && !Object.hasOwn(deprecated.ids, id)) {
     warnError(`Deprecation warning: ${message}`)
   }
   // mark as warned to avoid duplicate warn message

@@ -467,7 +467,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       return this._observableInstanceState ===
         ObservableInstanceLifecycle.CREATED
         ? this.type.getChildNode(this, subpath)
-        : this._childNodes![subpath]
+        : this._childNodes![subpath]!
     } finally {
       this._autoUnbox = true
     }
@@ -519,7 +519,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     return this._autoUnbox ? childNode.value : childNode
   }
 
-  toString(): string {
+  override toString(): string {
     const path = (this.isAlive ? this.path : this.pathUponDeath) || "<root>"
     const identifier = this.identifier ? `(id: ${this.identifier})` : ""
     return `${this.type.name}@${path}${identifier}${this.isAlive ? "" : " [dead]"}`
@@ -560,7 +560,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
             self,
             parts.slice(0, -1)
           ) as AnyObjectNode
-          node.applyPatchLocally(parts[parts.length - 1], patch)
+          node.applyPatchLocally(parts[parts.length - 1]!, patch)
         })
       }
     )
@@ -644,7 +644,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     if (this._internalEventsHasSubscribers(InternalEvents.Patch)) {
       const localizedPatch: IReversibleJsonPatch = {
         ...basePatch,
-        path: `${source.path.substr(this.path.length)}/${basePatch.path}` // calculate the relative path of the patch
+        path: `${source.path.slice(this.path.length)}/${basePatch.path}` // calculate the relative path of the patch
       }
       const [patch, reversePatch] = splitPatch(localizedPatch)
       this._internalEventsEmit(InternalEvents.Patch, patch, reversePatch)
