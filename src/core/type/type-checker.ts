@@ -35,25 +35,49 @@ export interface IValidationError {
 export type IValidationResult = IValidationError[]
 
 const MAX_STRINGIFY_DEPTH = 3
+const MAX_STRINGIFY_ARRAY_ITEMS = 10
+const MAX_STRINGIFY_OBJECT_KEYS = 20
+const MAX_STRINGIFY_STRING_LENGTH = 100
+
+// Recursively cap depth, array length, object key count, and string length so a
+// huge offending snapshot degrades into readable, bounded context instead of a
+// wall of text that then gets sliced mid-structure. The depth cap also bounds
+// recursion on circular structures.
+function truncateForStringify(value: any, depth: number): any {
+  if (typeof value === "string") {
+    return value.length > MAX_STRINGIFY_STRING_LENGTH
+      ? `${value.substring(0, MAX_STRINGIFY_STRING_LENGTH)}… (${value.length - MAX_STRINGIFY_STRING_LENGTH} more characters)`
+      : value
+  }
+  if (value === null || typeof value !== "object") {
+    return value
+  }
+  if (depth >= MAX_STRINGIFY_DEPTH) {
+    return Array.isArray(value) ? "[…]" : "{…}"
+  }
+  if (Array.isArray(value)) {
+    const items = value
+      .slice(0, MAX_STRINGIFY_ARRAY_ITEMS)
+      .map(item => truncateForStringify(item, depth + 1))
+    if (value.length > MAX_STRINGIFY_ARRAY_ITEMS) {
+      items.push(`… ${value.length - MAX_STRINGIFY_ARRAY_ITEMS} more items`)
+    }
+    return items
+  }
+  const keys = Object.keys(value)
+  const result: Record<string, any> = {}
+  for (const key of keys.slice(0, MAX_STRINGIFY_OBJECT_KEYS)) {
+    result[key] = truncateForStringify(value[key], depth + 1)
+  }
+  if (keys.length > MAX_STRINGIFY_OBJECT_KEYS) {
+    result["…"] = `${keys.length - MAX_STRINGIFY_OBJECT_KEYS} more keys`
+  }
+  return result
+}
 
 function safeStringify(value: any) {
   try {
-    const ancestors: any[] = []
-    return JSON.stringify(value, function (_key, val) {
-      if (val !== null && typeof val === "object") {
-        while (
-          ancestors.length > 0 &&
-          ancestors[ancestors.length - 1] !== this
-        ) {
-          ancestors.pop()
-        }
-        if (ancestors.length >= MAX_STRINGIFY_DEPTH) {
-          return Array.isArray(val) ? "[…]" : "{…}"
-        }
-        ancestors.push(val)
-      }
-      return val
-    })
+    return JSON.stringify(truncateForStringify(value, 0))
   } catch (e) {
     // istanbul ignore next
     return `<Unserializable: ${e}>`

@@ -1204,3 +1204,22 @@ test("#2186 substitutability for model types extending a common base", () => {
   // on the snapshot type — broke the only-optional case instead.
   true || ((t: typeof BaseType) => t.create())(SubTypeRequired)
 })
+
+test("large snapshots are truncated in conversion error messages", () => {
+  if (process.env.NODE_ENV !== "production") {
+    const M = types.model({
+      n: types.number,
+      list: types.array(types.number),
+      text: types.string
+    })
+    const bigArray = Array.from({ length: 50 }, (_, i) => i)
+    const longText = "x".repeat(300)
+    const badSnapshot = { n: "not a number", list: bigArray, text: longText }
+
+    // small/short values stay intact, large ones get capped with markers
+    expect(() => M.create(badSnapshot as any)).toThrowError(/… 40 more items/)
+    expect(() => M.create(badSnapshot as any)).toThrowError(
+      /… \(200 more characters\)/
+    )
+  }
+})
