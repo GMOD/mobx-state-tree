@@ -135,7 +135,6 @@ export {
   onAction,
   onPatch,
   onSnapshot,
-  process,
   protect,
   recordActions,
   recordPatches,

@@ -104,7 +104,7 @@ function shortenPrintValue(valueInString: string) {
 
 function toErrorString(error: IValidationError): string {
   const { value } = error
-  const type = error.context[error.context.length - 1].type!
+  const type = error.context[error.context.length - 1]!.type!
   const fullPath = error.context
     .map(({ path }) => path)
     .filter(path => path.length > 0)

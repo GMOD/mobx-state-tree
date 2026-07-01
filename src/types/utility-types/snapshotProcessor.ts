@@ -143,7 +143,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return node
   }
 
-  getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
+  override getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const sn = this._subtype.getSnapshot(node)
     return applyPostProcess ? this.postProcessSnapshot(sn, node) : sn
   }
@@ -163,7 +163,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return this._subtype
   }
 
-  is(thing: any): thing is any {
+  override is(thing: any): thing is any {
     const value = isType(thing)
       ? this._subtype
       : isStateTreeNode(thing)
@@ -178,7 +178,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     )
   }
 
-  isAssignableFrom(type: IAnyType): boolean {
+  override isAssignableFrom(type: IAnyType): boolean {
     return this._subtype.isAssignableFrom(type)
   }
 

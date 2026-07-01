@@ -111,7 +111,7 @@ export class CustomType<S, T> extends SimpleType<S | T, S, T> {
     return typeCheckSuccess()
   }
 
-  getSnapshot(node: this["N"]): S {
+  override getSnapshot(node: this["N"]): S {
     return this.options.toSnapshot(node.storedValue)
   }
 
@@ -127,7 +127,7 @@ export class CustomType<S, T> extends SimpleType<S | T, S, T> {
     return createScalarNode(this, parent, subpath, environment, valueToStore)
   }
 
-  reconcile(
+  override reconcile(
     current: this["N"],
     value: S | T,
     parent: AnyObjectNode,

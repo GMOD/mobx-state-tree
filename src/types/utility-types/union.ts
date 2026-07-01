@@ -95,7 +95,7 @@ export class Union extends BaseType<any, any, any> {
     }
   }
 
-  isAssignableFrom(type: IAnyType) {
+  override isAssignableFrom(type: IAnyType) {
     return this._types.some(subType => subType.isAssignableFrom(type))
   }
 

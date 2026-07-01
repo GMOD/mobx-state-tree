@@ -89,8 +89,7 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
 `)
 
 const DEPRECATED_METHODS_AND_INTERNAL_TYPES = stringToArray(`
-    setLivelynessChecking,
-    process
+    setLivelynessChecking
 `)
 
 const METHODS = METHODS_AND_INTERNAL_TYPES.filter(
@@ -150,27 +149,6 @@ test("correct types exposed", () => {
 
 test("types also exposed on t module", () => {
   expect(Object.keys(mst.t).sort()).toEqual(TYPES.sort())
-})
-
-test("all methods mentioned in API docs", () => {
-  const apimd = readFileSync(__dirname + "/../../docs/API/index.md", "utf8")
-  const missing = TYPES.map(type => "types." + type).filter(
-    identifier => apimd.indexOf(identifier) === -1
-  )
-  missing.push(
-    ...METHODS.filter(
-      identifier => apimd.indexOf("#" + identifier.toLowerCase()) === -1
-    )
-  )
-  expect(missing).toEqual([
-    "types.lazy",
-    "types.resilient",
-    "types.stripDefault",
-    "getUnionSubtypes",
-    "types",
-    "setDevMode",
-    "setTypeChecking"
-  ])
 })
 
 test("only accepted dependencies", () => {

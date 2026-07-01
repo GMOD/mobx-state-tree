@@ -470,7 +470,7 @@ export abstract class ComplexType<C, S, T> extends BaseType<
     super(name)
   }
 
-  create(snapshot: C = this.getDefaultSnapshot(), environment?: any) {
+  override create(snapshot: C = this.getDefaultSnapshot(), environment?: any) {
     return super.create(snapshot, environment)
   }
 
@@ -573,7 +573,7 @@ export abstract class SimpleType<C, S, T> extends BaseType<
   T,
   ScalarNode<C, S, T>
 > {
-  abstract instantiate(
+  abstract override instantiate(
     parent: AnyObjectNode | null,
     subpath: string,
     environment: any,
@@ -593,7 +593,7 @@ export abstract class SimpleType<C, S, T> extends BaseType<
     return node.storedValue
   }
 
-  getSnapshot(node: this["N"]): S {
+  override getSnapshot(node: this["N"]): S {
     return node.storedValue
   }
 

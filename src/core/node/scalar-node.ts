@@ -91,7 +91,7 @@ export class ScalarNode<C, S, T> extends BaseNode<C, S, T> {
     return this.type.getSnapshot(this)
   }
 
-  toString(): string {
+  override toString(): string {
     const path = (this.isAlive ? this.path : this.pathUponDeath) || "<root>"
     return `${this.type.name}@${path}${this.isAlive ? "" : " [dead]"}`
   }

@@ -50,7 +50,7 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
     return createScalarNode(this, parent, subpath, environment, initialValue)
   }
 
-  createNewInstance(snapshot: C) {
+  override createNewInstance(snapshot: C) {
     return this.initializer(snapshot)
   }
 

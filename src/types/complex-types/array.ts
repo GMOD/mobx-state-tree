@@ -186,9 +186,9 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   }
 
   getChildNode(node: this["N"], key: string): AnyNode {
-    const index = Number(key)
-    if (index < node.storedValue.length) {
-      return node.storedValue[index]
+    const child = node.storedValue[Number(key)]
+    if (child) {
+      return child
     }
     throw fail(`Not a child: ${key}`)
   }
@@ -211,14 +211,14 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
           const updatedNodes = reconcileArrayChildren(
             node,
             subType,
-            [childNodes[change.index]],
+            [childNodes[change.index]!],
             [change.newValue],
             [change.index]
           )
           if (!updatedNodes) {
             return null
           }
-          change.newValue = updatedNodes[0]
+          change.newValue = updatedNodes[0]!
         }
         break
       case "splice":
@@ -239,7 +239,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
 
           // update paths of remaining items
           for (let i = index + removedCount; i < childNodes.length; i++) {
-            childNodes[i].setParent(node, `${i + added.length - removedCount}`)
+            childNodes[i]!.setParent(node, `${i + added.length - removedCount}`)
           }
         }
         break
@@ -247,14 +247,14 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     return change
   }
 
-  getSnapshot(node: this["N"]): this["S"] {
+  override getSnapshot(node: this["N"]): this["S"] {
     return node.getChildren().map(childNode => childNode.snapshot)
   }
 
   processInitialSnapshot(childNodes: IChildNodesMap): this["S"] {
     const processed: this["S"] = []
     Object.keys(childNodes).forEach(key => {
-      processed.push(childNodes[key].getSnapshot())
+      processed.push(childNodes[key]!.getSnapshot())
     })
     return processed
   }
@@ -278,7 +278,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
             {
               op: "remove",
               path: `${change.index + i}`,
-              oldValue: change.removed[i].snapshot
+              oldValue: change.removed[i]!.snapshot
             },
             node
           )
@@ -406,7 +406,7 @@ function reconcileArrayChildren<TT>(
     if (!oldNode && !hasNewNode) {
       // both are empty, end
       break
-    } else if (!hasNewNode) {
+    } else if (oldNode && !hasNewNode) {
       // new one does not exists
       nothingChanged = false
       oldNodes.splice(i, 1)
@@ -443,7 +443,7 @@ function reconcileArrayChildren<TT>(
 
       // find a possible candidate to reuse
       for (let j = i; j < oldNodes.length; j++) {
-        if (areSame(oldNodes[j], newValue)) {
+        if (areSame(oldNodes[j]!, newValue)) {
           oldMatch = oldNodes.splice(j, 1)[0]
           break
         }

@@ -36,11 +36,16 @@
   },
   "author": "Michel Weststrate",
   "license": "MIT",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
   "files": [
     "dist/"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^26.0.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.4.0",
     "eslint-plugin-import": "^2.32.0",

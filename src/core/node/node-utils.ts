@@ -169,7 +169,7 @@ export function resolveNodeByPathParts(
   let current: AnyNode | null = base
   try {
     for (let i = 0; i < pathParts.length; i++) {
-      const part = pathParts[i]
+      const part = pathParts[i]!
       if (part === "..") {
         current = current!.parent
         if (current) {
@@ -230,7 +230,7 @@ export function convertChildNodesToArray(
 
   const result = new Array(keys.length) as AnyNode[]
   keys.forEach((key, index) => {
-    result[index] = childNodes![key]
+    result[index] = childNodes![key]!
   })
   return result
 }
