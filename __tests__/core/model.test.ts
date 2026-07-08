@@ -228,6 +228,31 @@ describe("Model instantiation", () => {
         })
       ).toThrow("[mobx-state-tree] name property is declared twice")
     })
+
+    test("an action reusing a property name is rejected", () => {
+      const M = types
+        .model("M", { name: types.string })
+        .actions(() => ({
+          name() {}
+        }))
+
+      expect(() => M.create({ name: "a" })).toThrow(
+        "[mobx-state-tree] name property is declared twice"
+      )
+    })
+
+    test("a composed view shadowing a base property is rejected", () => {
+      const Base = types.model("Base", { name: types.string })
+      const WithView = types.model("WithView", {}).views(() => ({
+        get name() {
+          return "x"
+        }
+      }))
+
+      expect(() => types.compose(Base, WithView).create({ name: "a" })).toThrow(
+        "[mobx-state-tree] name property is declared twice"
+      )
+    })
   })
 })
 describe("Model properties objects", () => {

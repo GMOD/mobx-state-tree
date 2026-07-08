@@ -323,7 +323,7 @@ class EventHandler<F extends (...args: any[]) => any> {
  */
 export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   private eventHandlers?: {
-    [k in keyof E]?: EventHandler<(...args: any[]) => any>
+    [k in keyof E]?: EventHandler<E[k]>
   }
 
   hasSubscribers(event: keyof E): boolean {
@@ -369,7 +369,7 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
   emit<N extends keyof E>(event: N, ...args: ArgumentTypes<E[N]>) {
     const handler = this.eventHandlers?.[event]
     if (handler) {
-      ;(handler.emit as any)(...args)
+      handler.emit(...args)
     }
   }
 }

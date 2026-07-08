@@ -7,7 +7,10 @@ import {
   computed,
   defineProperty,
   getAtom,
+  type IAtom,
   intercept,
+  isComputedProp,
+  isObservableProp,
   makeObservable,
   observable,
   observe,
@@ -405,6 +408,9 @@ export class ModelType<
   private preProcessor!: (snapshot: any) => any | undefined
   private postProcessor!: (snapshot: any) => any | undefined
   readonly propertyNames: string[]
+  // member/property name collisions are a property of the type, so we only need
+  // to check the first instance we finalize (see finalizeNewInstance)
+  private duplicateKeysChecked = false
 
   constructor(opts: ModelTypeConfig) {
     super(opts.name || defaultObjectOptions.name)
@@ -666,6 +672,23 @@ export class ModelType<
     })
 
     this.initializers.reduce((self, fn) => fn(self), instance)
+
+    // views, actions and volatile share the instance namespace with properties,
+    // so a view/action reusing a property name silently clobbers that property's
+    // observable value. It's a type-level mistake (identical for every instance),
+    // so we check just the first one we finalize: a healthy property stays a
+    // plain observable, a shadowing getter becomes a computed, and a shadowing
+    // function/value stops being observable at all. The flag is only set on
+    // success so a broken type keeps throwing on every create.
+    if (!this.duplicateKeysChecked) {
+      this.forAllProps(name => {
+        if (isComputedProp(instance, name) || !isObservableProp(instance, name)) {
+          throw fail(`${name} property is declared twice`)
+        }
+      })
+      this.duplicateKeysChecked = true
+    }
+
     intercept(instance, this.willChange)
     observe(instance, this.didChange)
   }
@@ -734,13 +757,11 @@ export class ModelType<
   override getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const res = {} as any
     this.forAllProps((name, type) => {
-      try {
-        // TODO: FIXME, make sure the observable ref is used!
-        const atom = getAtom(node.storedValue, name)
-        ;(atom as any).reportObserved()
-      } catch (_e) {
-        throw fail(`${name} property is declared twice`)
-      }
+      // observe the property's atom so the snapshot computed recomputes when a
+      // child is reassigned (getChildNode below reads via raw() and won't
+      // track). mobx types getAtom's return as the bare IDepTreeNode, so we
+      // narrow to IAtom to reach reportObserved.
+      ;(getAtom(node.storedValue, name) as IAtom).reportObserved()
       const snapshot = this.getChildNode(node, name).snapshot
       // strip-default optionals omit their key when equal to the default
       if (!shouldStripChildFromSnapshot(type, snapshot)) {

@@ -714,7 +714,7 @@ export function getRelativePath(
  */
 export function clone<T extends IAnyStateTreeNode>(
   source: T,
-  keepEnvironment: boolean | any = true
+  keepEnvironment: boolean | object = true
 ): T {
   // check all arguments
   assertIsStateTreeNode(source, 1)
@@ -932,10 +932,11 @@ export function getMembers(target: IAnyStateTreeNode): IModelReflectionData {
       }
       return
     }
-    if (descriptor.value._isFlowAction === true) {
+    const value = descriptor.value
+    if (value?._isFlowAction === true) {
       reflected.flowActions.push(key)
     }
-    if (descriptor.value._isMSTAction === true) {
+    if (value?._isMSTAction === true) {
       reflected.actions.push(key)
     } else if (isObservableProp(target, key)) {
       reflected.volatile.push(key)
