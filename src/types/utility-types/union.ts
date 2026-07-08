@@ -219,21 +219,13 @@ export class Union extends BaseType<any, any, any> {
       return this._dispatcher(value)
     }
 
-    // fast path: when type checking is disabled, try quick structural matching first
+    // fast path: when type checking is disabled, try quick structural matching
+    // first. This skips full recursive validation of every property value, a
+    // meaningful win for wide model members (e.g. jbrowse config schemas).
     if (!isTypeCheckingEnabled()) {
       const quickMatch = this.tryQuickMatch(value, reconcileCurrentType)
       if (quickMatch) {
         return quickMatch
-      }
-      // for plain object snapshots that didn't match via quick path, try all types
-      // with quick matching before falling back to full validation
-      // (state tree nodes must go through full validation for type identity checks)
-      if (isPlainObject(value) && !isStateTreeNode(value)) {
-        for (const type of this._types) {
-          if (this.snapshotLooksLikeType(value, type)) {
-            return type
-          }
-        }
       }
     }
 
