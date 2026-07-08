@@ -3,8 +3,8 @@ import { readFileSync } from "fs"
 import { join } from "path"
 
 // Import from both built branches
-import * as mstBranch1 from "../../dist_branch1/mobx-state-tree.module.js"
-import * as mstBranch2 from "../../dist_branch2/mobx-state-tree.module.js"
+import * as mstBranch1 from "../../dist_branch1/mobx-state-tree.mjs"
+import * as mstBranch2 from "../../dist_branch2/mobx-state-tree.mjs"
 
 // Read branch names
 const branch1Name = readFileSync(
