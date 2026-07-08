@@ -44,7 +44,9 @@ import {
   isPlainObject,
   isStateTreeNode,
   isType,
+  ModelType,
   mobxShallow,
+  normalizeIdentifier,
   popContext,
   typeCheckFailure,
   typeCheckSuccess,
@@ -391,6 +393,24 @@ function reconcileArrayChildren<TT>(
 ): AnyNode[] | null {
   let nothingChanged = true
 
+  // When the element type is a plain model with an identifier, index the old
+  // nodes by id so a moved / replaced child is matched in O(1) instead of the
+  // linear scan in the reorder branch below. This turns a full array
+  // replacement (the common "load new data" case) from O(n^2) into O(n). Types
+  // whose id extraction needs type-specific preprocessing (union,
+  // snapshotProcessor, late, ...) are intentionally excluded: areSame must run
+  // `is()` before their id check, so they stay on the scan path.
+  let idIndex: { attr: string; byId: Map<string, AnyNode> } | undefined
+  if (childType instanceof ModelType && childType.identifierAttribute) {
+    const byId = new Map<string, AnyNode>()
+    for (const n of oldNodes) {
+      if (n instanceof ObjectNode && n.identifier !== null) {
+        byId.set(n.identifier, n)
+      }
+    }
+    idIndex = { attr: childType.identifierAttribute, byId }
+  }
+
   for (let i = 0; ; i++) {
     const hasNewNode = i <= newValues.length - 1
     const oldNode = oldNodes[i]
@@ -438,14 +458,28 @@ function reconcileArrayChildren<TT>(
       // both are the same, reconcile
       oldNodes[i] = valueAsNode(childType, parent, newPath, newValue, oldNode)
     } else {
-      // nothing to do, try to reorder
+      // nothing to do, try to reorder: find a candidate old node to reuse
       let oldMatch = undefined
 
-      // find a possible candidate to reuse
-      for (let j = i; j < oldNodes.length; j++) {
-        if (areSame(oldNodes[j]!, newValue)) {
+      if (idIndex && isPlainObject(newValue)) {
+        // for an identified element type a plain-object snapshot can only match
+        // by id (it is never a live node, and snapshot-reference equality still
+        // implies the same id), so a miss means "nothing to reuse" without
+        // scanning. areSame still verifies the single candidate.
+        const candidate = idIndex.byId.get(
+          normalizeIdentifier(newValue[idIndex.attr])
+        )
+        const j = candidate ? oldNodes.indexOf(candidate, i) : -1
+        if (j >= i && areSame(oldNodes[j]!, newValue)) {
           oldMatch = oldNodes.splice(j, 1)[0]
-          break
+        }
+      } else {
+        // find a possible candidate to reuse
+        for (let j = i; j < oldNodes.length; j++) {
+          if (areSame(oldNodes[j]!, newValue)) {
+            oldMatch = oldNodes.splice(j, 1)[0]
+            break
+          }
         }
       }
 

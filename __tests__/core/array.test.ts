@@ -301,6 +301,41 @@ test("it should reconciliate keyed instances correctly", () => {
   expect(store.todos[1] === coffee).toBe(true)
   expect(store.todos[2] === biscuit).toBe(false)
 })
+test("keyed reconciliation reuses moved nodes and drops replaced ones", () => {
+  const Task = types.model("Task", { id: types.identifier, task: "" })
+  const Store = types.model({ todos: types.array(Task) })
+  const store = Store.create({
+    todos: Array.from({ length: 20 }, (_, i) => ({
+      id: `${i}`,
+      task: `t${i}`
+    }))
+  })
+  const first = store.todos[0]
+  const last = store.todos[19]
+
+  // move last to front, keep first: matching ids must reuse the same instances
+  applySnapshot(store, {
+    todos: [
+      { id: "19", task: "t19" },
+      { id: "0", task: "t0" },
+      { id: "5", task: "t5" }
+    ]
+  })
+  expect(store.todos.map(t => t.id)).toEqual(["19", "0", "5"])
+  expect(store.todos[0] === last).toBe(true)
+  expect(store.todos[1] === first).toBe(true)
+
+  // full replacement with all-new ids: no reuse possible, all fresh nodes
+  const before = store.todos.slice()
+  applySnapshot(store, {
+    todos: [
+      { id: "100", task: "a" },
+      { id: "101", task: "b" }
+    ]
+  })
+  expect(store.todos.map(t => t.id)).toEqual(["100", "101"])
+  expect(before.some(t => store.todos.includes(t))).toBe(false)
+})
 test("it correctly reconciliate when swapping", () => {
   const Task = types.model("Task", {})
   const Store = types.model({
