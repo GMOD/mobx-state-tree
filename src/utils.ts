@@ -253,8 +253,6 @@ export type ArgumentTypes<F extends (...args: any[]) => any> = F extends (
  */
 class EventHandler<F extends (...args: any[]) => any> {
   private handlers: F[] = []
-  private emitting = false
-  private pendingUnregisters: F[] | null = null
 
   get hasSubscribers(): boolean {
     return this.handlers.length > 0
@@ -276,14 +274,6 @@ class EventHandler<F extends (...args: any[]) => any> {
   }
 
   unregister(fn: F) {
-    if (this.emitting) {
-      // defer unregistration until emit is done
-      if (!this.pendingUnregisters) {
-        this.pendingUnregisters = []
-      }
-      this.pendingUnregisters.push(fn)
-      return
-    }
     const index = this.handlers.indexOf(fn)
     if (index >= 0) {
       this.handlers.splice(index, 1)
@@ -295,25 +285,10 @@ class EventHandler<F extends (...args: any[]) => any> {
   }
 
   emit(...args: ArgumentTypes<F>) {
-    // use emitting flag to defer unregistrations instead of copying array
-    this.emitting = true
-    try {
-      for (const f of this.handlers) {
-        f(...args)
-      }
-    } finally {
-      this.emitting = false
-      // process any deferred unregistrations
-      if (this.pendingUnregisters) {
-        for (const fn of this.pendingUnregisters) {
-          const index = this.handlers.indexOf(fn)
-          if (index >= 0) {
-            this.handlers.splice(index, 1)
-          }
-        }
-        this.pendingUnregisters = null
-      }
-    }
+    // iterate a copy so (un)registrations during emit don't disturb this pass
+    // and reentrant emits stay correct
+    const handlers = this.handlers.slice()
+    handlers.forEach(f => f(...args))
   }
 }
 
