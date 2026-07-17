@@ -75,6 +75,11 @@ const snapshotReactionOptions = {
   }
 }
 
+// keepAlive lets the snapshot computed memoize its value even with no observer,
+// so getSnapshot() stays referentially stable without an eager snapshot
+// reaction serializing the whole tree at create time. Shared: mobx only reads it.
+const snapshotComputedOptions = { keepAlive: true }
+
 type InternalEventHandlers<S> = {
   [InternalEvents.Dispose]: IDisposer
   [InternalEvents.Patch]: (patch: IJsonPatch, reversePatch: IJsonPatch) => void
@@ -123,6 +128,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   private _cachedInitialSnapshot?: S
   private _cachedInitialSnapshotCreated = false
   private _snapshotComputed: IComputedValue<S>
+  // whether _snapshotComputed has ever run — see createObservableInstance
+  private _snapshotComputedEvaluated = false
 
   constructor(
     complexType: ComplexType<C, S, T>,
@@ -132,7 +139,14 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     initialValue: C
   ) {
     super(complexType, parent, subpath, environment)
-    this._snapshotComputed = computed<S>(() => freeze(this.getSnapshot()))
+    // keepAlive: memoize the snapshot after the first read even with no
+    // observer, so getSnapshot() is referentially stable (and reconcile-by-
+    // snapshot works) without eagerly serializing the whole tree at create
+    // time — the previous cost, driven by the eager root reaction below.
+    this._snapshotComputed = computed<S>(() => {
+      this._snapshotComputedEvaluated = true
+      return freeze(this.getSnapshot())
+    }, snapshotComputedOptions)
 
     this.unbox = this.unbox.bind(this)
 
@@ -243,13 +257,18 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
     this._observableInstanceState = ObservableInstanceLifecycle.CREATED
 
-    // NOTE: we need to touch snapshot, because non-observable
-    // "_observableInstanceState" field was touched
-    ;(this._snapshotComputed as any).trackAndCompute()
+    // The snapshot computed branches on the non-observable
+    // "_observableInstanceState" flag we just flipped, so a value already
+    // memoized from the initial snapshot is now stale (mobx can't see the
+    // change) — refresh it. When it was never read there is nothing to refresh,
+    // and forcing it here would serialize the whole subtree (the dominant cost
+    // of creating a root) for a value nobody has asked for yet, so we skip it.
+    this.refreshMemoizedSnapshot()
 
-    if (this.isRoot) {
-      this._addSnapshotReaction()
-    }
+    // The root's snapshot reaction only drives onSnapshot; set it up lazily
+    // (onSnapshot already does) rather than eagerly here, so a root nobody
+    // subscribes to never pays for a full-tree snapshot at creation. keepAlive
+    // on _snapshotComputed preserves snapshot referential stability without it.
 
     this._childNodes = EMPTY_OBJECT
 
@@ -377,6 +396,22 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.createObservableInstanceIfNeeded()
     }
     return this._snapshotComputed.get()
+  }
+
+  /**
+   * @internal
+   * @hidden
+   * Recompute+retrack the keepAlive snapshot computed if it has already run.
+   * Needed whenever something changes what the snapshot would produce without
+   * an observable mobx would track: flipping the (non-observable) observable-
+   * instance state, or SnapshotProcessor rewriting getSnapshot after
+   * construction (see snapshotProcessor._fixNode). If it never ran, there is
+   * nothing cached to go stale, so this is a no-op.
+   */
+  refreshMemoizedSnapshot(): void {
+    if (this._snapshotComputedEvaluated) {
+      ;(this._snapshotComputed as any).trackAndCompute()
+    }
   }
 
   // NOTE: we use this method to get snapshot without creating @computed overhead

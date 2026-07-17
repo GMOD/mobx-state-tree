@@ -99,6 +99,11 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     const oldGetSnapshot = node.getSnapshot
     node.getSnapshot = () =>
       this.postProcessSnapshot(oldGetSnapshot.call(node), node) as any
+    // getSnapshot was just rewritten; refresh any snapshot already memoized for
+    // this node (e.g. it was serialized before being moved under this processor)
+    if (node instanceof ObjectNode) {
+      node.refreshMemoizedSnapshot()
+    }
     if (!isUnionType(this._subtype)) {
       node.getReconciliationType = () => {
         return this
