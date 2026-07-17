@@ -15,6 +15,7 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     decorate,
     addMiddleware,
     isStateTreeNode,
+    extendInstance,
     flow,
     castFlowReturn,
     applyAction,

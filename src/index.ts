@@ -91,6 +91,7 @@ export {
   destroy,
   detach,
   escapeJsonPath,
+  extendInstance,
   flow,
   getChildType,
   getEnv,
