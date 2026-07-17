@@ -160,7 +160,27 @@ export class Union extends BaseType<any, any, any> {
     ).join("\n    ")}`
   }
 
+  // Memoizes the discriminator -> member scan below. Union membership is fixed
+  // at construction, so the result for a given `type` string never changes.
+  // Without this, validating a config with many elements drawn from a wide
+  // pluggable union (e.g. jbrowse's 30+ track/adapter types) re-scans every
+  // member — and calls resolveModelType + literal.is() on each — once per
+  // element. With it, each distinct discriminator scans once; the rest are
+  // O(1) map hits. `undefined` (no match OR ambiguous) is cached too.
+  private _discriminatorCache?: Map<string, IAnyType | undefined>
   private _findCandidateByTypeDiscriminator(
+    discriminator: string
+  ): IAnyType | undefined {
+    const cache = (this._discriminatorCache ??= new Map())
+    if (cache.has(discriminator)) {
+      return cache.get(discriminator)
+    }
+    const found = this._scanForTypeDiscriminator(discriminator)
+    cache.set(discriminator, found)
+    return found
+  }
+
+  private _scanForTypeDiscriminator(
     discriminator: string
   ): IAnyType | undefined {
     let found: IAnyType | undefined
