@@ -26,6 +26,7 @@ import {
   EMPTY_OBJECT,
   type FunctionWithFlag,
   Hook,
+  type IAnyStateTreeNode,
   type IAnyType,
   type IChildNodesMap,
   type IJsonPatch,
@@ -295,6 +296,13 @@ export interface ModelTypeConfig {
   initializers?: ReadonlyArray<(instance: any) => any>
   preProcessor?: (snapshot: any) => any
   postProcessor?: (snapshot: any) => any
+  /**
+   * @internal Set by cloneAndEnhance when a chain step (`.actions()`,
+   * `.views()`, `.volatile()`, …) adds no new properties: `properties` is then
+   * the parent type's already-converted + frozen ModelProperties, so the
+   * constructor can skip the toPropertiesObject/freeze reprocessing pass.
+   */
+  propertiesArePreProcessed?: boolean
 }
 
 const defaultObjectOptions = {
@@ -415,11 +423,18 @@ export class ModelType<
   constructor(opts: ModelTypeConfig) {
     super(opts.name || defaultObjectOptions.name)
     Object.assign(this, defaultObjectOptions, opts)
-    // ensures that any default value gets converted to its related type
-    this.properties = toPropertiesObject(this.properties) as PROPS
-    freeze(this.properties) // make sure nobody messes with it
-    this.propertyNames = Object.keys(this.properties)
-    this.identifierAttribute = this._getIdentifierAttribute()
+    if (opts.propertiesArePreProcessed) {
+      // `properties` is a parent type's already-converted + frozen output
+      // (chain step with no new props); skip the reprocessing/freeze pass.
+      this.propertyNames = Object.keys(this.properties)
+      this.identifierAttribute = this._getIdentifierAttribute()
+    } else {
+      // ensures that any default value gets converted to its related type
+      this.properties = toPropertiesObject(this.properties) as PROPS
+      freeze(this.properties) // make sure nobody messes with it
+      this.propertyNames = Object.keys(this.properties)
+      this.identifierAttribute = this._getIdentifierAttribute()
+    }
   }
 
   private _getIdentifierAttribute(): string | undefined {
@@ -438,13 +453,29 @@ export class ModelType<
   }
 
   cloneAndEnhance(opts: ModelTypeConfig): IAnyModelType {
-    return new ModelType({
-      name: opts.name || this.name,
-      properties: Object.assign({}, this.properties, opts.properties),
-      initializers: this.initializers.concat(opts.initializers || []),
-      preProcessor: opts.preProcessor || this.preProcessor,
-      postProcessor: opts.postProcessor || this.postProcessor
-    })
+    // Fast path: a chain step that adds no new properties (.actions/.views/
+    // .volatile/.named/pre-postProcessor) can reuse this type's already-
+    // converted + frozen properties verbatim, skipping toPropertiesObject.
+    const hasNewProps =
+      opts.properties !== undefined && Object.keys(opts.properties).length > 0
+    return new ModelType(
+      hasNewProps
+        ? {
+            name: opts.name || this.name,
+            properties: Object.assign({}, this.properties, opts.properties),
+            initializers: this.initializers.concat(opts.initializers || []),
+            preProcessor: opts.preProcessor || this.preProcessor,
+            postProcessor: opts.postProcessor || this.postProcessor
+          }
+        : {
+            name: opts.name || this.name,
+            properties: this.properties,
+            propertiesArePreProcessed: true,
+            initializers: this.initializers.concat(opts.initializers || []),
+            preProcessor: opts.preProcessor || this.preProcessor,
+            postProcessor: opts.postProcessor || this.postProcessor
+          }
+    )
   }
 
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A) {
@@ -575,6 +606,35 @@ export class ModelType<
       return self
     }
     return this.cloneAndEnhance({ initializers: [viewInitializer] })
+  }
+
+  /**
+   * @internal
+   * @hidden
+   * Materializes an additional actions/views/state extension onto an
+   * already-created instance, using the same machinery as `.extend()` runs at
+   * creation time. Powers {@link extendInstance}; callers must ensure the writes
+   * are permitted (see extendInstance, which runs this in an action context).
+   */
+  applyExtensionToInstance(
+    self: this["T"],
+    extension: { actions?: ModelActions; views?: object; state?: object }
+  ): void {
+    const { actions, views, state, ...rest } = extension
+    for (const key in rest) {
+      throw fail(
+        `extendInstance should return an object with a subset of the fields 'actions', 'views' and 'state'. Found invalid key '${key}'`
+      )
+    }
+    if (state) {
+      this.instantiateVolatileState(self, state)
+    }
+    if (views) {
+      this.instantiateViews(self, views)
+    }
+    if (actions) {
+      this.instantiateActions(self, actions)
+    }
   }
 
   private instantiateViews(self: this["T"], views: object): void {
@@ -992,4 +1052,52 @@ export function isModelType<IT extends IAnyModelType = IAnyModelType>(
   type: IAnyType
 ): type is IT {
   return isType(type) && (type.flags & TypeFlags.Object) > 0
+}
+
+/**
+ * `extendInstance` - attaches additional actions, views and volatile state to an
+ * already-created model instance, using the same instantiation machinery as
+ * `.extend()`. This enables lazily loading a model's views/actions chain: create
+ * the model with only its base props (plus any critical-path members), then attach
+ * the rest at runtime — e.g. from a dynamically imported module — without rebuilding
+ * the type or re-hydrating the tree.
+ *
+ * The extension is applied inside an action context, so it works on protected trees.
+ * Attached views are computeds (reactive, memoized) and attached actions get a full
+ * MST action context, exactly like members declared in the original chain.
+ *
+ * Note: the attached members are NOT part of the instance's *static* type. If you
+ * need them typed, declare the augmented shape separately (an `import type` of the
+ * chain's return type is erased at build time, so it costs nothing in the bundle).
+ *
+ * @param instance a live model instance
+ * @param fn receives the instance and returns `{ actions?, views?, state? }`
+ * @returns the same instance
+ */
+export function extendInstance<T extends IAnyStateTreeNode>(
+  instance: T,
+  fn: (self: T) => { actions?: ModelActions; views?: object; state?: object }
+): T {
+  if (!isStateTreeNode(instance)) {
+    throw fail("extendInstance expects a mobx-state-tree node")
+  }
+  const type = getStateTreeNode(instance).type
+  if (!isModelType(type)) {
+    throw fail("extendInstance can only be used on model instances")
+  }
+  // Views/actions/volatile are installed via defineProperty + makeObservable — the
+  // same "add" operations the initializers perform at creation, before the
+  // write-protection interceptor is attached (see finalizeNewInstance). On a live
+  // instance that interceptor is already active, so run the attach inside an action
+  // context: isRunningAction() then short-circuits assertWritable.
+  const modelType = type as unknown as ModelType<any, any, any, any, IAnyModelType>
+  const attach = createActionInvoker(
+    instance,
+    "@@extendInstance",
+    (() => {
+      modelType.applyExtensionToInstance(instance, fn(instance))
+    }) as FunctionWithFlag
+  )
+  attach()
+  return instance
 }
