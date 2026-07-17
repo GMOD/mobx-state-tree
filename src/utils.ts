@@ -409,6 +409,13 @@ export function setTypeChecking(enabled: boolean | undefined) {
   _typeChecking = enabled
 }
 
+// the ENABLE_TYPE_CHECK env var is fixed at process start, so read it once:
+// process.env access is a comparatively expensive lookup and isTypeCheckingEnabled
+// runs on every create() / typed write. The setTypeChecking() override and
+// dev-mode default stay live below.
+const _envTypeCheck =
+  typeof process !== "undefined" && process.env?.ENABLE_TYPE_CHECK === "true"
+
 /**
  * @internal
  * @hidden
@@ -416,12 +423,7 @@ export function setTypeChecking(enabled: boolean | undefined) {
 export function isTypeCheckingEnabled() {
   // an explicit setTypeChecking() override (incl. `false`) wins over the
   // dev-mode / env-var default, hence ?? rather than ||
-  return (
-    _typeChecking ??
-    (devMode() ||
-      (typeof process !== "undefined" &&
-        process.env?.ENABLE_TYPE_CHECK === "true"))
-  )
+  return _typeChecking ?? (devMode() || _envTypeCheck)
 }
 
 let _devMode = process.env.NODE_ENV !== "production"
