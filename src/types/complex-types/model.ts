@@ -300,9 +300,23 @@ export interface ModelTypeConfig {
    * @internal Set by cloneAndEnhance when a chain step (`.actions()`,
    * `.views()`, `.volatile()`, …) adds no new properties: `properties` is then
    * the parent type's already-converted + frozen ModelProperties, so the
-   * constructor can skip the toPropertiesObject/freeze reprocessing pass.
+   * constructor can skip the toPropertiesObject/freeze reprocessing pass, and
+   * `propertyNames`/`identifierAttribute` below are the parent's already-derived
+   * values (identical, since the property set is unchanged).
    */
   propertiesArePreProcessed?: boolean
+  /** @internal Carried with `propertiesArePreProcessed`; see above. */
+  propertyNames?: string[]
+  /** @internal Carried with `propertiesArePreProcessed`; see above. */
+  identifierAttribute?: string
+  /**
+   * @internal Set by cloneAndEnhance when new props are added: `properties` is
+   * the parent's already-converted+frozen bag merged with the (freshly
+   * converted) delta, so every value is already a type. The constructor then
+   * skips the toPropertiesObject pass but still freezes + rederives
+   * propertyNames/identifierAttribute, since the key set changed.
+   */
+  propertiesAreConverted?: boolean
 }
 
 const defaultObjectOptions = {
@@ -425,12 +439,20 @@ export class ModelType<
     Object.assign(this, defaultObjectOptions, opts)
     if (opts.propertiesArePreProcessed) {
       // `properties` is a parent type's already-converted + frozen output
-      // (chain step with no new props); skip the reprocessing/freeze pass.
-      this.propertyNames = Object.keys(this.properties)
-      this.identifierAttribute = this._getIdentifierAttribute()
+      // (chain step with no new props), so its derived propertyNames and
+      // identifierAttribute are identical to the parent's — reuse them verbatim
+      // (cloneAndEnhance passed them in) instead of re-running Object.keys and
+      // the per-prop identifier scan, both O(props), on every step.
+      this.propertyNames = opts.propertyNames!
+      this.identifierAttribute = opts.identifierAttribute
     } else {
-      // ensures that any default value gets converted to its related type
-      this.properties = toPropertiesObject(this.properties) as PROPS
+      // `propertiesAreConverted` (set by cloneAndEnhance when props are added)
+      // means every value is already a type — the parent's converted bag merged
+      // with a freshly converted delta — so skip re-converting. Only raw entry
+      // points (`model()`) still need the full toPropertiesObject pass.
+      if (!opts.propertiesAreConverted) {
+        this.properties = toPropertiesObject(this.properties) as PROPS
+      }
       freeze(this.properties) // make sure nobody messes with it
       this.propertyNames = Object.keys(this.properties)
       this.identifierAttribute = this._getIdentifierAttribute()
@@ -454,28 +476,39 @@ export class ModelType<
 
   cloneAndEnhance(opts: ModelTypeConfig): IAnyModelType {
     // Fast path: a chain step that adds no new properties (.actions/.views/
-    // .volatile/.named/pre-postProcessor) can reuse this type's already-
-    // converted + frozen properties verbatim, skipping toPropertiesObject.
+    // .volatile/.named/pre-postProcessor) reuses this type's already-converted +
+    // frozen properties (and their derived names/identifier) verbatim.
     const hasNewProps =
       opts.properties !== undefined && Object.keys(opts.properties).length > 0
-    return new ModelType(
-      hasNewProps
-        ? {
-            name: opts.name || this.name,
-            properties: Object.assign({}, this.properties, opts.properties),
-            initializers: this.initializers.concat(opts.initializers || []),
-            preProcessor: opts.preProcessor || this.preProcessor,
-            postProcessor: opts.postProcessor || this.postProcessor
-          }
-        : {
-            name: opts.name || this.name,
-            properties: this.properties,
-            propertiesArePreProcessed: true,
-            initializers: this.initializers.concat(opts.initializers || []),
-            preProcessor: opts.preProcessor || this.preProcessor,
-            postProcessor: opts.postProcessor || this.postProcessor
-          }
-    )
+    if (!hasNewProps) {
+      return new ModelType({
+        name: opts.name || this.name,
+        properties: this.properties,
+        propertiesArePreProcessed: true,
+        // safe to share: propertyNames is never mutated after construction
+        propertyNames: this.propertyNames,
+        identifierAttribute: this.identifierAttribute,
+        initializers: this.initializers.concat(opts.initializers || []),
+        preProcessor: opts.preProcessor || this.preProcessor,
+        postProcessor: opts.postProcessor || this.postProcessor
+      })
+    }
+    // Adding props: this type's `properties` is already converted+frozen, so only
+    // the delta needs conversion. compose passes already-converted props
+    // (cur.properties) and flags them; `.props()` passes a raw declaration. Either
+    // way the merged bag is fully converted, so the constructor skips re-converting
+    // the (potentially large) inherited set — the previous hot spot in compose.
+    const convertedNewProps = opts.propertiesAreConverted
+      ? opts.properties!
+      : toPropertiesObject(opts.properties!)
+    return new ModelType({
+      name: opts.name || this.name,
+      properties: Object.assign({}, this.properties, convertedNewProps),
+      propertiesAreConverted: true,
+      initializers: this.initializers.concat(opts.initializers || []),
+      preProcessor: opts.preProcessor || this.preProcessor,
+      postProcessor: opts.postProcessor || this.postProcessor
+    })
   }
 
   actions<A extends ModelActions>(fn: (self: Instance<this>) => A) {
@@ -1028,6 +1061,8 @@ export function compose(...args: any[]): any {
       prev.cloneAndEnhance({
         name: `${prev.name}_${cur.name}`,
         properties: cur.properties,
+        // cur.properties is another ModelType's already-converted+frozen bag
+        propertiesAreConverted: true,
         initializers: cur.initializers,
         preProcessor: (snapshot: any) =>
           cur.applySnapshotPreProcessor(
