@@ -1,5 +1,4 @@
 import {
-  _getGlobalState,
   defineProperty as mobxDefineProperty,
   isObservableArray,
   isObservableObject
@@ -26,9 +25,7 @@ export const EMPTY_OBJECT: {} = Object.freeze({})
  * @internal
  * @hidden
  */
-export const mobxShallow = _getGlobalState().useProxies
-  ? { deep: false }
-  : { deep: false, proxy: false }
+export const mobxShallow = { deep: false } as const
 Object.freeze(mobxShallow)
 
 /**

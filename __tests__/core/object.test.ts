@@ -21,7 +21,7 @@ import {
   resolveIdentifier
 } from "../../src"
 
-import { autorun, reaction, observable, configure, getDebugName } from "mobx"
+import { autorun, reaction, observable, getDebugName } from "mobx"
 
 const createTestFactories = () => {
   const Factory = types
@@ -1198,11 +1198,7 @@ test("#1173 - detaching a model should not screw it", () => {
   expect(detachedItem).toBe(n0)
 })
 
-test("#1702 - should not throw with useProxies: 'ifavailable'", () => {
-  configure({
-    useProxies: "ifavailable"
-  })
-
+test("#1702 - should not throw when a view reads a defaulted prop", () => {
   const M = types.model({ x: 5 }).views(self => ({
     get y() {
       return self.x

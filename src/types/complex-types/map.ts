@@ -9,7 +9,6 @@ import {
   _interceptReads,
   action,
   intercept,
-  observable,
   observe,
   values
 } from "mobx"
@@ -156,7 +155,11 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
     initialData?: IObservableMapInitialValues<string, any> | undefined,
     name?: string
   ) {
-    super(initialData, (observable.ref as any).enhancer, name)
+    // mobx's default (deep) enhancer. The old `observable.ref.enhancer` arg
+    // read undefined ever since mobx 6 renamed the field to `options_.enhancer`,
+    // so deep has been the effective behavior all along; mobx 7 dropped
+    // `observable.ref` entirely.
+    super(initialData, undefined, name)
   }
 
   override get(key: string): IT["Type"] | undefined {

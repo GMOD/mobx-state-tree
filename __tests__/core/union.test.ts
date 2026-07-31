@@ -1,5 +1,4 @@
 import { it, test, expect, describe } from "vitest"
-import { configure } from "mobx"
 import {
   types,
   hasParent,
@@ -572,10 +571,6 @@ describe("1045 - secondary union types with applySnapshot and ids", () => {
                     for (const type of [2, 1]) {
                       describe(`snapshot is of type Submodel${type}`, () => {
                         it(`apply snapshot works when the node is not touched`, () => {
-                          configure({
-                            useProxies: "never"
-                          })
-
                           const t = initTest(
                             useSnapshot,
                             useCreate,
@@ -586,10 +581,6 @@ describe("1045 - secondary union types with applySnapshot and ids", () => {
                         })
 
                         it(`apply snapshot works when the node is touched`, () => {
-                          configure({
-                            useProxies: "never"
-                          })
-
                           const t = initTest(
                             useSnapshot,
                             useCreate,
