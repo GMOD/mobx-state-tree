@@ -491,22 +491,21 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   applySnapshot(node: this["N"], snapshot: this["C"]): void {
     typecheckInternal(this, snapshot)
     const target = node.storedValue
-    const currentKeys: { [key: string]: boolean } = {}
-    Array.from(target.keys()).forEach(key => {
-      currentKeys[key] = false
-    })
+    // keys present before the apply, minus the ones the snapshot (re)sets — what
+    // remains has to be deleted. A Set rather than a plain object: it needs no
+    // sentinel values, no second pass to find the survivors, and it can hold keys
+    // like "__proto__", which an object literal silently swallows.
+    const staleKeys = new Set(target.keys())
     if (snapshot) {
       // Don't use target.replace, as it will throw away all existing items first
       for (const key in snapshot) {
         target.set(key, snapshot[key])
-        currentKeys[`${key}`] = true
+        staleKeys.delete(key)
       }
     }
-    Object.keys(currentKeys).forEach(key => {
-      if (currentKeys[key] === false) {
-        target.delete(key)
-      }
-    })
+    for (const key of staleKeys) {
+      target.delete(key)
+    }
   }
 
   getChildType(): IAnyType {
