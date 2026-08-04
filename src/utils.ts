@@ -282,10 +282,19 @@ class EventHandler<F extends (...args: any[]) => any> {
   }
 
   emit(...args: ArgumentTypes<F>) {
-    // iterate a copy so (un)registrations during emit don't disturb this pass
-    // and reentrant emits stay correct
-    const handlers = this.handlers.slice()
-    handlers.forEach(f => f(...args))
+    const handlers = this.handlers
+    // 0 and 1 handlers are by far the common cases (a patch/snapshot listener, a
+    // disposer) and need no copy: with a single handler, calling the value we
+    // already read is exactly what iterating a copy of it would do.
+    if (handlers.length <= 1) {
+      handlers[0]?.(...args)
+      return
+    }
+    // otherwise iterate a copy so (un)registrations during emit don't disturb
+    // this pass and reentrant emits stay correct
+    for (const f of handlers.slice()) {
+      f(...args)
+    }
   }
 }
 

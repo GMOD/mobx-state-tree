@@ -82,6 +82,11 @@ export function escapeJsonPath(path: string): string {
  * Unescape slashes and backslashes.
  */
 export function unescapeJsonPath(path: string): string {
+  // every escape sequence starts with `~`, so bail before the two regex passes
+  // for the overwhelmingly common unescaped part (mirrors escapeJsonPath above)
+  if (!path.includes("~")) {
+    return path
+  }
   return path.replace(/~1/g, "/").replace(/~0/g, "~")
 }
 
