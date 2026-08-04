@@ -215,7 +215,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
             subType,
             [childNodes[change.index]!],
             [change.newValue],
-            [change.index]
+            change.index
           )
           if (!updatedNodes) {
             return null
@@ -232,7 +232,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
             subType,
             childNodes.slice(index, index + removedCount),
             added,
-            added.map((_, i) => index + i)
+            index
           )
           if (!addedNodes) {
             return null
@@ -384,12 +384,16 @@ export function array<IT extends IAnyType>(subtype: IT): IArrayType<IT> {
   return new ArrayType<IT>(`${subtype.name}[]`, subtype)
 }
 
+/**
+ * @param firstNewPath index the reconciled slice starts at; both call sites
+ * hand over a contiguous run, so subpath `i` is simply `firstNewPath + i`
+ */
 function reconcileArrayChildren<TT>(
   parent: AnyObjectNode,
   childType: IType<any, any, TT>,
   oldNodes: AnyNode[],
   newValues: TT[],
-  newPaths: (string | number)[]
+  firstNewPath: number
 ): AnyNode[] | null {
   let nothingChanged = true
 
@@ -415,7 +419,7 @@ function reconcileArrayChildren<TT>(
     const hasNewNode = i <= newValues.length - 1
     const oldNode = oldNodes[i]
     let newValue = hasNewNode ? newValues[i] : undefined
-    const newPath = `${newPaths[i]}`
+    const newPath = `${firstNewPath + i}`
 
     // for some reason, instead of newValue we got a node, fallback to the storedValue
     // TODO: https://github.com/mobxjs/mobx-state-tree/issues/340#issuecomment-325581681
@@ -545,9 +549,17 @@ function valueAsNode(
 }
 
 /**
+ * Reconciliation types that carry an identifier expose this; `getReconciliationType`
+ * is declared as the general `IAnyType`, on which it isn't part of the surface.
+ */
+interface SnapshotIdMatcher {
+  isMatchingSnapshotId(current: AnyNode, snapshot: any): boolean
+}
+
+/**
  * Check if a node holds a value.
  */
-function areSame(oldNode: AnyNode, newValue: any) {
+function areSame(oldNode: AnyNode, newValue: any): boolean {
   // never consider dead old nodes for reconciliation
   if (!oldNode.isAlive) {
     return false
@@ -569,14 +581,22 @@ function areSame(oldNode: AnyNode, newValue: any) {
     return false
   }
 
+  if (
+    oldNode.identifier === null ||
+    !oldNode.identifierAttribute ||
+    !isPlainObject(newValue)
+  ) {
+    return false
+  }
+
   const oldNodeType = oldNode.getReconciliationType()
   // new value is a snapshot with the correct identifier
   return (
-    oldNode.identifier !== null &&
-    oldNode.identifierAttribute &&
-    isPlainObject(newValue) &&
     oldNodeType.is(newValue) &&
-    (oldNodeType as any).isMatchingSnapshotId(oldNode, newValue)
+    (oldNodeType as unknown as SnapshotIdMatcher).isMatchingSnapshotId(
+      oldNode,
+      newValue
+    )
   )
 }
 
