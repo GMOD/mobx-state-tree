@@ -92,18 +92,15 @@ export class OptionalValue<
   }
 
   getDefaultInstanceOrSnapshot(): this["C"] | this["T"] {
-    const defaultInstanceOrSnapshot =
-      typeof this._defaultValue === "function"
-        ? (this._defaultValue as IFunctionReturn<this["C"] | this["T"]>)()
-        : this._defaultValue
-
-    // while static values are already snapshots and checked on types.optional
-    // generator functions must always be rechecked just in case
-    if (typeof this._defaultValue === "function") {
-      typecheckInternal(this, defaultInstanceOrSnapshot)
+    const defaultValue = this._defaultValue
+    if (typeof defaultValue !== "function") {
+      // static values are already snapshots, checked once by types.optional
+      return defaultValue
     }
-
-    return defaultInstanceOrSnapshot
+    const generated = (defaultValue as IFunctionReturn<this["C"] | this["T"]>)()
+    // generator functions must always be rechecked just in case
+    typecheckInternal(this, generated)
+    return generated
   }
 
   isValidSnapshot(
@@ -255,35 +252,74 @@ export function isOptionalType<IT extends IAnyType>(type: IT): type is IT {
 }
 
 /**
- * Compare a child snapshot to a stripped-default's reference snapshot. Mirrors
- * the legacy hand-rolled comparison: identity for primitives, structural for
- * objects/arrays.
+ * Compare a child snapshot to a stripped-default's reference snapshot: identity
+ * for primitives, structural for objects/arrays.
+ *
+ * Walks the two snapshots in parallel and bails at the first difference. The
+ * previous implementation compared `JSON.stringify(a) === JSON.stringify(b)`
+ * behind a size guard, which is O(whole snapshot) on both sides — plus two
+ * string allocations — even when the very first key differs. That is the normal
+ * case for an identified sub-model: its snapshot has exactly the same shape as
+ * the default and differs only in the identifier, so the size guard never fires
+ * and every `getSnapshot` of the parent serialized both trees just to answer
+ * "no".
+ *
+ * Snapshots are frozen, acyclic, JSON-ish plain data, so a plain recursive walk
+ * is safe. Key order is compared too, matching what stringify comparison did:
+ * the point is to answer "is this still the default", and the only unsafe answer
+ * is a false positive (a key gets dropped from the snapshot that shouldn't be),
+ * so where this can't reproduce stringify exactly — `{a: undefined}` vs
+ * `{b: undefined}`, or `NaN` nested in a frozen value, both of which stringify
+ * flattened into equal text — it errs toward "not equal" and simply keeps the
+ * key. Neither shape is reachable from a model snapshot, whose key set and order
+ * are fixed by its type.
  */
 function defaultSnapshotEquals(a: unknown, b: unknown): boolean {
   if (a === b) {
     return true
   }
   if (
-    typeof a === "object" &&
-    a !== null &&
-    typeof b === "object" &&
-    b !== null
+    typeof a !== "object" ||
+    a === null ||
+    typeof b !== "object" ||
+    b === null
   ) {
-    // Cheap structural short-circuit before the full stringify compare: a
-    // value of a different size can't equal the default, so the common strip
-    // case (non-empty value vs an empty `[]`/`{}` default) avoids stringifying
-    // a potentially large snapshot on every getSnapshot.
-    if (Array.isArray(a) !== Array.isArray(b)) {
-      return false
-    }
-    const aSize = Array.isArray(a) ? a.length : Object.keys(a).length
-    const bSize = Array.isArray(b) ? b.length : Object.keys(b).length
-    if (aSize !== bSize) {
-      return false
-    }
-    return JSON.stringify(a) === JSON.stringify(b)
+    return false
   }
-  return false
+  const aIsArray = Array.isArray(a)
+  if (aIsArray !== Array.isArray(b)) {
+    return false
+  }
+  if (aIsArray) {
+    const arrayA = a as unknown[]
+    const arrayB = b as unknown[]
+    if (arrayA.length !== arrayB.length) {
+      return false
+    }
+    for (let i = 0; i < arrayA.length; i++) {
+      if (!defaultSnapshotEquals(arrayA[i], arrayB[i])) {
+        return false
+      }
+    }
+    return true
+  }
+  const objectA = a as Record<string, unknown>
+  const objectB = b as Record<string, unknown>
+  const keysA = Object.keys(objectA)
+  const keysB = Object.keys(objectB)
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+  for (let i = 0; i < keysA.length; i++) {
+    const key = keysA[i]!
+    if (
+      key !== keysB[i] ||
+      !defaultSnapshotEquals(objectA[key], objectB[key])
+    ) {
+      return false
+    }
+  }
+  return true
 }
 
 /**
