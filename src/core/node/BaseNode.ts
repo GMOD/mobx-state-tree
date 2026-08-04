@@ -94,7 +94,6 @@ export abstract class BaseNode<C, S, T> {
     subpath: string,
     public environment: any
   ) {
-    this.environment = environment
     this.baseSetParent(parent, subpath)
   }
 

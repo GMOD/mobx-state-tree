@@ -430,13 +430,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   private _getCachedInitialSnapshot(): S {
     if (!this._cachedInitialSnapshotCreated) {
-      const type = this.type
-      const childNodes = this._childNodes
-      const snapshot = this._initialSnapshot
-
-      this._cachedInitialSnapshot = type.processInitialSnapshot(
-        childNodes,
-        snapshot
+      this._cachedInitialSnapshot = this.type.processInitialSnapshot(
+        this._childNodes
       )
       this._cachedInitialSnapshotCreated = true
     }

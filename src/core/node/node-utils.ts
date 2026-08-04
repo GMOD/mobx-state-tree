@@ -223,14 +223,6 @@ export function convertChildNodesToArray(
     return EMPTY_ARRAY as AnyNode[]
   }
 
-  const keys = Object.keys(childNodes)
-  if (!keys.length) {
-    return EMPTY_ARRAY as AnyNode[]
-  }
-
-  const result = new Array(keys.length) as AnyNode[]
-  keys.forEach((key, index) => {
-    result[index] = childNodes![key]!
-  })
-  return result
+  const result = Object.values(childNodes)
+  return result.length ? result : (EMPTY_ARRAY as AnyNode[])
 }

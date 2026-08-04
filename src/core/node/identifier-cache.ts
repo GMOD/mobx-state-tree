@@ -24,8 +24,6 @@ export class IdentifierCache {
   // n.b. it is not really the time, but just an integer that gets increased after each modification to the array
   private lastCacheModificationPerId = observable.map<string, number>()
 
-  constructor() {}
-
   private updateLastCacheModificationPerId(identifier: string) {
     const lcm = this.lastCacheModificationPerId.get(identifier)
     // we start at 1 since 0 means no update since cache creation
@@ -78,7 +76,7 @@ export class IdentifierCache {
         if (!set.length) {
           this.cache.delete(id)
         }
-        this.updateLastCacheModificationPerId(node.identifier!)
+        this.updateLastCacheModificationPerId(id)
       }
     }
   }

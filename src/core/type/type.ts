@@ -436,10 +436,6 @@ export abstract class ComplexType<C, S, T> extends BaseType<
 > {
   identifierAttribute?: string
 
-  constructor(name: string) {
-    super(name)
-  }
-
   override create(snapshot: C = this.getDefaultSnapshot(), environment?: any) {
     return super.create(snapshot, environment)
   }
@@ -460,7 +456,7 @@ export abstract class ComplexType<C, S, T> extends BaseType<
     subpath: string,
     patch: IJsonPatch
   ): void
-  abstract processInitialSnapshot(childNodes: IChildNodesMap, snapshot: C): S
+  abstract processInitialSnapshot(childNodes: IChildNodesMap): S
 
   abstract getChildren(node: this["N"]): ReadonlyArray<AnyNode>
   abstract getChildNode(node: this["N"], key: string): AnyNode
