@@ -1,7 +1,6 @@
 import {
   type IObjectDidChange,
   type IObjectWillChange,
-  _getAdministration,
   _interceptReads,
   action,
   computed,
@@ -66,6 +65,18 @@ import {
 
 const PRE_PROCESS_SNAPSHOT = "preProcessSnapshot"
 const POST_PROCESS_SNAPSHOT = "postProcessSnapshot"
+
+/**
+ * mobx's per-property `ObservableValue`: an atom we can `reportObserved()` plus
+ * `raw()` to read the stored child node directly, bypassing the unboxing
+ * interceptor installed in `finalizeNewInstance`. mobx types `getAtom` as the
+ * bare `IDepTreeNode`, so the one narrowing cast lives here.
+ */
+type PropObservable = IAtom & { raw(): AnyNode | undefined }
+
+function getPropObservable(storedValue: any, key: string): PropObservable {
+  return getAtom(storedValue, key) as PropObservable
+}
 
 /** @hidden */
 export interface ModelProperties {
@@ -328,20 +339,8 @@ const defaultObjectOptions = {
 function toPropertiesObject(
   declaredProps: ModelPropertiesDeclaration
 ): ModelProperties {
-  const keysList = Object.keys(declaredProps)
-  const alreadySeenKeys = new Set<string>()
-
-  keysList.forEach(key => {
-    if (alreadySeenKeys.has(key)) {
-      throw fail(
-        `${key} is declared twice in the model. Model should not contain the same keys`
-      )
-    }
-    alreadySeenKeys.add(key)
-  })
-
   // loop through properties and ensures that all items are types
-  return keysList.reduce(
+  return Object.keys(declaredProps).reduce(
     (props, key) => {
       // warn if user intended a HOOK
       if (key in Hook) {
@@ -397,7 +396,9 @@ function toPropertiesObject(
 
       return props
     },
-    { ...declaredProps } as any
+    // seeded with the raw declaration; every key is either replaced by its
+    // converted type below, left alone because it already is one, or throws
+    { ...declaredProps } as ModelProperties
   )
 }
 
@@ -775,7 +776,10 @@ export class ModelType<
     // success so a broken type keeps throwing on every create.
     if (!this.duplicateKeysChecked) {
       this.forAllProps(name => {
-        if (isComputedProp(instance, name) || !isObservableProp(instance, name)) {
+        if (
+          isComputedProp(instance, name) ||
+          !isObservableProp(instance, name)
+        ) {
           throw fail(`${name} property is declared twice`)
         }
       })
@@ -828,39 +832,55 @@ export class ModelType<
   }
 
   getChildren(node: this["N"]): ReadonlyArray<AnyNode> {
-    const res: AnyNode[] = []
-    this.forAllProps(name => {
-      res.push(this.getChildNode(node, name))
-    })
+    const names = this.propertyNames
+    const res: AnyNode[] = new Array(names.length)
+    for (let i = 0; i < names.length; i++) {
+      res[i] = this.getPropertyNode(node, names[i]!)
+    }
     return res
   }
 
-  getChildNode(node: this["N"], key: string): AnyNode {
-    if (!(key in this.properties)) {
-      throw fail(`Not a value property: ${key}`)
-    }
-    const adm = _getAdministration(node.storedValue, key)
-    const childNode = adm.raw?.()
+  /**
+   * Same as {@link getChildNode} but for a key already known to be a declared
+   * property (callers iterating `propertyNames`), so the membership guard is
+   * skipped.
+   */
+  private getPropertyNode(node: this["N"], key: string): AnyNode {
+    const childNode = getPropObservable(node.storedValue, key).raw()
     if (!childNode) {
       throw fail(`Node not available for property ${key}`)
     }
     return childNode
   }
 
+  getChildNode(node: this["N"], key: string): AnyNode {
+    if (!(key in this.properties)) {
+      throw fail(`Not a value property: ${key}`)
+    }
+    return this.getPropertyNode(node, key)
+  }
+
   override getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
     const res = {} as any
-    this.forAllProps((name, type) => {
-      // observe the property's atom so the snapshot computed recomputes when a
-      // child is reassigned (getChildNode below reads via raw() and won't
-      // track). mobx types getAtom's return as the bare IDepTreeNode, so we
-      // narrow to IAtom to reach reportObserved.
-      ;(getAtom(node.storedValue, name) as IAtom).reportObserved()
-      const snapshot = this.getChildNode(node, name).snapshot
+    const storedValue = node.storedValue
+    const properties = this.properties
+    for (const name of this.propertyNames) {
+      // One mobx lookup serves both purposes: reportObserved so the snapshot
+      // computed recomputes when the child is reassigned (raw() below does not
+      // track), and raw() to read the child node. Going through getChildNode
+      // would repeat the same lookup for every property.
+      const observable = getPropObservable(storedValue, name)
+      observable.reportObserved()
+      const childNode = observable.raw()
+      if (!childNode) {
+        throw fail(`Node not available for property ${name}`)
+      }
+      const snapshot = childNode.snapshot
       // strip-default optionals omit their key when equal to the default
-      if (!shouldStripChildFromSnapshot(type, snapshot)) {
+      if (!shouldStripChildFromSnapshot(properties[name]!, snapshot)) {
         res[name] = snapshot
       }
-    })
+    }
     if (applyPostProcess) {
       return this.applySnapshotPostProcessor(res)
     }
@@ -938,7 +958,10 @@ export class ModelType<
   }
 
   private forAllProps(fn: (name: string, type: IAnyType) => void) {
-    this.propertyNames.forEach(key => fn(key, this.properties[key]!))
+    const properties = this.properties
+    for (const key of this.propertyNames) {
+      fn(key, properties[key]!)
+    }
   }
 
   describe() {
@@ -1125,14 +1148,16 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   // write-protection interceptor is attached (see finalizeNewInstance). On a live
   // instance that interceptor is already active, so run the attach inside an action
   // context: isRunningAction() then short-circuits assertWritable.
-  const modelType = type as unknown as ModelType<any, any, any, any, IAnyModelType>
-  const attach = createActionInvoker(
-    instance,
-    "@@extendInstance",
-    (() => {
-      modelType.applyExtensionToInstance(instance, fn(instance))
-    }) as FunctionWithFlag
-  )
+  const modelType = type as unknown as ModelType<
+    any,
+    any,
+    any,
+    any,
+    IAnyModelType
+  >
+  const attach = createActionInvoker(instance, "@@extendInstance", (() => {
+    modelType.applyExtensionToInstance(instance, fn(instance))
+  }) as FunctionWithFlag)
   attach()
   return instance
 }
