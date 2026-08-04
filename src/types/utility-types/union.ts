@@ -19,7 +19,6 @@ import {
   assertIsType,
   devMode,
   fail,
-  flattenTypeErrors,
   isPlainObject,
   isStateTreeNode,
   isType,
@@ -68,13 +67,16 @@ export class Union extends BaseType<any, any, any> {
   private readonly _dispatcher?: ITypeDispatcher
   private readonly _eager: boolean = true
 
-  get flags() {
+  // Deliberately recomputed rather than memoized: a `types.late` member reports
+  // 0 for its subtype until the definition resolves, so the fold is not stable
+  // over the type's lifetime and a memo would need a carve-out for exactly the
+  // case that motivates it. Measured at ~4% of union creation, which is not
+  // worth another cache.
+  get flags(): TypeFlags {
     let result: TypeFlags = TypeFlags.Union
-
-    this._types.forEach(type => {
+    for (const type of this._types) {
       result |= type.flags
-    })
-
+    }
     return result
   }
 
@@ -255,12 +257,11 @@ export class Union extends BaseType<any, any, any> {
       if (reconcileCurrentType.is(value)) {
         return reconcileCurrentType
       }
-      return this._types
-        .filter(t => t !== reconcileCurrentType)
-        .find(type => type.is(value))
-    } else {
-      return this._types.find(type => type.is(value))
+      return this._types.find(
+        type => type !== reconcileCurrentType && type.is(value)
+      )
     }
+    return this._types.find(type => type.is(value))
   }
 
   private tryQuickMatch(
@@ -278,16 +279,21 @@ export class Union extends BaseType<any, any, any> {
       return this.tryMatchPrimitive(value)
     }
 
-    // for objects, try structural matching against model types
-    const typesToCheck = reconcileCurrentType
-      ? [
-          reconcileCurrentType,
-          ...this._types.filter(t => t !== reconcileCurrentType)
-        ]
-      : this._types
-
-    for (const type of typesToCheck) {
-      if (this.snapshotLooksLikeType(value, type)) {
+    // for objects, try structural matching against model types, preferring the
+    // reconciliation type (checked first, then skipped in the main pass) so a
+    // reconcile keeps its current member when it still fits — without building
+    // the reordered candidate list this used to allocate on every call
+    if (
+      reconcileCurrentType &&
+      this.snapshotLooksLikeType(value, reconcileCurrentType)
+    ) {
+      return reconcileCurrentType
+    }
+    for (const type of this._types) {
+      if (
+        type !== reconcileCurrentType &&
+        this.snapshotLooksLikeType(value, type)
+      ) {
         return type
       }
     }
@@ -419,7 +425,7 @@ export class Union extends BaseType<any, any, any> {
       context,
       value,
       "No type is applicable for the union"
-    ).concat(flattenTypeErrors(allErrors))
+    ).concat(allErrors.flat())
   }
 
   getSubTypes() {

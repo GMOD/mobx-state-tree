@@ -183,16 +183,6 @@ export function typeCheckFailure(
   return [{ context: context.slice(), value, message }]
 }
 
-/**
- * @internal
- * @hidden
- */
-export function flattenTypeErrors(
-  errors: IValidationResult[]
-): IValidationResult {
-  return errors.flat()
-}
-
 // TODO; doublecheck: typecheck should only needed to be invoked from: type.create and array / map / value.property will change
 /**
  * @internal
