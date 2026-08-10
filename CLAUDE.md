@@ -140,6 +140,13 @@ copy. (Beware grepping for this: most `onSnapshot` hits in jbrowse are substring
 matches on `getSessionSnapshot(` / `migrateSessionSnapshot(`; there are only
 three real `onSnapshot(` call sites in non-test source.)
 
+**Fixed upstream in jbrowse** (`perf(core): stop re-serializing the session on
+every change for undo`): TimeTraveller now triggers on `onPatch`, which fires
+synchronously on the same changes but costs nothing, and takes the snapshot once
+inside the debounce window. 194 → 67 µs per frame, 2.89x, measured against the
+*published* 6.1.0 dist so it stacks with the ADR 0002 work rather than
+overlapping it.
+
 **Cheap safety check for any change:** diff the runtime export list
 (`Object.keys(require('dist/mobx-state-tree.cjs'))`) and the `index.d.ts`
 declaration surface between old and new builds. Note `ComplexType`, `BaseType`
@@ -180,13 +187,26 @@ Also note the ESM entry: `import "mobx"` resolves to `dist/mobx.mjs`, the
 unminified build with those guards intact. There is no production condition to
 opt into from a plain `.mjs`.
 
+**Worktree setup is automatic.** `.claude/hooks/setup-worktree.sh` runs on
+`WorktreeCreate` and does `pnpm install` in the new worktree. Don't symlink the
+main checkout's `node_modules` instead: it happens to work here (single package)
+but not in a pnpm *workspace* like jbrowse, where each package's deps and the
+links between packages live in `<pkg>/node_modules` — there, a root-only symlink
+gives `tsc` 12k unresolved-import errors. Run the script by hand for a worktree
+you made with plain `git worktree add`:
+
+```
+echo '{"worktree_path":"/path/to/wt"}' | .claude/hooks/setup-worktree.sh
+```
+
 **Building a baseline without disturbing this worktree.** Don't use
 `scripts/build-both-branches.sh` (wired to `prebench`) — it does `git checkout` of
 two branches, which is unsafe in a shared worktree, and it refuses to run with
 uncommitted changes anyway. Instead:
 
 1. `git worktree add --detach <scratch>/baseline HEAD`
-2. `ln -s <main>/node_modules <scratch>/baseline/node_modules`
+2. `ln -s <main>/node_modules <scratch>/baseline/node_modules` (or run the setup
+   hook above, which avoids the `pnpm build` caveat in step 3)
 3. Build there with the binaries directly —
    `<main>/node_modules/.bin/tsc && <main>/node_modules/.bin/rollup -c`. **Not
    `pnpm build`**: pnpm's dep check tries to purge the symlinked `node_modules`
