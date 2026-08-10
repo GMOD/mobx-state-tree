@@ -116,6 +116,30 @@ unchanged (those are mobx's own machinery, not MST's). After the change,
 `ModelType.getSnapshot` is the largest single frame in the write path at 22%,
 followed by mobx re-binding the computed's ~40 dependencies.
 
+**Confirmed on a real interaction.** Instrumenting `autorun`/`reaction`/
+`onSnapshot`/`onPatch` at registration (jest.mock is hoisted, so wrappers are in
+place before any jbrowse module imports them) and dragging a real
+LinearGenomeView over the volvox config, 120 frames of `horizontalScroll`:
+
+- **Exactly one listener fires per frame**, and it is
+  `onSnapshot` in `packages/core/src/util/TimeTraveller.ts` — undo/redo, wired as
+  `types.optional(TimeTraveller, { targetPath: '../session' })`, so it serializes
+  **the whole session** on every frame. Nothing else in the app fires per frame.
+- Per scroll frame at the model layer, medians over 9 alternating rounds, twice:
+  **176 → 99 µs and 113 → 65 µs, i.e. 1.74x–1.78x faster** as shipped. The undo
+  listener's own share drops from ~25 µs to ~2–10 µs.
+
+**The `onSnapshot` + `setTimeout` debounce is the trap; `autorun(..., {delay})`
+is not.** TimeTraveller debounces *recording* with a 300 ms `setTimeout` inside
+the callback — but MST must compute the snapshot to invoke the callback at all,
+so 119 of 120 frames serialize the session and throw it away. Compare
+`setupSessionStorageAutosave` (`products/jbrowse-web/src/rootModel/persistence.ts`),
+which wraps the same `getSnapshot(session)` in `autorun(..., { delay: 400 })`:
+mobx defers the whole body, so it costs nothing per frame. That is the pattern to
+copy. (Beware grepping for this: most `onSnapshot` hits in jbrowse are substring
+matches on `getSessionSnapshot(` / `migrateSessionSnapshot(`; there are only
+three real `onSnapshot(` call sites in non-test source.)
+
 **Cheap safety check for any change:** diff the runtime export list
 (`Object.keys(require('dist/mobx-state-tree.cjs'))`) and the `index.d.ts`
 declaration surface between old and new builds. Note `ComplexType`, `BaseType`
