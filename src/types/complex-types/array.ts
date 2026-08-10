@@ -201,7 +201,6 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     const node = getStateTreeNode(change.object as IStateTreeNode<this>)
     node.assertWritable({ subpath: `${change.index}` })
     const subType = (node.type as this)._subType
-    const childNodes = node.getChildren()
 
     switch (change.type) {
       case "update":
@@ -213,7 +212,10 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
           const updatedNodes = reconcileArrayChildren(
             node,
             subType,
-            [childNodes[change.index]!],
+            // only the replaced child is reconciled, so read that one node
+            // directly — `node.getChildren()` copies the whole backing array,
+            // which made a single-element assignment cost O(array length)
+            [node.getChildNode(`${change.index}`)],
             [change.newValue],
             change.index
           )
@@ -226,6 +228,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
       case "splice":
         {
           const { index, removedCount, added } = change
+          const childNodes = node.getChildren()
 
           const addedNodes = reconcileArrayChildren(
             node,
@@ -404,8 +407,14 @@ function reconcileArrayChildren<TT>(
   // whose id extraction needs type-specific preprocessing (union,
   // snapshotProcessor, late, ...) are intentionally excluded: areSame must run
   // `is()` before their id check, so they stay on the scan path.
+  // With at most one old node the scan below is already O(1), so building the
+  // index would only add a Map allocation to every single-element write.
   let idIndex: { attr: string; byId: Map<string, AnyNode> } | undefined
-  if (childType instanceof ModelType && childType.identifierAttribute) {
+  if (
+    oldNodes.length > 1 &&
+    childType instanceof ModelType &&
+    childType.identifierAttribute
+  ) {
     const byId = new Map<string, AnyNode>()
     for (const n of oldNodes) {
       if (n instanceof ObjectNode && n.identifier !== null) {
