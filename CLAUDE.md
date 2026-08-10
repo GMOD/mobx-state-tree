@@ -57,6 +57,33 @@ the identifier" — the normal case, which no size guard catches. Unions, by
 contrast, barely matter to JBrowse and are mostly `dispatcher`-based (which
 bypasses the quick-match path entirely).
 
+**Where JBrowse's MST time actually goes — measure before optimizing for it.**
+Profiled `createTestSession` over the 262-track `test_data/config_demo.json`
+with MST forced to production mode (`setDevMode(false)`; jest otherwise runs
+`NODE_ENV=test`, which leaves full validation on and is *not* what ships):
+
+- **~44% of the run is MST, and roughly 27 points of that is building model
+  *types*, not instances** — `ModelType` constructor, `cloneAndEnhance`,
+  `toPropertiesObject`, `union()`, `BaseType`/`ComplexType`, plus the GC
+  pressure they generate. JBrowse constructs a config-schema type per track at
+  runtime via `makeConfigurationSchemaModel`.
+- **Instance-level work barely registers, because `jbrowse.tracks` elements are
+  `types.frozen`** — `isStateTreeNode(tracks[0])` is `false`. The 262 tracks
+  never become model instances, so they never touch `getSnapshot`,
+  `finalizeNewInstance` or reconciliation.
+- The one instance-heavy operation, `addView('LinearGenomeView')`, is **57%
+  mobx / 21% MST**, and the mobx half is `defineProperty_` /
+  `defineComputedProperty_` installing ~60 computed views per instance.
+  Batching MST's per-getter `makeObservable` into one call was tried and
+  **rejected**: 1.05x/1.25x on an LGV-shaped model and both directions on a
+  narrow one, i.e. noise. The cost is mobx's per-computed work, which batching
+  does not remove.
+
+So **type construction is the open target for JBrowse startup**, and
+instance-path wins (however large in isolation) will not show up there. Note
+also that a cross-process jest A/B of `createTestSession` is far too noisy to
+resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
+
 **Cheap safety check for any change:** diff the runtime export list
 (`Object.keys(require('dist/mobx-state-tree.cjs'))`) and the `index.d.ts`
 declaration surface between old and new builds. Note `ComplexType`, `BaseType`
