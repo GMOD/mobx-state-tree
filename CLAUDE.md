@@ -84,6 +84,38 @@ instance-path wins (however large in isolation) will not show up there. Note
 also that a cross-process jest A/B of `createTestSession` is far too noisy to
 resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
 
+**Startup is not the interesting workload, though — value churn is.** For rapid
+value changes (dragging/scrolling a view, where one prop is written per frame
+and everything observing it re-derives), the cost of a single typed write on a
+JBrowse-shaped session, measured in-process with alternating rounds:
+
+| what is listening | µs per write |
+| --- | --- |
+| nothing | ~9 µs |
+| `onPatch(root)` | ~9 µs — essentially free |
+| an `autorun` over derived computeds | ~18 µs |
+| **`onSnapshot(root)`** | **~75 µs (was ~150 µs)** |
+| an `autorun` reading `getSnapshot(view)` | ~28 µs (was ~70 µs) |
+
+Two things follow, and the first matters more than any MST change:
+
+- **`onSnapshot` on a hot path turns every value change into a subtree
+  reserialize, ~8x the cost of the write itself.** `onPatch` costs nothing by
+  comparison. 95 files in jbrowse-components reference `onSnapshot`; if any sit
+  above a view that changes per frame, that is the dominant cost of the change.
+  Debounce it or switch to patches.
+- The cost is **flat in tree size** (measured 10 → 800 tracks): child snapshots
+  are memoized, so only the path from the changed node to the root re-serializes.
+  It scales with the *width of the models on that path*, not the size of the
+  tree — a 40-prop view costs 40 property reads per write.
+
+This is where the ADR 0002 work actually lands: 1.99x/2.19x on
+`onSnapshot(root)` and 2.48x/2.59x on `autorun(getSnapshot(view))` across
+repeated runs, while bare writes, `onPatch` and pure computed reactivity are
+unchanged (those are mobx's own machinery, not MST's). After the change,
+`ModelType.getSnapshot` is the largest single frame in the write path at 22%,
+followed by mobx re-binding the computed's ~40 dependencies.
+
 **Cheap safety check for any change:** diff the runtime export list
 (`Object.keys(require('dist/mobx-state-tree.cjs'))`) and the `index.d.ts`
 declaration surface between old and new builds. Note `ComplexType`, `BaseType`
