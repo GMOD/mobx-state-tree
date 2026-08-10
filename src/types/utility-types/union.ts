@@ -42,12 +42,29 @@ export interface UnionOptions {
 // the scoping never engages and every failure prints every member's full
 // structure. Wrappers expose their child as `_subtype` (optional/refinement/
 // snapshotProcessor) or via `getSubType()` (late); bounded to avoid cycles.
+// Only *successful* resolutions are cached. A wrapper chain's shape is fixed at
+// construction, so once a member resolves to a ModelType it always will; but a
+// `late` member reports no subtype until its definition evaluates, and that
+// miss must stay retryable.
+const resolvedModelTypes = new WeakMap<
+  IAnyType,
+  ModelType<any, any, any, any, any>
+>()
+
 function resolveModelType(
   type: IAnyType | undefined
 ): ModelType<any, any, any, any, any> | undefined {
-  let current = type
+  if (!type) {
+    return undefined
+  }
+  const cached = resolvedModelTypes.get(type)
+  if (cached) {
+    return cached
+  }
+  let current: IAnyType | undefined = type
   for (let depth = 0; current && depth < 20; depth++) {
     if (current instanceof ModelType) {
+      resolvedModelTypes.set(type, current)
       return current
     }
     const wrapper = current as {
@@ -339,12 +356,14 @@ export class Union extends BaseType<any, any, any> {
       // use cached propertyNames from ModelType instead of Object.keys()
       for (const key of model.propertyNames) {
         const propType = props[key]!
-        const isOptional = propType.flags & TypeFlags.Optional
+        // `flags` is a recomputed getter on the wrapper types (optional,
+        // snapshotProcessor, late, union), so read it once per property
+        const flags = propType.flags
         const propValue = value[key]
 
         // check required properties exist and are not undefined
         // (unless the type accepts undefined, which Optional types do)
-        if (!isOptional) {
+        if (!(flags & TypeFlags.Optional)) {
           if (!(key in value) || propValue === undefined) {
             return false
           }
@@ -352,7 +371,7 @@ export class Union extends BaseType<any, any, any> {
 
         // for literal types, verify the value matches exactly
         // this is critical for discriminated unions
-        if (propType.flags & TypeFlags.Literal) {
+        if (flags & TypeFlags.Literal) {
           if (!propType.is(propValue)) {
             return false
           }

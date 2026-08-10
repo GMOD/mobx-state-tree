@@ -110,7 +110,11 @@ export function isPlainObject(value: any): value is { [k: string]: any } {
     return false
   }
   const proto = Object.getPrototypeOf(value)
-  if (proto == null) {
+  // Fast path for an object literal from this realm — nearly every snapshot MST
+  // inspects. The fallback compares the constructor's *source text* so that an
+  // `Object` from another realm (iframe, vm context) still counts as plain; it
+  // is ~6x slower, so only cross-realm and null-prototype values pay for it.
+  if (proto === Object.prototype || proto == null) {
     return true
   }
   return proto.constructor?.toString() === plainObjectString

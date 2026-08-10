@@ -41,13 +41,13 @@ export class IdentifierCache {
   addNodeToCache(node: AnyObjectNode, lastCacheUpdate = true): void {
     if (node.identifierAttribute) {
       const identifier = node.identifier!
-      if (!this.cache.has(identifier)) {
-        this.cache.set(
-          identifier,
-          observable.array<AnyObjectNode>([], mobxShallow)
-        )
+      // one observable-map read, not a has() plus a get(): this runs for every
+      // identified node created
+      let set = this.cache.get(identifier)
+      if (!set) {
+        set = observable.array<AnyObjectNode>([], mobxShallow)
+        this.cache.set(identifier, set)
       }
-      const set = this.cache.get(identifier)!
       if (set.includes(node)) {
         throw fail(`Already registered`)
       }
