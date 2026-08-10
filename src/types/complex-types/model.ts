@@ -1,6 +1,7 @@
 import {
   type IObjectDidChange,
   type IObjectWillChange,
+  _getAdministration,
   _interceptReads,
   action,
   computed,
@@ -72,10 +73,44 @@ const POST_PROCESS_SNAPSHOT = "postProcessSnapshot"
  * interceptor installed in `finalizeNewInstance`. mobx types `getAtom` as the
  * bare `IDepTreeNode`, so the one narrowing cast lives here.
  */
-type PropObservable = IAtom & { raw(): AnyNode | undefined }
+type PropObservable = IAtom & {
+  raw(): AnyNode | undefined
+  /** the read interceptor `_interceptReads` installs; see finalizeNewInstance */
+  dehancer?: (childNode: AnyNode | undefined) => AnyNode | undefined
+}
 
 function getPropObservable(storedValue: any, key: string): PropObservable {
   return getAtom(storedValue, key) as PropObservable
+}
+
+/**
+ * All of an instance's per-property `ObservableValue`s in one map, or
+ * `undefined` if this mobx does not expose them.
+ *
+ * `observable.object` returns a **Proxy**, and `getAtom(storedValue, key)`
+ * probes it with four `isObservableArray/Set/Map/Object` guards plus a `$mobx`
+ * read — each one a marker-property read that goes through the proxy's `get`
+ * trap. Paying that per property made the trap machinery the bulk of a wide
+ * model's `getSnapshot`; resolving the administration once and reading its
+ * property map directly reduces the per-property cost to a `Map.get`.
+ *
+ * `values_` is mobx-internal, hence the undefined result: every caller keeps a
+ * path built on supported API, so a mobx that drops it degrades to the old
+ * speed rather than breaking.
+ *
+ * The map is complete for our instances. `getAtom` falls back to
+ * `materializeLazy{Computed,Observable}_` because mobx defers constructing an
+ * `ObservableValue` for *decorator* annotations; `createNewInstance` builds
+ * these through `observable.object`, which populates `values_` eagerly for
+ * every declared property.
+ */
+function getPropObservables(
+  storedValue: any
+): Map<string, PropObservable> | undefined {
+  const adm = _getAdministration(storedValue) as {
+    values_?: Map<string, PropObservable>
+  }
+  return adm.values_
 }
 
 /** @hidden */
@@ -761,9 +796,19 @@ export class ModelType<
   finalizeNewInstance(node: this["N"], instance: this["T"]): void {
     addHiddenFinalProp(instance, "toString", objectTypeToString)
 
-    this.forAllProps(name => {
-      _interceptReads(instance, name, node.unbox)
-    })
+    // `_interceptReads(instance, name, ...)` assigns exactly this `dehancer`,
+    // but reaches the ObservableValue via getAtom — several proxy-trap reads
+    // per property (see getPropObservables). Resolve the map once instead.
+    const observables = getPropObservables(instance)
+    if (observables) {
+      for (const name of this.propertyNames) {
+        observables.get(name)!.dehancer = node.unbox
+      }
+    } else {
+      this.forAllProps(name => {
+        _interceptReads(instance, name, node.unbox)
+      })
+    }
 
     this.initializers.reduce((self, fn) => fn(self), instance)
 
@@ -833,9 +878,20 @@ export class ModelType<
 
   getChildren(node: this["N"]): ReadonlyArray<AnyNode> {
     const names = this.propertyNames
+    const storedValue = node.storedValue
+    const observables = getPropObservables(storedValue)
     const res: AnyNode[] = new Array(names.length)
     for (let i = 0; i < names.length; i++) {
-      res[i] = this.getPropertyNode(node, names[i]!)
+      const name = names[i]!
+      const childNode = (
+        observables
+          ? observables.get(name)
+          : getPropObservable(storedValue, name)
+      )?.raw()
+      if (!childNode) {
+        throw fail(`Node not available for property ${name}`)
+      }
+      res[i] = childNode
     }
     return res
   }
@@ -864,12 +920,18 @@ export class ModelType<
     const res = {} as any
     const storedValue = node.storedValue
     const properties = this.properties
+    const observables = getPropObservables(storedValue)
     for (const name of this.propertyNames) {
       // One mobx lookup serves both purposes: reportObserved so the snapshot
       // computed recomputes when the child is reassigned (raw() below does not
       // track), and raw() to read the child node. Going through getChildNode
       // would repeat the same lookup for every property.
-      const observable = getPropObservable(storedValue, name)
+      const observable = observables
+        ? observables.get(name)
+        : getPropObservable(storedValue, name)
+      if (!observable) {
+        throw fail(`Node not available for property ${name}`)
+      }
       observable.reportObserved()
       const childNode = observable.raw()
       if (!childNode) {
