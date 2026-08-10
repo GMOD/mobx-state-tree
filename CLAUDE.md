@@ -4,7 +4,10 @@ Our fork of mobx-state-tree, published to npm and consumed by JBrowse and by
 third parties. `agent-docs/adr/` holds the decisions where the obvious change is
 wrong for a measured reason — read
 [0001](agent-docs/adr/0001-keyed-array-reconcile-and-no-validation-cache.md)
-before touching array reconciliation or union dispatch.
+before touching array reconciliation or union dispatch, and
+[0002](agent-docs/adr/0002-mobx-proxy-traps-and-per-property-lookups.md) before
+touching how `ModelType` reaches a property's mobx observable — or when
+upgrading mobx, since it depends on the internal `values_` field.
 
 ## Verification norm
 
@@ -74,6 +77,25 @@ Treat anything under ~1.3x from it as noise.
 back; flip the leading side each round; compare per-round **medians**, not means,
 since GC spikes skew means. ~25 rounds with an inner loop sized to ~1 ms+ per
 sample resolves 1.03x reproducibly.
+
+**Neutralize `process.env` in any node benchmark, or you will profile the wrong
+thing.** Node serves `process.env` from a live getenv proxy, and mobx reads
+`process.env.NODE_ENV` on *every* observable read and write — branches a bundler
+dead-code-eliminates for real consumers. Left alone, that one guard
+(`checkIfStateReadsAreAllowed`) measured **38.8% of `getSnapshot`**, drowning out
+every MST frame. Put this above the imports:
+
+```js
+process.env.NODE_ENV = "production"
+Object.defineProperty(process, "env", { value: { ...process.env } })
+```
+
+A/B *ratios* survive without it — both sides pay equally — but profiles do not,
+and the ratios understate MST-side wins.
+
+Also note the ESM entry: `import "mobx"` resolves to `dist/mobx.mjs`, the
+unminified build with those guards intact. There is no production condition to
+opt into from a plain `.mjs`.
 
 **Building a baseline without disturbing this worktree.** Don't use
 `scripts/build-both-branches.sh` (wired to `prebench`) — it does `git checkout` of
