@@ -23,7 +23,11 @@ export class Frozen<T> extends SimpleType<T, T, T> {
   flags = TypeFlags.Frozen
 
   constructor(private subType?: IAnyType) {
-    super(subType ? `frozen(${subType.name})` : "frozen")
+    super(subType ? undefined : "frozen")
+  }
+
+  protected override computeName(): string {
+    return `frozen(${this.subType!.name})`
   }
 
   describe() {

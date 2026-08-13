@@ -42,8 +42,19 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
   IT["TypeWithoutSTN"],
   ExtractNodeType<IT>
 > {
-  get flags() {
-    return this._subtype.flags | TypeFlags.SnapshotProcessor
+  private _flags?: TypeFlags
+
+  // memoized once stable; see the guard on Union.flags
+  get flags(): TypeFlags {
+    const cached = this._flags
+    if (cached !== undefined) {
+      return cached
+    }
+    const result = this._subtype.flags | TypeFlags.SnapshotProcessor
+    if (!(result & TypeFlags.Late)) {
+      this._flags = result
+    }
+    return result
   }
 
   constructor(
@@ -51,7 +62,11 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     private readonly _processors: ISnapshotProcessors<IT, CustomC, CustomS>,
     name?: string
   ) {
-    super(name || _subtype.name)
+    super(name)
+  }
+
+  protected override computeName(): string {
+    return this._subtype.name
   }
 
   describe() {

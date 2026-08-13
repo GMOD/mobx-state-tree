@@ -38,8 +38,20 @@ export class OptionalValue<
   IT["SnapshotType"],
   IT["TypeWithoutSTN"]
 > {
-  get flags() {
-    return this._subtype.flags | TypeFlags.Optional
+  private _flags?: TypeFlags
+
+  // memoized once stable; see the same guard on Union.flags for why `Late` in
+  // the folded result is the exact test for "may still change"
+  get flags(): TypeFlags {
+    const cached = this._flags
+    if (cached !== undefined) {
+      return cached
+    }
+    const result = this._subtype.flags | TypeFlags.Optional
+    if (!(result & TypeFlags.Late)) {
+      this._flags = result
+    }
+    return result
   }
 
   constructor(
@@ -50,7 +62,13 @@ export class OptionalValue<
     >,
     readonly optionalValues: OptionalVals
   ) {
-    super(_subtype.name)
+    // no name argument: reading `_subtype.name` here would force the name of
+    // whatever is wrapped, and jbrowse wraps a union per config slot
+    super()
+  }
+
+  protected override computeName(): string {
+    return this._subtype.name
   }
 
   describe() {

@@ -84,32 +84,51 @@ export class Union extends BaseType<any, any, any> {
   private readonly _dispatcher?: ITypeDispatcher
   private readonly _eager: boolean = true
 
-  // Deliberately recomputed rather than memoized: a `types.late` member reports
-  // 0 for its subtype until the definition resolves, so the fold is not stable
-  // over the type's lifetime and a memo would need a carve-out for exactly the
-  // case that motivates it. Measured at ~4% of union creation, which is not
-  // worth another cache.
+  private _flags?: TypeFlags
+
+  // Memoized, but only once the fold is known to be stable. A `types.late`
+  // member reports 0 for its subtype until its definition resolves, so a union
+  // containing one must keep recomputing — and every wrapper ORs its subtype's
+  // flags upward, so `Late` in the *result* is an exact test for "some member
+  // may still change" however deeply it is nested. A resolved late still
+  // reports Late, so such a union simply never caches; that is conservative in
+  // the safe direction and no real-world union is built out of late members.
+  //
+  // This reverses an earlier decision to leave it uncached, which was sized at
+  // ~4% "on union creation alone". That understated it: the reads are what
+  // cost, not the creation. `ModelType._getIdentifierAttribute` folds every
+  // property's flags on each `types.model()`, and jbrowse's config slots are
+  // unions under a stripDefault, so building one schema re-folded every slot's
+  // union. See agent-docs/adr/0003.
   get flags(): TypeFlags {
+    const cached = this._flags
+    if (cached !== undefined) {
+      return cached
+    }
     let result: TypeFlags = TypeFlags.Union
     for (const type of this._types) {
       result |= type.flags
     }
+    if (!(result & TypeFlags.Late)) {
+      this._flags = result
+    }
     return result
   }
 
+  protected override computeName(): string {
+    return `(${this._types.map(type => type.name).join(" | ")})`
+  }
+
   constructor(
-    name: string,
     private readonly _types: IAnyType[],
     options?: UnionOptions
   ) {
-    super(name)
-    options = {
-      eager: true,
-      dispatcher: undefined,
-      ...options
-    }
-    this._dispatcher = options.dispatcher
-    if (!options.eager) {
+    super()
+    // read the two options directly rather than spreading defaults into a fresh
+    // object: this constructor runs once per config slot in jbrowse, and the
+    // merged object was allocated only to be read twice and dropped
+    this._dispatcher = options?.dispatcher
+    if (options?.eager === false) {
       this._eager = false
     }
   }
@@ -572,11 +591,15 @@ export function union(
   optionsOrType: UnionOptions | IAnyType,
   ...otherTypes: IAnyType[]
 ): IAnyType {
-  const options = isType(optionsOrType) ? undefined : optionsOrType
-  const types = isType(optionsOrType)
-    ? [optionsOrType, ...otherTypes]
-    : otherTypes
-  const name = `(${types.map(type => type.name).join(" | ")})`
+  const firstIsType = isType(optionsOrType)
+  const options = firstIsType ? undefined : optionsOrType
+  // `otherTypes` is already a fresh rest array, so prepending in place saves
+  // allocating and copying a second one per union
+  const types = otherTypes
+  if (firstIsType) {
+    types.unshift(optionsOrType)
+  }
+  // the name is folded from the members on demand — see Union.computeName
 
   // check all options
   if (devMode()) {
@@ -592,7 +615,7 @@ export function union(
       assertIsType(type, options ? i + 2 : i + 1)
     })
   }
-  return new Union(name, types, options)
+  return new Union(types, options)
 }
 
 /**

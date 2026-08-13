@@ -108,12 +108,15 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   readonly flags = TypeFlags.Array
   private readonly hookInitializers: Array<IHooksGetter<IMSTArray<IT>>> = []
   constructor(
-    name: string,
     private readonly _subType: IT,
     hookInitializers: Array<IHooksGetter<IMSTArray<IT>>> = []
   ) {
-    super(name)
+    super()
     this.hookInitializers = hookInitializers
+  }
+
+  protected override computeName(): string {
+    return `${this._subType.name}[]`
   }
 
   hooks(hooks: IHooksGetter<IMSTArray<IT>>) {
@@ -121,7 +124,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
       this.hookInitializers.length > 0
         ? this.hookInitializers.concat(hooks)
         : [hooks]
-    return new ArrayType(this.name, this._subType, hookInitializers)
+    return new ArrayType(this._subType, hookInitializers)
   }
 
   instantiate(
@@ -384,7 +387,7 @@ ArrayType.prototype.applySnapshot = action(ArrayType.prototype.applySnapshot)
  */
 export function array<IT extends IAnyType>(subtype: IT): IArrayType<IT> {
   assertIsType(subtype, 1)
-  return new ArrayType<IT>(`${subtype.name}[]`, subtype)
+  return new ArrayType<IT>(subtype)
 }
 
 /**

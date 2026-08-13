@@ -31,7 +31,11 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
       snapshot: any
     ) => FT["CreationType"]
   ) {
-    super(`resilient(${_subtype.name})`)
+    super()
+  }
+
+  protected override computeName(): string {
+    return `resilient(${this._subtype.name})`
   }
 
   describe() {

@@ -157,7 +157,11 @@ export abstract class BaseReferenceType<
     protected readonly targetType: IT,
     private readonly onInvalidated?: OnReferenceInvalidated<ReferenceT<IT>>
   ) {
-    super(`reference(${targetType.name})`)
+    super()
+  }
+
+  protected override computeName(): string {
+    return `reference(${this.targetType.name})`
   }
 
   describe() {

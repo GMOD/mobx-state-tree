@@ -238,13 +238,16 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   private readonly hookInitializers: Array<IHooksGetter<IMSTMap<IT>>> = []
 
   constructor(
-    name: string,
     private readonly _subType: IAnyType,
     hookInitializers: Array<IHooksGetter<IMSTMap<IT>>> = []
   ) {
-    super(name)
+    super()
     this._determineIdentifierMode()
     this.hookInitializers = hookInitializers
+  }
+
+  protected override computeName(): string {
+    return `Map<string, ${this._subType.name}>`
   }
 
   hooks(hooks: IHooksGetter<IMSTMap<IT>>) {
@@ -252,7 +255,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
       this.hookInitializers.length > 0
         ? this.hookInitializers.concat(hooks)
         : [hooks]
-    return new MapType(this.name, this._subType, hookInitializers)
+    return new MapType(this._subType, hookInitializers)
   }
 
   instantiate(
@@ -569,7 +572,7 @@ MapType.prototype.applySnapshot = action(MapType.prototype.applySnapshot)
  * @returns
  */
 export function map<IT extends IAnyType>(subtype: IT): IMapType<IT> {
-  return new MapType<IT>(`Map<string, ${subtype.name}>`, subtype)
+  return new MapType<IT>(subtype)
 }
 
 /**
