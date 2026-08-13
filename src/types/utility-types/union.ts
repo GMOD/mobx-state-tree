@@ -602,7 +602,7 @@ export function union(
  * @returns
  */
 export function isUnionType<IT extends IAnyType>(type: IT): type is IT {
-  return (type.flags & TypeFlags.Union) > 0
+  return isType(type) && (type.flags & TypeFlags.Union) > 0
 }
 
 /**

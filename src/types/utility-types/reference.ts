@@ -24,6 +24,7 @@ import {
   getStateTreeNode,
   isModelType,
   isStateTreeNode,
+  isType,
   isValidIdentifier,
   maybe,
   normalizeIdentifier,
@@ -583,7 +584,7 @@ export function reference<IT extends IAnyComplexType>(
 export function isReferenceType<IT extends IReferenceType<any>>(
   type: IT
 ): type is IT {
-  return (type.flags & TypeFlags.Reference) > 0
+  return isType(type) && (type.flags & TypeFlags.Reference) > 0
 }
 
 export function safeReference<IT extends IAnyComplexType>(

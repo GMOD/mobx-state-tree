@@ -76,8 +76,6 @@ abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
  * @hidden
  */
 export class IdentifierType extends BaseIdentifierType<string> {
-  override readonly flags = TypeFlags.Identifier
-
   constructor() {
     super(`identifier`, "string")
   }

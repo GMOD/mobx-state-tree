@@ -139,5 +139,5 @@ export function refinement(...args: any[]): IAnyType {
  * @returns
  */
 export function isRefinementType<IT extends IAnyType>(type: IT): type is IT {
-  return (type.flags & TypeFlags.Refinement) > 0
+  return isType(type) && (type.flags & TypeFlags.Refinement) > 0
 }

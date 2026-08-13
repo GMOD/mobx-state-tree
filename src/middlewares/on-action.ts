@@ -1,7 +1,6 @@
 import { runInAction } from "mobx"
 
 import {
-  type AnyNode,
   type IActionContext,
   type IAnyStateTreeNode,
   type IDisposer,
@@ -41,12 +40,7 @@ export interface IActionRecorder {
   replay(target: IAnyStateTreeNode): void
 }
 
-function serializeArgument(
-  node: AnyNode,
-  actionName: string,
-  index: number,
-  arg: any
-): any {
+function serializeArgument(arg: any): any {
   if (arg instanceof Date) {
     return { $MST_DATE: arg.getTime() }
   }
@@ -76,7 +70,7 @@ function serializeArgument(
   }
 }
 
-function deserializeArgument(adm: AnyNode, value: any): any {
+function deserializeArgument(value: any): any {
   if (value && typeof value === "object" && "$MST_DATE" in value) {
     return new Date(value["$MST_DATE"])
   }
@@ -133,7 +127,7 @@ function baseApplyAction(
     throw fail(`Action '${action.name}' does not exist in '${node.path}'`)
   }
   return resolvedTarget[action.name](
-    ...(action.args ? action.args.map(v => deserializeArgument(node, v)) : [])
+    ...(action.args ? action.args.map(deserializeArgument) : [])
   )
 }
 
@@ -271,9 +265,7 @@ export function onAction(
       const info = {
         name: rawCall.name,
         path: getRelativePathBetweenNodes(getStateTreeNode(target), sourceNode),
-        args: rawCall.args.map((arg: any, index: number) =>
-          serializeArgument(sourceNode, rawCall.name, index, arg)
-        )
+        args: rawCall.args.map(serializeArgument)
       }
       if (attachAfter) {
         const res = next(rawCall)

@@ -929,11 +929,8 @@ export class ModelType<
       const observable = observables
         ? observables.get(name)
         : getPropObservable(storedValue, name)
-      if (!observable) {
-        throw fail(`Node not available for property ${name}`)
-      }
-      observable.reportObserved()
-      const childNode = observable.raw()
+      observable?.reportObserved()
+      const childNode = observable?.raw()
       if (!childNode) {
         throw fail(`Node not available for property ${name}`)
       }
