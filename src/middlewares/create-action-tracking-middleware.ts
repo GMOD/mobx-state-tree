@@ -1,10 +1,5 @@
 import { type IMiddlewareEvent, type IMiddlewareHandler } from "../internal.ts"
 
-const runningActions = new Map<
-  number,
-  { async: boolean; call: IMiddlewareEvent; context: any }
->()
-
 export interface IActionTrackingMiddlewareHooks<T> {
   filter?: (call: IMiddlewareEvent) => boolean
   onStart: (call: IMiddlewareEvent) => T
@@ -31,6 +26,16 @@ export interface IActionTrackingMiddlewareHooks<T> {
 export function createActionTrackingMiddleware<T = any>(
   hooks: IActionTrackingMiddlewareHooks<T>
 ): IMiddlewareHandler {
+  // per middleware, not per module: the entries hold the `context` this
+  // middleware's own onStart returned, so two middlewares on one tree would
+  // otherwise overwrite each other's context and then delete the shared entry —
+  // whichever saw `flow_return` second dereferenced `undefined`.
+  // createActionTrackingMiddleware2 scopes its map the same way.
+  const runningActions = new Map<
+    number,
+    { async: boolean; call: IMiddlewareEvent; context: T }
+  >()
+
   return function actionTrackingMiddleware(
     call: IMiddlewareEvent,
     next: (actionCall: IMiddlewareEvent) => any,
