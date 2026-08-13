@@ -36,17 +36,44 @@ A/B a change against it:
 1. `PKG=$JB/node_modules/.pnpm/@jbrowse+mobx-state-tree@<ver>_mobx@<ver>/node_modules/@jbrowse/mobx-state-tree`
 2. Back up `$PKG/dist` and verify it is byte-identical to a build of this repo at
    the released tag. That is what makes the swap a true A/B.
-3. `cp -r <my dist> $PKG/dist`, run the suites, and **restore from a bash
-   `trap restore EXIT`** — a failure must not leave someone else's checkout on a
-   private build.
-4. Jest writes to **stderr**: capture with `> file 2>&1`, never `2>&1 > file`,
+3. **`mv "$PKG/dist" "$PKG/dist.orig"` and copy into a fresh directory — never
+   `cp` onto the files in place.** Those files are **hardlinked into pnpm's
+   content-addressable store** (`stat -c %h` reads 7+), so writing through them
+   corrupts the store for every other project sharing the inode. `mv` the
+   directory aside and the originals stay untouched on their own inodes.
+   **Restore from a bash `trap restore EXIT INT TERM`** — a failure must not
+   leave someone else's checkout on a private build.
+4. **Invoke jest/tsc directly, not through `pnpm test`.** pnpm's
+   `verify-deps-before-run` fires a real install (seen: `Packages: +4 -4`) that
+   can rebuild `node_modules` mid-A/B. Two traps in doing so: `node_modules/.bin/jest`
+   is a **shell wrapper, not JS** (`node` on it dies with `SyntaxError: missing )`),
+   so use `node node_modules/jest/bin/jest.js`; and without
+   `NODE_PATH=$JB/node_modules/.pnpm/node_modules` — which `pnpm run` would have
+   set — `config/jest/babelTransform.cjs` cannot resolve `babel-jest` and jest
+   exits having run **0 of N suites** while still printing a summary that looks
+   like a result.
+5. Jest writes to **stderr**: capture with `> file 2>&1`, never `2>&1 > file`,
    which prints to the terminal and writes an empty file.
 
 Run the three project groups separately: `packages/core/src packages/product-core
-packages/app-core` is fast and MST-dense, `plugins` is the big one, `products`
-holds the slow image-snapshot tests. **Capture a baseline run first** —
-pre-existing and flaky failures over there are normal, and assuming a failure is
-yours costs a lot of time.
+packages/app-core` is fast and MST-dense (~100 s), `plugins` is the big one
+(~520 s), `products` holds the slow image-snapshot tests (~760 s). **Capture a
+baseline run first** — pre-existing and flaky failures over there are normal, and
+assuming a failure is yours costs a lot of time. One shortcut: run the _swapped_
+side first, and only run the baseline if something goes red. An all-pass result
+cannot be concealing a pre-existing failure, which halves the wall clock on the
+common outcome.
+
+**Verified green on the tree as of August 2026** (six commits after 6.2.0:
+dedupe, the `createActionTrackingMiddleware` fix, the `isXType` guard
+signatures, redundant-assertion removal): `packages/core+product-core+app-core`
+**3039/3039** on both sides, `plugins` **7996/7996**, `products` **1870/1870**,
+and `pnpm typecheck` **0 errors** on both sides — that last one is the only run
+that exercises a `.d.ts` change, since jest transforms with babel and never
+typechecks. Note jbrowse's `packages/core/src/util/mst-reflection.ts` carries
+hand-written workarounds for the `never`-narrowing those guards used to cause
+("the negated identity guards above narrow `maybeLate` to `never`, so route it
+through a function arg"); they still compile, they are just unnecessary now.
 
 **What the consumers actually exercise**, so you know what a change can break.
 JBrowse's imports are all public API — `types` by a wide margin, then
@@ -111,15 +138,20 @@ JBrowse's `packages/core/src/ReExports/abi.test.ts` pins the export names
 plugins may have linked against, and `@jbrowse/core/util/Base1DViewModel` is
 served as an MST **type object**, so its baseline enumerated MST's internals —
 `C`, `N`, `S`, `T`, `isType`, `propertiesArePreProcessed`, `preProcessor`,
-`duplicateKeysChecked` and friends — as if they were ABI. Removing any of them
-fails that one test while everything else passes (3017/3018 in its group, 7890/7890
-in `plugins`). **The check is `n in mod`, so it follows the prototype chain**:
-moving a field off the instance is invisible to it, and only a name that stops
-existing anywhere fails. Today that is `C`, `N`, `S`, `T` and
-`propertiesArePreProcessed`, all from ADR 0003. Size the blast radius of a
-change with `in`, not `Object.keys` — even though `Object.keys` is what
-generated the baseline. It is over-capture on their side — a module served as a value,
-not as a namespace of names — not a real plugin contract, but it _will_ go red.
+`duplicateKeysChecked` and friends — as if they were ABI. **The check is
+`n in mod`, so it follows the prototype chain**: moving a field off the instance
+is invisible to it, and only a name that stops existing anywhere fails. Size the
+blast radius of a change with `in`, not `Object.keys` — even though
+`Object.keys` is what generated the baseline.
+
+**That test is green again as of August 2026** — jbrowse regenerated
+`abiBaseline.json`, and the `Base1DViewModel` entry is now exactly the fourteen
+names that survive ADR 0003 (`C`, `N`, `S`, `T` and `propertiesArePreProcessed`
+are gone from the pin). So the old "3017/3018 in its group" is stale: verified
+against a swapped-in 6.2.0+ build, the group runs **3039/3039** and `plugins`
+**7996/7996**. Two of the pinned fourteen (`isType`, `name`) already answer
+`false` to `Object.keys` and `true` to `in`, which is the standing proof that
+the check is `in`. Keep all fourteen reachable and it stays green.
 
 **Startup is not the interesting workload, though — value churn is.** For rapid
 value changes (dragging/scrolling a view, where one prop is written per frame
