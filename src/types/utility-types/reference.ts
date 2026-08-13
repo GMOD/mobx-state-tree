@@ -151,7 +151,10 @@ export abstract class BaseReferenceType<
   ReferenceIdentifier,
   IT["TypeWithoutSTN"]
 > {
-  readonly flags = TypeFlags.Reference
+  // on the prototype, not an own slot per type: the same constant on every
+  // instance, never reassigned. Assigned below the class body; see
+  // agent-docs/adr/0004.
+  declare readonly flags: TypeFlags
 
   constructor(
     protected readonly targetType: IT,
@@ -350,6 +353,10 @@ export abstract class BaseReferenceType<
     }
   }
 }
+// see the `flags` declaration in the class body
+Object.assign(BaseReferenceType.prototype as object, {
+  flags: TypeFlags.Reference
+})
 
 /**
  * @internal

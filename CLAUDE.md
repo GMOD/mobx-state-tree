@@ -213,6 +213,17 @@ since GC spikes skew means. Two are checked in — both take
   at `INNER=2000`+ the same pair reads 1.00–1.03x. A _consistent_ direction is
   not by itself evidence when each sample is near timer granularity.
 
+**Some changes are memory-shaped, and no timer here can see them.** Removing an
+own slot from a type object (the ADR 0003 / 0004 trick) moves allocation, and
+below the timing floor that is indistinguishable from doing nothing.
+`scripts/mem-config-schema.mjs [distDir]` (needs `--expose-gc`) runs the same
+262-schema workload and reports retained heap plus the own-slot count over the
+reachable type graph — **the same to the byte on every run**, so a sub-1% win is
+reportable there and invisible in the A/B. Hoisting `flags` measured 0.99x on
+the timer against a 1.00x null control while removing 1,582 slots and 0.6% of
+heap; see the follow-up section of ADR 0004. Run both before concluding that a
+slot removal "did nothing" — or that it sped anything up.
+
 **One invocation resolves nothing under ~1.1x, whatever the round count.** Two
 byte-identical dists at 41 rounds, eight invocations, read **0.933x to 1.022x**
 — and six same-direction results in a row happened on those identical builds, so

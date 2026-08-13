@@ -234,7 +234,10 @@ export class MapType<IT extends IAnyType> extends ComplexType<
 > {
   identifierMode: MapIdentifierMode = MapIdentifierMode.UNKNOWN
   mapIdentifierAttribute: string | undefined = undefined
-  readonly flags = TypeFlags.Map
+  // on the prototype, not an own slot per type: the same constant on every
+  // instance, never reassigned. Assigned below the class body; see
+  // agent-docs/adr/0004.
+  declare readonly flags: TypeFlags
 
   constructor(
     private readonly _subType: IAnyType,
@@ -529,6 +532,8 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   }
 }
 MapType.prototype.applySnapshot = action(MapType.prototype.applySnapshot)
+// see the `flags` declaration in the class body
+Object.assign(MapType.prototype as object, { flags: TypeFlags.Map })
 
 /**
  * `types.map` - Creates a key based collection type who's children are all of a uniform declared type.

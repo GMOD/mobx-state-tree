@@ -150,3 +150,52 @@ even though it is the check that generated the baseline — use `in`.
 The ADR 0003 argument for the edit is unchanged: no plugin imports `C` from
 `Base1DViewModel`, and per-name pins should not be generated for a module whose
 export is a value rather than a namespace of names.
+
+## Follow-up: `flags` (August 2026)
+
+The obvious next candidate under the same rule. Nine type classes declared
+`readonly flags = TypeFlags.X`: a constant, identical on every instance of the
+class, and — unlike `_flags` on `Union` / `OptionalValue` / `SnapshotProcessor`
+— never reassigned, so there is no later write to trade the slot for. Hoisted on
+`ModelType`, `ArrayType`, `MapType`, `Literal`, `CustomType`, `Frozen`, `Lazy`,
+`BaseIdentifierType` and `BaseReferenceType`. `CoreType` keeps its own slot: its
+`flags` is a constructor argument, so it genuinely varies per instance.
+
+Semantics verified unchanged: same value; `"flags" in type` still answers `true`
+(so `abi.test.ts` stays green — see the ABI section above); `for...in` over a
+`ModelType` yields exactly the same fourteen keys; the runtime export list and
+`index.d.ts` are byte-identical.
+
+**It buys memory, not time.** `scripts/ab-config-schema.mjs` at 41 and 61
+rounds, ten invocations: **0.972x–1.027x, median 0.99x** — against a null
+control of two byte-identical dists reading **0.984x–1.007x, median 1.00x** over
+six invocations. The two distributions overlap almost completely. GC event count
+over 40 build-and-drop rounds: 23 either way.
+
+`scripts/mem-config-schema.mjs` was added for this, because the timer
+structurally cannot resolve a slot removal. It reads the same to the byte on
+every run:
+
+|                                  | baseline | hoisted |
+| -------------------------------- | -------- | ------- |
+| retained heap, 262 track schemas | 8.23 MB  | 8.18 MB |
+| reachable type objects           | 45,088   | 45,088  |
+| own slots across them            | 144,733  | 143,151 |
+
+That is −1,582 slots, −1.1% of the own-property count and −0.6% of retained
+heap.
+
+**Why so much smaller than the 1.17–1.28x this ADR's own prototype hoisting
+got:** that moved six fields, two of them (`isType`, `_name`) on _every_ type
+object and four on `Union`, of which jbrowse builds ~20k per session — on the
+order of 10^5 slots. `flags` is one field, and the two highest-volume classes in
+this workload already compute it with a getter, so `Union` and
+`OptionalValue`/`StripDefaultValue` were never paying for it at all. What is
+left is ~1.6k reachable objects plus ~7k transient chain-step `ModelType`s, one
+slot each — real and deterministic, and far below the timer's floor.
+
+Kept regardless: it is free, it is measurable in the dimension it acts on, and
+leaving `flags` as the one constant field still charged per type would be an
+exception the next reader has to re-derive. **But do not expect it to show up in
+a startup number** — the type-construction speedup on record is still ADR 0003's
+and this ADR's, unchanged.

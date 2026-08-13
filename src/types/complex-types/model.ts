@@ -474,7 +474,11 @@ export class ModelType<
   >
   implements IModelType<PROPS, OTHERS, CustomC, CustomS>
 {
-  readonly flags = TypeFlags.Object
+  // on the prototype, not an own slot per type: it is the same constant for
+  // every ModelType ever built and is never reassigned, so unlike `_flags` on
+  // the wrapper types there is no later write to trade a slot for. Assigned
+  // below the class body; see agent-docs/adr/0004.
+  declare readonly flags: TypeFlags
 
   /*
    * The original object definition
@@ -1065,6 +1069,8 @@ export class ModelType<
   }
 }
 ModelType.prototype.applySnapshot = action(ModelType.prototype.applySnapshot)
+// see the `flags` declaration in the class body
+Object.assign(ModelType.prototype as object, { flags: TypeFlags.Object })
 
 export function model<P extends ModelPropertiesDeclaration = {}>(
   name: string,
