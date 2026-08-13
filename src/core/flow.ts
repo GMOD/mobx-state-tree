@@ -98,7 +98,9 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
   const spawner = function flowSpawner(this: any, ...flowArgs: any[]) {
     // Implementation based on https://github.com/tj/co/blob/master/index.js
     const runId = getNextActionId()
-    const parentContext = getCurrentActionContext()!
+    // no `!`: the guard below is the point, and asserting non-null first made it
+    // dead to the checker while leaving it live at runtime
+    const parentContext = getCurrentActionContext()
     if (!parentContext) {
       throw fail("a mst flow must always have a parent context")
     }
