@@ -428,7 +428,8 @@ export class Union extends BaseType<any, any, any> {
     // - A failure is the definitive, scoped error only when every member is
     //   discriminated; otherwise a catch-all could still accept the value, so
     //   fall through to full validation.
-    if (isPlainObject(value) && !isStateTreeNode(value)) {
+    const isSnapshotObject = isPlainObject(value) && !isStateTreeNode(value)
+    if (isSnapshotObject) {
       const discriminator = (value as { type?: unknown }).type
       if (typeof discriminator === "string") {
         const candidate = this._findCandidateByTypeDiscriminator(discriminator)
@@ -445,10 +446,9 @@ export class Union extends BaseType<any, any, any> {
     // for plain-object snapshots, prefer union members whose literal-typed
     // discriminator properties match the value (e.g. {type: "MsaView"})
     // so error output is scoped to the intended branch instead of every member
-    const candidates =
-      isPlainObject(value) && !isStateTreeNode(value)
-        ? this._types.filter(t => this.snapshotLooksLikeType(value, t))
-        : []
+    const candidates = isSnapshotObject
+      ? this._types.filter(t => this.snapshotLooksLikeType(value, t))
+      : []
     const typesToValidate = candidates.length > 0 ? candidates : this._types
 
     const allErrors: IValidationError[][] = []

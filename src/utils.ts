@@ -53,12 +53,6 @@ export function identity(_: any): any {
  * @internal
  * @hidden
  */
-export function noop() {}
-
-/**
- * @internal
- * @hidden
- */
 export const isInteger = Number.isInteger
 
 /**
@@ -358,47 +352,6 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
     }
   }
 }
-
-const prototypeHasOwnProperty = Object.prototype.hasOwnProperty
-
-/**
- * @internal
- * @hidden
- */
-export function hasOwnProperty(object: object, propName: string) {
-  return prototypeHasOwnProperty.call(object, propName)
-}
-
-/**
- * @internal
- * @hidden
- */
-export type DeprecatedFunction = ((id: string, message: string) => void) & {
-  ids?: { [id: string]: true }
-}
-
-/**
- * @internal
- * @hidden
- */
-export const deprecated: DeprecatedFunction = function (
-  id: string,
-  message: string
-): void {
-  // skip if running production
-  if (!devMode()) {
-    return
-  }
-  // warn if hasn't been warned before
-  if (deprecated.ids && !Object.hasOwn(deprecated.ids, id)) {
-    warnError(`Deprecation warning: ${message}`)
-  }
-  // mark as warned to avoid duplicate warn message
-  if (deprecated.ids) {
-    deprecated.ids[id] = true
-  }
-}
-deprecated.ids = {}
 
 /**
  * @internal

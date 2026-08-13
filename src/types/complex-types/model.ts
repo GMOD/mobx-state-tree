@@ -365,11 +365,7 @@ export interface ModelTypeConfig {
   propertiesAreConverted?: boolean
 }
 
-const defaultObjectOptions = {
-  name: "AnonymousModel",
-  properties: {},
-  initializers: EMPTY_ARRAY
-}
+const ANONYMOUS_MODEL_NAME = "AnonymousModel"
 
 /**
  * A plain loop rather than `forAllProps`, which allocated a closure and made an
@@ -497,7 +493,7 @@ export class ModelType<
     // `??`, not `||`: `types.model("", {})` names the model "". The old
     // `Object.assign(this, defaults, opts)` below overwrote the `||` fallback
     // with opts.name afterwards, so that only worked by accident.
-    super(opts.name ?? defaultObjectOptions.name)
+    super(opts.name ?? ANONYMOUS_MODEL_NAME)
     // Every field is assigned here, unconditionally and in a fixed order,
     // rather than by `Object.assign(this, defaultObjectOptions, opts)`. `opts`
     // carries a different key set at each of the three call sites — `model()`,
@@ -680,21 +676,7 @@ export class ModelType<
     VS extends object = {}
   >(fn: (self: Instance<this>) => { actions?: A; views?: V; state?: VS }) {
     const initializer = (self: Instance<this>) => {
-      const { actions, views, state, ...rest } = fn(self)
-      for (const key in rest) {
-        throw fail(
-          `The \`extend\` function should return an object with a subset of the fields 'actions', 'views' and 'state'. Found invalid key '${key}'`
-        )
-      }
-      if (state) {
-        this.instantiateVolatileState(self, state)
-      }
-      if (views) {
-        this.instantiateViews(self, views)
-      }
-      if (actions) {
-        this.instantiateActions(self, actions)
-      }
+      this.applyExtension(self, fn(self), "The `extend` function")
       return self
     }
     return this.cloneAndEnhance({ initializers: [initializer] })
@@ -720,10 +702,23 @@ export class ModelType<
     self: this["T"],
     extension: { actions?: ModelActions; views?: object; state?: object }
   ): void {
+    this.applyExtension(self, extension, "extendInstance")
+  }
+
+  /**
+   * Materializes an `{ actions, views, state }` bundle onto an instance. Shared
+   * by `.extend()` (at creation time) and `applyExtensionToInstance` (on a live
+   * instance); `subject` only names the caller in the invalid-key error.
+   */
+  private applyExtension(
+    self: this["T"],
+    extension: { actions?: ModelActions; views?: object; state?: object },
+    subject: string
+  ): void {
     const { actions, views, state, ...rest } = extension
     for (const key in rest) {
       throw fail(
-        `extendInstance should return an object with a subset of the fields 'actions', 'views' and 'state'. Found invalid key '${key}'`
+        `${subject} should return an object with a subset of the fields 'actions', 'views' and 'state'. Found invalid key '${key}'`
       )
     }
     if (state) {
@@ -1090,7 +1085,7 @@ export function model(...args: any[]): any {
     )
   }
 
-  const name = typeof args[0] === "string" ? args.shift() : "AnonymousModel"
+  const name = typeof args[0] === "string" ? args.shift() : ANONYMOUS_MODEL_NAME
   const properties = args.shift() || {}
   return new ModelType({ name, properties })
 }
@@ -1152,7 +1147,7 @@ export function compose<PA extends ModelProperties, OA, FCA, FSA, PB extends Mod
 export function compose(...args: any[]): any {
   // TODO: just join the base type names if no name is provided
   const hasTypename = typeof args[0] === "string"
-  const typeName: string = hasTypename ? args[0] : "AnonymousModel"
+  const typeName: string = hasTypename ? args[0] : ANONYMOUS_MODEL_NAME
   if (hasTypename) {
     args.shift()
   }

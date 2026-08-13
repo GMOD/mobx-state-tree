@@ -19,6 +19,7 @@ import {
   ComplexType,
   EMPTY_OBJECT,
   type ExtractCSTWithSTN,
+  type HookInitializers,
   type IAnyModelType,
   type IAnyStateTreeNode,
   type IAnyType,
@@ -29,13 +30,12 @@ import {
   type IValidationContext,
   type IValidationResult,
   ModelType,
+  NO_HOOK_INITIALIZERS,
   ObjectNode,
   TypeFlags,
-  addHiddenFinalProp,
-  addHiddenWritableProp,
+  appendHookInitializer,
   asArray,
   cannotDetermineSubtype,
-  createActionInvoker,
   createObjectNode,
   devMode,
   escapeJsonPath,
@@ -43,6 +43,7 @@ import {
   getContextForPath,
   getSnapshot,
   getStateTreeNode,
+  installHookInitializers,
   isMutable,
   isPlainObject,
   isStateTreeNode,
@@ -235,15 +236,14 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   mapIdentifierAttribute: string | undefined = undefined
   readonly flags = TypeFlags.Map
 
-  private readonly hookInitializers: Array<IHooksGetter<IMSTMap<IT>>> = []
-
   constructor(
     private readonly _subType: IAnyType,
-    hookInitializers: Array<IHooksGetter<IMSTMap<IT>>> = []
+    private readonly hookInitializers: HookInitializers<
+      IMSTMap<IT>
+    > = NO_HOOK_INITIALIZERS
   ) {
     super()
     this._determineIdentifierMode()
-    this.hookInitializers = hookInitializers
   }
 
   protected override computeName(): string {
@@ -251,11 +251,10 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   }
 
   hooks(hooks: IHooksGetter<IMSTMap<IT>>) {
-    const hookInitializers =
-      this.hookInitializers.length > 0
-        ? this.hookInitializers.concat(hooks)
-        : [hooks]
-    return new MapType(this._subType, hookInitializers)
+    return new MapType(
+      this._subType,
+      appendHookInitializer(this.hookInitializers, hooks)
+    )
   }
 
   instantiate(
@@ -327,23 +326,10 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   ): void {
     _interceptReads(instance, node.unbox)
 
-    const type = node.type as this
-    type.hookInitializers.forEach(initializer => {
-      const hooks = initializer(instance as unknown as IMSTMap<IT>)
-      Object.keys(hooks).forEach(name => {
-        const hook = hooks[name as keyof typeof hooks]!
-        const actionInvoker = createActionInvoker(
-          instance as IAnyStateTreeNode,
-          name,
-          hook
-        )
-        ;(!devMode() ? addHiddenFinalProp : addHiddenWritableProp)(
-          instance,
-          name,
-          actionInvoker
-        )
-      })
-    })
+    installHookInitializers(
+      (node.type as this).hookInitializers,
+      instance as unknown as IMSTMap<IT>
+    )
 
     intercept(instance, this.willChange)
     observe(instance, this.didChange)

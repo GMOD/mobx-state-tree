@@ -104,7 +104,9 @@ function shortenPrintValue(valueInString: string) {
 
 function toErrorString(error: IValidationError): string {
   const { value } = error
-  const type = error.context[error.context.length - 1]!.type!
+  // every context entry carries a type: they are built by getContextForPath and
+  // by typecheck's initial `[{ path: "", type }]`
+  const type = error.context[error.context.length - 1]!.type
   const fullPath = error.context
     .map(({ path }) => path)
     .filter(path => path.length > 0)
@@ -117,24 +119,31 @@ function toErrorString(error: IValidationError): string {
     : isPrimitive(value)
       ? "value"
       : "snapshot"
-  const isSnapshotCompatible =
-    type && isStateTreeNode(value) && type.is(getStateTreeNode(value).snapshot)
 
-  return `${pathPrefix}${currentTypename} ${shortenPrintValue(prettyPrintValue(value))} is not assignable ${
-    type ? `to type: \`${type.name}\`` : ``
-  }${error.message ? ` (${error.message})` : ""}${
-    type
-      ? isPrimitiveType(type) || isPrimitive(value)
-        ? `.`
-        : `, expected an instance of \`${(type as IAnyType).name}\` or a snapshot like \`${shortenPrintValue(
-            (type as IAnyType).describe()
-          )}\` instead.${
-            isSnapshotCompatible
-              ? " (Note that a snapshot of the provided value is compatible with the targeted type)"
-              : ""
-          }`
-      : `.`
-  }`
+  let expectation: string
+  if (isPrimitiveType(type) || isPrimitive(value)) {
+    expectation = "."
+  } else {
+    // `isPrimitiveType` is declared `(type: IT) => type is IT`, so its negative
+    // branch narrows to `never` rather than to "some non-primitive type"; the
+    // annotation restores the type it actually has here.
+    const complexType: IAnyType = type
+    const isSnapshotCompatible =
+      isStateTreeNode(value) && complexType.is(getStateTreeNode(value).snapshot)
+    expectation = `, expected an instance of \`${complexType.name}\` or a snapshot like \`${shortenPrintValue(
+      complexType.describe()
+    )}\` instead.${
+      isSnapshotCompatible
+        ? " (Note that a snapshot of the provided value is compatible with the targeted type)"
+        : ""
+    }`
+  }
+
+  return `${pathPrefix}${currentTypename} ${shortenPrintValue(
+    prettyPrintValue(value)
+  )} is not assignable to type: \`${type.name}\`${
+    error.message ? ` (${error.message})` : ""
+  }${expectation}`
 }
 
 /**

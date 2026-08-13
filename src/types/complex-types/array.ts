@@ -18,6 +18,7 @@ import {
   EMPTY_ARRAY,
   EMPTY_OBJECT,
   type ExtractCSTWithSTN,
+  type HookInitializers,
   type IAnyStateTreeNode,
   type IAnyType,
   type IChildNodesMap,
@@ -27,18 +28,17 @@ import {
   type IType,
   type IValidationContext,
   type IValidationResult,
+  NO_HOOK_INITIALIZERS,
   ObjectNode,
   TypeFlags,
-  addHiddenFinalProp,
-  addHiddenWritableProp,
+  appendHookInitializer,
   assertIsType,
   convertChildNodesToArray,
-  createActionInvoker,
   createObjectNode,
-  devMode,
   fail,
   getContextForPath,
   getStateTreeNode,
+  installHookInitializers,
   isArray,
   isNode,
   isPlainObject,
@@ -106,13 +106,14 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   IMSTArray<IT>
 > {
   readonly flags = TypeFlags.Array
-  private readonly hookInitializers: Array<IHooksGetter<IMSTArray<IT>>> = []
+
   constructor(
     private readonly _subType: IT,
-    hookInitializers: Array<IHooksGetter<IMSTArray<IT>>> = []
+    private readonly hookInitializers: HookInitializers<
+      IMSTArray<IT>
+    > = NO_HOOK_INITIALIZERS
   ) {
     super()
-    this.hookInitializers = hookInitializers
   }
 
   protected override computeName(): string {
@@ -120,11 +121,10 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   }
 
   hooks(hooks: IHooksGetter<IMSTArray<IT>>) {
-    const hookInitializers =
-      this.hookInitializers.length > 0
-        ? this.hookInitializers.concat(hooks)
-        : [hooks]
-    return new ArrayType(this._subType, hookInitializers)
+    return new ArrayType(
+      this._subType,
+      appendHookInitializer(this.hookInitializers, hooks)
+    )
   }
 
   instantiate(
@@ -160,23 +160,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   finalizeNewInstance(node: this["N"], instance: this["T"]): void {
     _getAdministration(instance).dehancer = node.unbox
 
-    const type = node.type as this
-    type.hookInitializers.forEach(initializer => {
-      const hooks = initializer(instance)
-      Object.keys(hooks).forEach(name => {
-        const hook = hooks[name as keyof typeof hooks]!
-        const actionInvoker = createActionInvoker(
-          instance as IAnyStateTreeNode,
-          name,
-          hook
-        )
-        ;(!devMode() ? addHiddenFinalProp : addHiddenWritableProp)(
-          instance,
-          name,
-          actionInvoker
-        )
-      })
-    })
+    installHookInitializers((node.type as this).hookInitializers, instance)
 
     intercept(instance as IObservableArray<AnyNode>, this.willChange)
     observe(instance as IObservableArray<AnyNode>, this.didChange)

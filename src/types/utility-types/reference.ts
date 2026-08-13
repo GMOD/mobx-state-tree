@@ -358,13 +358,6 @@ export abstract class BaseReferenceType<
 export class IdentifierReferenceType<
   IT extends IAnyComplexType
 > extends BaseReferenceType<IT> {
-  constructor(
-    targetType: IT,
-    onInvalidated?: OnReferenceInvalidated<ReferenceT<IT>>
-  ) {
-    super(targetType, onInvalidated)
-  }
-
   override getValue(storedRefNode: this["N"]) {
     if (!storedRefNode.isAlive) {
       return undefined

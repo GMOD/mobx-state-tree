@@ -108,8 +108,10 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
   }
 
   private _fixNode(node: this["N"]): void {
-    // the node has to use these methods rather than the original type ones
-    proxyNodeTypeMethods(node.type, this, "create")
+    // the node's type is the *inner* type, so `getType(instance).create(...)`
+    // would bypass the processors — point it at ours instead
+    const nodeType = node.type as { create: (...args: any[]) => any }
+    nodeType.create = this.create.bind(this)
 
     if (node instanceof ObjectNode) {
       node.hasSnapshotPostProcessor = !!this._processors.postProcessor
@@ -211,16 +213,6 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     }
     const processedSn = this.preProcessSnapshot(snapshot)
     return this._subtype.isMatchingSnapshotId(current as any, processedSn)
-  }
-}
-
-function proxyNodeTypeMethods(
-  nodeType: any,
-  snapshotProcessorType: any,
-  ...methods: (keyof SnapshotProcessor<any, any, any>)[]
-) {
-  for (const method of methods) {
-    nodeType[method] = snapshotProcessorType[method].bind(snapshotProcessorType)
   }
 }
 

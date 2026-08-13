@@ -591,6 +591,34 @@ export function getIdentifier(target: IAnyStateTreeNode): string | null {
 }
 
 /**
+ * Resolves a reference getter to the referenced node, or `undefined` when the
+ * reference is empty, dangling, or (with `checkIfAlive`) points at a dead node.
+ * Backs both {@link tryReference} and {@link isValidReference}.
+ */
+function resolveReference<N extends IAnyStateTreeNode>(
+  getter: () => N | null | undefined,
+  checkIfAlive: boolean
+): N | undefined {
+  try {
+    const node = getter()
+    if (node === undefined || node === null) {
+      return undefined
+    }
+    if (!isStateTreeNode(node)) {
+      throw fail(
+        "The reference to be checked is not one of node, null or undefined"
+      )
+    }
+    return !checkIfAlive || isAlive(node) ? node : undefined
+  } catch (e) {
+    if (e instanceof InvalidReferenceError) {
+      return undefined
+    }
+    throw e
+  }
+}
+
+/**
  * Tests if a reference is valid (pointing to an existing node and optionally if alive) and returns such reference if the check passes,
  * else it returns undefined.
  *
@@ -602,27 +630,7 @@ export function tryReference<N extends IAnyStateTreeNode>(
   getter: () => N | null | undefined,
   checkIfAlive = true
 ): N | undefined {
-  try {
-    const node = getter()
-    if (node === undefined || node === null) {
-      return undefined
-    } else if (isStateTreeNode(node)) {
-      if (!checkIfAlive) {
-        return node
-      } else {
-        return isAlive(node) ? node : undefined
-      }
-    } else {
-      throw fail(
-        "The reference to be checked is not one of node, null or undefined"
-      )
-    }
-  } catch (e) {
-    if (e instanceof InvalidReferenceError) {
-      return undefined
-    }
-    throw e
-  }
+  return resolveReference(getter, checkIfAlive)
 }
 
 /**
@@ -636,23 +644,7 @@ export function isValidReference<N extends IAnyStateTreeNode>(
   getter: () => N | null | undefined,
   checkIfAlive = true
 ): boolean {
-  try {
-    const node = getter()
-    if (node === undefined || node === null) {
-      return false
-    } else if (isStateTreeNode(node)) {
-      return checkIfAlive ? isAlive(node) : true
-    } else {
-      throw fail(
-        "The reference to be checked is not one of node, null or undefined"
-      )
-    }
-  } catch (e) {
-    if (e instanceof InvalidReferenceError) {
-      return false
-    }
-    throw e
-  }
+  return resolveReference(getter, checkIfAlive) !== undefined
 }
 
 /**
