@@ -326,7 +326,11 @@ export abstract class BaseType<
   // charge ADR 0003 is about. Assigned below the class body.
   declare readonly isType: true
 
-  private _name?: string
+  // `undefined` on the prototype rather than an own slot per type: the
+  // composite types leave the name unset (see `name` below), so for a union or
+  // an optional this field only ever held `undefined`. The own slot appears
+  // when a name is actually assigned, which is the same trick as `isType`.
+  declare private _name?: string
 
   /**
    * Builds the name of a type that does not get one handed to it. Composite
@@ -361,7 +365,9 @@ export abstract class BaseType<
   }
 
   constructor(name?: string) {
-    this._name = name
+    if (name !== undefined) {
+      this._name = name
+    }
   }
 
   create(snapshot?: C, environment?: any) {
@@ -449,7 +455,9 @@ export abstract class BaseType<
     | typeof cannotDetermineSubtype
 }
 BaseType.prototype.create = action(BaseType.prototype.create)
-;(BaseType.prototype as { isType: true }).isType = true
+// Defaults that every type shares, kept off the individual type objects. See
+// `isType` and `_name` in the class body.
+Object.assign(BaseType.prototype as object, { isType: true, _name: undefined })
 
 /**
  * @internal

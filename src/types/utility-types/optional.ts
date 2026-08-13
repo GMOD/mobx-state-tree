@@ -358,7 +358,9 @@ export class StripDefaultValue<
   IT extends IAnyType,
   OptionalVals extends ValidOptionalValues
 > extends OptionalValue<IT, OptionalVals> {
-  private _defaultSnapshot?: { value: IT["SnapshotType"] }
+  // on the prototype until a strip actually happens; jbrowse builds one of these
+  // per config slot and most are never serialized. See `BaseType.isType`.
+  declare private _defaultSnapshot?: { value: IT["SnapshotType"] }
 
   shouldStripFromSnapshot(snapshot: IT["SnapshotType"]): boolean {
     if (!this._defaultSnapshot) {
@@ -376,6 +378,10 @@ export class StripDefaultValue<
     return defaultSnapshotEquals(snapshot, this._defaultSnapshot.value)
   }
 }
+
+Object.assign(StripDefaultValue.prototype as object, {
+  _defaultSnapshot: undefined
+})
 
 /**
  * Whether `type` is a strip-default optional whose current child `snapshot`

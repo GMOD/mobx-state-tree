@@ -81,8 +81,13 @@ function resolveModelType(
  * @hidden
  */
 export class Union extends BaseType<any, any, any> {
-  private readonly _dispatcher?: ITypeDispatcher
-  private readonly _eager: boolean = true
+  // All three live on the prototype and only become own slots on the rare union
+  // that needs one: an eager, dispatcher-less union that never fails a
+  // typecheck — which is every union jbrowse builds per config slot, tens of
+  // thousands per session load — carries none of them. Same reasoning as
+  // `BaseType.isType`; see agent-docs/adr/0003.
+  declare private readonly _dispatcher?: ITypeDispatcher
+  declare private readonly _eager: boolean
 
   private _flags?: TypeFlags
 
@@ -127,9 +132,13 @@ export class Union extends BaseType<any, any, any> {
     // read the two options directly rather than spreading defaults into a fresh
     // object: this constructor runs once per config slot in jbrowse, and the
     // merged object was allocated only to be read twice and dropped
-    this._dispatcher = options?.dispatcher
-    if (options?.eager === false) {
-      this._eager = false
+    if (options !== undefined) {
+      if (options.dispatcher !== undefined) {
+        this._dispatcher = options.dispatcher
+      }
+      if (options.eager === false) {
+        this._eager = false
+      }
     }
   }
 
@@ -205,7 +214,7 @@ export class Union extends BaseType<any, any, any> {
   // member — and calls resolveModelType + literal.is() on each — once per
   // element. With it, each distinct discriminator scans once; the rest are
   // O(1) map hits. `undefined` (no match OR ambiguous) is cached too.
-  private _discriminatorCache?: Map<string, IAnyType | undefined>
+  declare private _discriminatorCache?: Map<string, IAnyType | undefined>
   private _findCandidateByTypeDiscriminator(
     discriminator: string
   ): IAnyType | undefined {
@@ -470,6 +479,14 @@ export class Union extends BaseType<any, any, any> {
     return this._types
   }
 }
+
+// Defaults shared by every union; see the field declarations at the top of the
+// class for why they are not own slots.
+Object.assign(Union.prototype as object, {
+  _dispatcher: undefined,
+  _eager: true,
+  _discriminatorCache: undefined
+})
 
 /**
  * Transform _NotCustomized | _NotCustomized... to _NotCustomized, _NotCustomized | A | B to A | B
