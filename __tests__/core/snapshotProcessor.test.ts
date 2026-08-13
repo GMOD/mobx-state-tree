@@ -848,6 +848,14 @@ describe("snapshotProcessor", () => {
     expect(store.prop).toBe("b")
   })
 
+  test("it names itself after its subtype unless given a name", () => {
+    const M = types.model("Todo", { a: types.string })
+    expect(types.snapshotProcessor(M, {}).name).toBe("Todo")
+    expect(types.snapshotProcessor(M, {}, "Wrapped").name).toBe("Wrapped")
+    // an empty name is not a name: it falls through to the subtype's
+    expect(types.snapshotProcessor(M, {}, "").name).toBe("Todo")
+  })
+
   if (process.env.NODE_ENV !== "production") {
     test("it should fail if given incorrect processor", () => {
       expect(() => {

@@ -62,7 +62,10 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     private readonly _processors: ISnapshotProcessors<IT, CustomC, CustomS>,
     name?: string
   ) {
-    super(name)
+    // `|| undefined`, so an empty name still falls through to the subtype's, as
+    // it did when this read `name || _subtype.name`. Passing `""` straight to
+    // `super` would keep it: `_name ??= computeName()` only fills a nullish one.
+    super(name || undefined)
   }
 
   protected override computeName(): string {
