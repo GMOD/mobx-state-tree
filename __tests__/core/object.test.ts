@@ -132,6 +132,66 @@ test("it should emit snapshots", () => {
   expect(snapshots).toEqual([{ to: "universe" }])
 })
 
+test("it stops serializing once the last snapshot listener is disposed", () => {
+  // the snapshot reaction re-serializes the subtree on every change, so it has
+  // to go away with its last listener rather than run on for the node's life
+  let serializations = 0
+  const Factory = types
+    .model({ to: "world" })
+    .actions(self => ({
+      setTo(v: string) {
+        self.to = v
+      }
+    }))
+    .postProcessSnapshot(sn => {
+      serializations++
+      return sn
+    })
+  const doc = Factory.create()
+
+  const disposer = onSnapshot(doc, () => {})
+  doc.setTo("universe")
+  const whileListening = serializations
+  expect(whileListening).toBeGreaterThan(0)
+
+  disposer()
+  doc.setTo("galaxy")
+  doc.setTo("cosmos")
+  expect(serializations).toBe(whileListening)
+
+  // and getSnapshot still reflects the writes made while nothing was listening
+  expect(getSnapshot(doc)).toEqual({ to: "cosmos" })
+})
+
+test("a second snapshot listener keeps the reaction alive when the first is disposed", () => {
+  const { Factory } = createTestFactories()
+  const doc = Factory.create()
+  unprotect(doc)
+  const first: SnapshotOut<typeof doc>[] = []
+  const second: SnapshotOut<typeof doc>[] = []
+  const disposeFirst = onSnapshot(doc, s => first.push(s))
+  onSnapshot(doc, s => second.push(s))
+
+  disposeFirst()
+  doc.to = "universe"
+
+  expect(first).toEqual([])
+  expect(second).toEqual([{ to: "universe" }])
+})
+
+test("onSnapshot can be re-registered after being disposed", () => {
+  const { Factory } = createTestFactories()
+  const doc = Factory.create()
+  unprotect(doc)
+  const snapshots: SnapshotOut<typeof doc>[] = []
+
+  onSnapshot(doc, () => {})()
+  onSnapshot(doc, s => snapshots.push(s))
+  doc.to = "universe"
+
+  expect(snapshots).toEqual([{ to: "universe" }])
+})
+
 test("it should emit snapshots for children", () => {
   const Factory = createFactoryWithChildren()
   const folder = Factory.create({

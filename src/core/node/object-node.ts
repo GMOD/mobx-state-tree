@@ -120,7 +120,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   private _autoUnbox = true // unboxing is disabled when reading child nodes
   _isRunningAction = false // only relevant for root
-  private _hasSnapshotReaction = false
+  private _snapshotReactionDisposer?: IDisposer
 
   private _observableInstanceState = ObservableInstanceLifecycle.UNINITIALIZED
   private _childNodes: IChildNodesMap
@@ -657,7 +657,20 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   onSnapshot(onChange: (snapshot: S) => void): IDisposer {
     this._addSnapshotReaction()
-    return this._internalEventsRegister(InternalEvents.Snapshot, onChange)
+    const unregister = this._internalEventsRegister(
+      InternalEvents.Snapshot,
+      onChange
+    )
+    return () => {
+      unregister()
+      // The reaction re-serializes the whole subtree on every change, so leaving
+      // it running once the last listener is gone would keep charging the node
+      // for a snapshot nobody receives. Referential stability of getSnapshot()
+      // does not depend on it — that comes from keepAlive on _snapshotComputed.
+      if (!this._internalEventsHasSubscribers(InternalEvents.Snapshot)) {
+        this._removeSnapshotReaction()
+      }
+    }
   }
 
   protected emitSnapshot(snapshot: S): void {
@@ -738,15 +751,28 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   private _addSnapshotReaction(): void {
-    if (!this._hasSnapshotReaction) {
+    if (!this._snapshotReactionDisposer) {
       const snapshotDisposer = reaction(
         () => this.snapshot,
         snapshot => this.emitSnapshot(snapshot),
         snapshotReactionOptions
       )
       this.addDisposer(snapshotDisposer)
-      this._hasSnapshotReaction = true
+      this._snapshotReactionDisposer = snapshotDisposer
     }
+  }
+
+  private _removeSnapshotReaction(): void {
+    const disposer = this._snapshotReactionDisposer
+    if (!disposer) {
+      return
+    }
+    this._snapshotReactionDisposer = undefined
+    // not removeDisposer(), which throws when the registration is already gone —
+    // the last listener can be disposed from within a disposer, i.e. after
+    // aboutToDie has cleared them
+    this._internalEventsUnregister(InternalEvents.Dispose, disposer)
+    disposer()
   }
 
   // #region internal event handling
