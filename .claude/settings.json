@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "s=.claude/hooks/setup-worktree.sh; [ -x \"$s\" ] || s=\"$CLAUDE_PROJECT_DIR/$s\"; if [ -x \"$s\" ]; then exec \"$s\"; else cat >/dev/null; echo '{\"systemMessage\":\"worktree setup hook not found - run pnpm install in the new worktree yourself\"}'; fi",
+            "command": "s=.claude/hooks/setup-worktree.sh; [ -x \"$s\" ] || s=\"$CLAUDE_PROJECT_DIR/$s\"; if [ -x \"$s\" ]; then exec \"$s\"; else d=$(cat | jq -r '.worktree_path // .worktreePath // .path // .worktree // .cwd // empty' 2>/dev/null); d=${d:-$PWD}; echo \"setup-worktree.sh not found; run pnpm install in $d yourself\" >>~/.claude/worktree-hook.log; echo \"$d\"; fi",
             "timeout": 600,
             "statusMessage": "Installing dependencies in the new worktree..."
           }

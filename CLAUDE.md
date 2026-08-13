@@ -188,12 +188,17 @@ unminified build with those guards intact. There is no production condition to
 opt into from a plain `.mjs`.
 
 **Worktree setup is automatic.** `.claude/hooks/setup-worktree.sh` runs on
-`WorktreeCreate` and does `pnpm install` in the new worktree. Don't symlink the
+`WorktreeCreate` and does `pnpm install` in the new worktree. **Its stdout must
+be the worktree path and nothing else** — the runtime reads a `WorktreeCreate`
+hook's stdout as the directory to enter, and fails the whole `EnterWorktree` if
+it is empty. Printing a `{"systemMessage": ...}` blob there (the earlier bug)
+makes it chdir into a directory by that name. Status goes to
+`~/.claude/worktree-hook.log`. Don't symlink the
 main checkout's `node_modules` instead: it happens to work here (single package)
 but not in a pnpm *workspace* like jbrowse, where each package's deps and the
 links between packages live in `<pkg>/node_modules` — there, a root-only symlink
 gives `tsc` 12k unresolved-import errors. Run the script by hand for a worktree
-you made with plain `git worktree add`:
+you made with plain `git worktree add` (it echoes the path; status is in the log):
 
 ```
 echo '{"worktree_path":"/path/to/wt"}' | .claude/hooks/setup-worktree.sh
