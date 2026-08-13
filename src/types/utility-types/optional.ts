@@ -264,11 +264,17 @@ const undefinedAsOptionalValues: [undefined] = [undefined]
 /**
  * Returns if a value represents an optional type.
  *
+ * Returns a plain `boolean`, not a `type is IT` predicate: with the parameter
+ * typed as `IT`, narrowing to `IT` was a no-op in the positive branch while
+ * collapsing the negative one to `never`, so `if (!isX(t)) { t.name }` failed
+ * to compile. Guards with a distinct narrowing target (`isArrayType`,
+ * `isMapType`, `isModelType`) keep their predicate.
+ *
  * @template IT
  * @param type
  * @returns
  */
-export function isOptionalType<IT extends IAnyType>(type: IT): type is IT {
+export function isOptionalType<IT extends IAnyType>(type: IT): boolean {
   return isType(type) && (type.flags & TypeFlags.Optional) > 0
 }
 

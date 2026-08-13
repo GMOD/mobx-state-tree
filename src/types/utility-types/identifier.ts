@@ -140,12 +140,18 @@ export const identifierNumber: ISimpleType<number> = new IdentifierNumberType()
 /**
  * Returns if a given value represents an identifier type.
  *
+ * Returns a plain `boolean`, not a `type is IT` predicate: with the parameter
+ * typed as `IT`, narrowing to `IT` was a no-op in the positive branch while
+ * collapsing the negative one to `never`, so `if (!isX(t)) { t.name }` failed
+ * to compile. Guards with a distinct narrowing target (`isArrayType`,
+ * `isMapType`, `isModelType`) keep their predicate.
+ *
  * @param type
  * @returns
  */
 export function isIdentifierType<
   IT extends typeof identifier | typeof identifierNumber
->(type: IT): type is IT {
+>(type: IT): boolean {
   return isType(type) && (type.flags & TypeFlags.Identifier) > 0
 }
 
