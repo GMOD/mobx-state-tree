@@ -604,18 +604,17 @@ export function union(
  * @param otherTypes
  * @returns
  */
-export function union(
-  optionsOrType: UnionOptions | IAnyType,
-  ...otherTypes: IAnyType[]
-): IAnyType {
-  const firstIsType = isType(optionsOrType)
-  const options = firstIsType ? undefined : optionsOrType
-  // Prepending into the rest array with `unshift` looks like it saves the second
-  // allocation, and costs 3x instead: V8 inlines the spread but calls out to the
-  // `unshift` builtin, which for the 2-member unions jbrowse builds per config
-  // slot dominates this function. Measured at ~50ns per union, ~10% of the whole
-  // config-schema workload. Allocate the second array.
-  const types = firstIsType ? [optionsOrType, ...otherTypes] : otherTypes
+export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
+  // One rest array, handed straight to the Union in the common case. Splitting
+  // the leading argument out — whether by a `(first, ...rest)` signature that
+  // rebuilds `[first, ...rest]`, or by `rest.unshift(first)` — allocates a
+  // second array per union, and jbrowse builds one union per config slot. (The
+  // `unshift` form is worse still: V8 inlines the spread and calls out to the
+  // builtin, so it measured 3x the spread on a two-member union.) Only the
+  // options overload, which nothing hot uses, pays for a copy.
+  const firstIsType = isType(args[0])
+  const options = firstIsType ? undefined : (args[0] as UnionOptions)
+  const types = (firstIsType ? args : args.slice(1)) as IAnyType[]
   // the name is folded from the members on demand — see Union.computeName
 
   // check all options
