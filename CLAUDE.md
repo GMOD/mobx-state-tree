@@ -103,7 +103,8 @@ A/B with `scripts/ab-config-schema.mjs`, and read a profile with
 
 **ADR 0004 also lists four changes that looked obviously right and measured
 neutral or worse** — read it before re-trying anything in `cloneAndEnhance` or
-`toPropertiesObject`.
+`toPropertiesObject`. Its prototype-hoisting trick is **ABI-safe**; see the
+`abi.test.ts` note below for why, and why deleting a field is not.
 
 **Watch out for `abi.test.ts` when you change a type's own properties.**
 JBrowse's `packages/core/src/ReExports/abi.test.ts` pins the export names
@@ -112,7 +113,12 @@ served as an MST **type object**, so its baseline enumerated MST's internals —
 `C`, `N`, `S`, `T`, `isType`, `propertiesArePreProcessed`, `preProcessor`,
 `duplicateKeysChecked` and friends — as if they were ABI. Removing any of them
 fails that one test while everything else passes (3017/3018 in its group, 7890/7890
-in `plugins`). It is over-capture on their side — a module served as a value,
+in `plugins`). **The check is `n in mod`, so it follows the prototype chain**:
+moving a field off the instance is invisible to it, and only a name that stops
+existing anywhere fails. Today that is `C`, `N`, `S`, `T` and
+`propertiesArePreProcessed`, all from ADR 0003. Size the blast radius of a
+change with `in`, not `Object.keys` — even though `Object.keys` is what
+generated the baseline. It is over-capture on their side — a module served as a value,
 not as a namespace of names — not a real plugin contract, but it _will_ go red.
 
 **Startup is not the interesting workload, though — value churn is.** For rapid

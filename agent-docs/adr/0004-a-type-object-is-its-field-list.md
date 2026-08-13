@@ -119,15 +119,34 @@ CLAUDE.md said the alternating-round harness "resolves 1.03x reproducibly" at
 Take several invocations, compare medians of medians, and re-measure anything
 important once the machine is idle.
 
-## ABI, again
+## ABI: prototype hoisting is safe, and here is the exact reason
 
 ADR 0003 explains why jbrowse's `packages/core/src/ReExports/abi.test.ts` pins
 MST internals as plugin ABI: `@jbrowse/core/util/Base1DViewModel` is served as
 the MST type object itself, so whatever generated `abiBaseline.json` enumerated
-its own properties.
+its own properties. The entry is:
 
-This ADR removes exactly one more name from a `ModelType`'s own keys: **`isType`**.
-It joins `C`, `N`, `S`, `T` and `propertiesArePreProcessed` on the list that has
-to come out of `abiBaseline.json`, and the argument is unchanged — no plugin
-imports `isType` from `Base1DViewModel`, and per-name pins should not be
-generated for a module whose export is a value rather than a namespace of names.
+```
+"@jbrowse/core/util/Base1DViewModel": ["C","N","S","T","duplicateKeysChecked",
+  "flags","identifierAttribute","initializers","isType","name","named",
+  "postProcessSnapshot","postProcessor","preProcessSnapshot","preProcessor",
+  "properties","propertiesArePreProcessed","propertyNames","props"]
+```
+
+**The check is `names.filter(n => !(n in mod))`, and `in` walks the prototype
+chain.** So moving a field from the instance to the prototype is invisible to
+it, and **nothing in this ADR adds to the baseline edit ADR 0003 needs**.
+Verified against the build: `isType` and `name` still answer `true`; the five
+that answer `false` are `C`, `N`, `S`, `T` and `propertiesArePreProcessed`,
+every one of them from ADR 0003 — `declare` on a phantom removes the name
+outright, and dropping the `Object.assign(this, opts)` plumbing removed the
+fifth.
+
+That is the rule for anyone doing more of this work: **hoisting a field to the
+prototype is ABI-safe; deleting one is not.** The corollary is that
+`Object.keys` on a type is not the check to run when sizing the blast radius,
+even though it is the check that generated the baseline — use `in`.
+
+The ADR 0003 argument for the edit is unchanged: no plugin imports `C` from
+`Base1DViewModel`, and per-name pins should not be generated for a module whose
+export is a value rather than a namespace of names.
