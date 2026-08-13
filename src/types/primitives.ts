@@ -250,6 +250,8 @@ export function isPrimitiveType<
       (TypeFlags.String |
         TypeFlags.Number |
         TypeFlags.Integer |
+        TypeFlags.Float |
+        TypeFlags.Finite |
         TypeFlags.Boolean |
         TypeFlags.Date)) >
       0

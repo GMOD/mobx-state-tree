@@ -114,7 +114,13 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
 
     when(
       () => !node.isAlive,
-      () => this.pendingNodeList.splice(this.pendingNodeList.indexOf(node), 1)
+      () => {
+        // guard the index: splice(-1, 1) would drop an unrelated pending node
+        const index = this.pendingNodeList.indexOf(node)
+        if (index >= 0) {
+          this.pendingNodeList.splice(index, 1)
+        }
+      }
     )
 
     return node
