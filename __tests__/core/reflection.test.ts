@@ -8,6 +8,8 @@ import {
   IAnyModelType,
   IModelReflectionData,
   IModelReflectionPropertiesData,
+  IOptionalIType,
+  isOptionalType,
   flow
 } from "../../src"
 
@@ -150,9 +152,20 @@ test("reflection - property contains type", () => {
   })
   const reflection = getMembers(node)
   expect(reflection.properties.string).toBe(types.string)
-  expect(reflection.properties.optional).toMatchObject(
-    types.optional(types.boolean, false)
-  )
+  // the `optional: false` shorthand expands to optional(boolean, false).
+  // Asserted by what the type *is*, not by structural comparison against a
+  // freshly built one: these carry lazily-populated internals (the name, the
+  // folded flags), so two equivalent types stop matching field-for-field as
+  // soon as one of them has been used.
+  const optionalType = reflection.properties.optional!
+  expect(isOptionalType(optionalType)).toBe(true)
+  expect(optionalType.getSubTypes()).toBe(types.boolean)
+  expect(optionalType.describe()).toBe("boolean?")
+  expect(
+    (
+      optionalType as IOptionalIType<typeof types.boolean, [undefined]>
+    ).getDefaultInstanceOrSnapshot()
+  ).toBe(false)
 })
 test("reflection - members chained", () => {
   const ChainedModel = types

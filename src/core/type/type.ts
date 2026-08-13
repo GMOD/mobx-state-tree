@@ -308,19 +308,57 @@ export abstract class BaseType<
   T,
   N extends BaseNode<any, any, any> = BaseNode<C, S, T>
 > implements IType<C, S, T> {
-  [$type]!: undefined
+  // `declare`, not a definite-assignment `!`: none of these five exist at
+  // runtime — `$type` is the nominal brand and C/S/T/N only make the inner
+  // types available to subclasses as `this["C"]` etc. Under
+  // useDefineForClassFields a `!` field is still *emitted*, so every type
+  // object in the process was materializing five own slots it never reads.
+  declare readonly [$type]: undefined
 
   // these are just to make inner types avaialable to inherited classes
-  readonly C!: C
-  readonly S!: S
-  readonly T!: T
-  readonly N!: N
+  declare readonly C: C
+  declare readonly S: S
+  declare readonly T: T
+  declare readonly N: N
 
   readonly isType = true
-  readonly name: string
 
-  constructor(name: string) {
-    this.name = name
+  private _name?: string
+
+  /**
+   * Builds the name of a type that does not get one handed to it. Composite
+   * types (`union`, `array`, `map`, `reference`, ...) override this to fold
+   * their members' names; see {@link name}. It runs after construction, so
+   * unlike a `super(...)` argument it can read the subclass's own fields.
+   */
+  protected computeName(): string {
+    // istanbul ignore next
+    throw fail(`${this.constructor.name} has neither a name nor a computeName`)
+  }
+
+  /**
+   * Friendly type name.
+   *
+   * A composite type folds its members' names, which for a union is a map +
+   * join over every member — and the result is read only by error messages and
+   * `describe()`. So those types leave it unset and it is built on first read
+   * and cached: a union that never fails a typecheck never builds one, and
+   * jbrowse builds a union per config slot, tens of thousands per session load.
+   *
+   * Deliberately not a lambda passed to the constructor: that allocated a
+   * closure per type (the very cost being avoided) and made two separately
+   * built but equivalent types compare unequal, since the closures differ.
+   */
+  get name(): string {
+    return (this._name ??= this.computeName())
+  }
+
+  set name(value: string) {
+    this._name = value
+  }
+
+  constructor(name?: string) {
+    this._name = name
   }
 
   create(snapshot?: C, environment?: any) {

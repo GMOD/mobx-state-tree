@@ -460,25 +460,41 @@ export class ModelType<
   /*
    * The original object definition
    */
-  public readonly initializers!: ((instance: any) => any)[]
-  public readonly properties!: PROPS
+  public readonly initializers: ReadonlyArray<(instance: any) => any>
+  public readonly properties: PROPS
 
-  private preProcessor!: (snapshot: any) => any | undefined
-  private postProcessor!: (snapshot: any) => any | undefined
+  private readonly preProcessor?: (snapshot: any) => any
+  private readonly postProcessor?: (snapshot: any) => any
   readonly propertyNames: string[]
   // member/property name collisions are a property of the type, so we only need
   // to check the first instance we finalize (see finalizeNewInstance)
   private duplicateKeysChecked = false
 
   constructor(opts: ModelTypeConfig) {
-    super(opts.name || defaultObjectOptions.name)
-    Object.assign(this, defaultObjectOptions, opts)
+    // `??`, not `||`: `types.model("", {})` names the model "". The old
+    // `Object.assign(this, defaults, opts)` below overwrote the `||` fallback
+    // with opts.name afterwards, so that only worked by accident.
+    super(opts.name ?? defaultObjectOptions.name)
+    // Every field is assigned here, unconditionally and in a fixed order,
+    // rather than by `Object.assign(this, defaultObjectOptions, opts)`. `opts`
+    // carries a different key set at each of the three call sites — `model()`,
+    // and cloneAndEnhance's preprocessed / converted paths — so copying it
+    // wholesale gave ModelType three hidden classes, making every later read of
+    // `type.properties` / `type.propertyNames` (getSnapshot's inner loop, among
+    // others) polymorphic. It also left the internal `propertiesArePreProcessed`
+    // / `propertiesAreConverted` plumbing on the type for its whole lifetime.
+    this.initializers = opts.initializers ?? EMPTY_ARRAY
+    this.preProcessor = opts.preProcessor
+    this.postProcessor = opts.postProcessor
+
+    const declaredProperties = (opts.properties ?? EMPTY_OBJECT) as PROPS
     if (opts.propertiesArePreProcessed) {
       // `properties` is a parent type's already-converted + frozen output
       // (chain step with no new props), so its derived propertyNames and
       // identifierAttribute are identical to the parent's — reuse them verbatim
       // (cloneAndEnhance passed them in) instead of re-running Object.keys and
       // the per-prop identifier scan, both O(props), on every step.
+      this.properties = declaredProperties
       this.propertyNames = opts.propertyNames!
       this.identifierAttribute = opts.identifierAttribute
     } else {
@@ -486,11 +502,14 @@ export class ModelType<
       // means every value is already a type — the parent's converted bag merged
       // with a freshly converted delta — so skip re-converting. Only raw entry
       // points (`model()`) still need the full toPropertiesObject pass.
-      if (!opts.propertiesAreConverted) {
-        this.properties = toPropertiesObject(this.properties) as PROPS
-      }
-      freeze(this.properties) // make sure nobody messes with it
-      this.propertyNames = Object.keys(this.properties)
+      const properties = (
+        opts.propertiesAreConverted
+          ? declaredProperties
+          : toPropertiesObject(declaredProperties)
+      ) as PROPS
+      this.properties = properties
+      freeze(properties) // make sure nobody messes with it
+      this.propertyNames = Object.keys(properties)
       this.identifierAttribute = this._getIdentifierAttribute()
     }
   }
