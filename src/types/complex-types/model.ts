@@ -371,6 +371,29 @@ const defaultObjectOptions = {
   initializers: EMPTY_ARRAY
 }
 
+/**
+ * A plain loop rather than `forAllProps`, which allocated a closure and made an
+ * indirect call per property. This runs once per `types.model()` over every
+ * declared property, and jbrowse builds a ~40-slot schema per track.
+ */
+function findIdentifierAttribute(
+  properties: ModelProperties,
+  propertyNames: string[]
+): string | undefined {
+  let identifierAttribute: string | undefined = undefined
+  for (const propName of propertyNames) {
+    if (properties[propName]!.flags & TypeFlags.Identifier) {
+      if (identifierAttribute) {
+        throw fail(
+          `Cannot define property '${propName}' as object identifier, property '${identifierAttribute}' is already defined as identifier property`
+        )
+      }
+      identifierAttribute = propName
+    }
+  }
+  return identifierAttribute
+}
+
 function toPropertiesObject(
   declaredProps: ModelPropertiesDeclaration
 ): ModelProperties {
@@ -509,24 +532,13 @@ export class ModelType<
       ) as PROPS
       this.properties = properties
       freeze(properties) // make sure nobody messes with it
-      this.propertyNames = Object.keys(properties)
-      this.identifierAttribute = this._getIdentifierAttribute()
+      const propertyNames = Object.keys(properties)
+      this.propertyNames = propertyNames
+      this.identifierAttribute = findIdentifierAttribute(
+        properties,
+        propertyNames
+      )
     }
-  }
-
-  private _getIdentifierAttribute(): string | undefined {
-    let identifierAttribute: string | undefined = undefined
-    this.forAllProps((propName, propType) => {
-      if (propType.flags & TypeFlags.Identifier) {
-        if (identifierAttribute) {
-          throw fail(
-            `Cannot define property '${propName}' as object identifier, property '${identifierAttribute}' is already defined as identifier property`
-          )
-        }
-        identifierAttribute = propName
-      }
-    })
-    return identifierAttribute
   }
 
   cloneAndEnhance(opts: ModelTypeConfig): IAnyModelType {

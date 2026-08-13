@@ -164,9 +164,12 @@ function checkOptionalPreconditions<IT extends IAnyType>(
   type: IAnyType,
   defaultValueOrFunction: OptionalDefaultValueOrFunction<IT>
 ) {
-  // make sure we never pass direct instances
+  // make sure we never pass direct instances. A node is always an object, so
+  // the typeof narrows first: most defaults are primitives, and reading
+  // `$treenode` off a string or a number is a megamorphic miss that this runs
+  // once per config slot.
   if (
-    typeof defaultValueOrFunction !== "function" &&
+    typeof defaultValueOrFunction === "object" &&
     isStateTreeNode(defaultValueOrFunction)
   ) {
     throw fail(

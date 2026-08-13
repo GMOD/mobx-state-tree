@@ -321,7 +321,10 @@ export abstract class BaseType<
   declare readonly T: T
   declare readonly N: N
 
-  readonly isType = true
+  // on the prototype, not on every instance: it is the same `true` for every
+  // type ever built, and an own slot per type is exactly the kind of per-type
+  // charge ADR 0003 is about. Assigned below the class body.
+  declare readonly isType: true
 
   private _name?: string
 
@@ -446,6 +449,7 @@ export abstract class BaseType<
     | typeof cannotDetermineSubtype
 }
 BaseType.prototype.create = action(BaseType.prototype.create)
+;(BaseType.prototype as { isType: true }).isType = true
 
 /**
  * @internal

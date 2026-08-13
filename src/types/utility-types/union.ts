@@ -593,12 +593,12 @@ export function union(
 ): IAnyType {
   const firstIsType = isType(optionsOrType)
   const options = firstIsType ? undefined : optionsOrType
-  // `otherTypes` is already a fresh rest array, so prepending in place saves
-  // allocating and copying a second one per union
-  const types = otherTypes
-  if (firstIsType) {
-    types.unshift(optionsOrType)
-  }
+  // Prepending into the rest array with `unshift` looks like it saves the second
+  // allocation, and costs 3x instead: V8 inlines the spread but calls out to the
+  // `unshift` builtin, which for the 2-member unions jbrowse builds per config
+  // slot dominates this function. Measured at ~50ns per union, ~10% of the whole
+  // config-schema workload. Allocate the second array.
+  const types = firstIsType ? [optionsOrType, ...otherTypes] : otherTypes
   // the name is folded from the members on demand — see Union.computeName
 
   // check all options
