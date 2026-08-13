@@ -60,6 +60,10 @@ export default defineConfig(
       "@typescript-eslint/prefer-optional-chain": "error",
       "@typescript-eslint/prefer-for-of": "error",
       "@typescript-eslint/no-inferrable-types": "error",
+      // type-aware, like the four rules above it: catches `as T` / `!` that the
+      // checker already proves redundant, which otherwise accumulate and hide
+      // the assertions that are load-bearing
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
       "@typescript-eslint/consistent-type-imports": [
         "error",
         { fixStyle: "inline-type-imports" }

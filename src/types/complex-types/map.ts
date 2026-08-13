@@ -195,11 +195,11 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
         throw fail(needsIdentifierError)
       }
       this.set(node.identifier, value)
-      return value as any
+      return value
     } else if (!isMutable(value)) {
       throw fail(`Map.put can only be used to store complex values`)
     } else {
-      const mapNode = getStateTreeNode(this as IAnyStateTreeNode)
+      const mapNode = getStateTreeNode(this)
       const mapType = mapNode.type as MapType<any>
 
       if (mapType.identifierMode !== MapIdentifierMode.YES) {
@@ -218,7 +218,7 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
       }
       const key = normalizeIdentifier(id)
       this.set(key, value)
-      return this.get(key) as any
+      return this.get(key)
     }
   }
 }
@@ -304,7 +304,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   ): IChildNodesMap {
     const subType = (objNode.type as this)._subType
     const result: IChildNodesMap = {}
-    Object.keys(initialSnapshot!).forEach(name => {
+    Object.keys(initialSnapshot).forEach(name => {
       result[name] = subType.instantiate(
         objNode,
         name,
@@ -521,7 +521,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   }
 
   getDefaultSnapshot(): this["C"] {
-    return EMPTY_OBJECT as this["C"]
+    return EMPTY_OBJECT
   }
 
   removeChild(node: this["N"], subpath: string) {

@@ -32,7 +32,7 @@ export function flow<R, Args extends any[]>(
  * @returns
  */
 export function castFlowReturn<T>(val: T): T {
-  return val as any
+  return val
 }
 
 /**

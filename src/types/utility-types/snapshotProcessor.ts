@@ -80,7 +80,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     if (this._processors.preProcessor) {
       return this._processors.preProcessor.call(null, sn)
     }
-    return sn as any
+    return sn
   }
 
   private preProcessSnapshotSafe(
@@ -98,7 +98,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     node: this["N"]
   ): this["S"] {
     if (this._processors.postProcessor) {
-      return this._processors.postProcessor!.call(
+      return this._processors.postProcessor.call(
         null,
         sn,
         node.storedValue

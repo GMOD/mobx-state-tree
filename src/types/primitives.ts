@@ -55,7 +55,7 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
   }
 
   isValidSnapshot(value: C, context: IValidationContext): IValidationResult {
-    if (isPrimitive(value) && this.checker(value as any)) {
+    if (isPrimitive(value) && this.checker(value)) {
       return typeCheckSuccess()
     }
     const typeName =

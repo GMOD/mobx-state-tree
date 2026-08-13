@@ -415,7 +415,7 @@ export function getParent<IT extends IAnyStateTreeNode | IAnyComplexType>(
   let parent: AnyObjectNode | null = getStateTreeNode(target).parent
   while (parent) {
     if (--d === 0) {
-      return parent.storedValue as any
+      return parent.storedValue
     }
     parent = parent.parent
   }
@@ -978,7 +978,7 @@ export function cast<O = never>(
  * @returns The same object cast as an instance
  */
 export function cast(snapshotOrInstance: any): any {
-  return snapshotOrInstance as any
+  return snapshotOrInstance
 }
 
 /**
@@ -1013,7 +1013,7 @@ export function castToSnapshot<I>(
 ): Extract<I, IAnyStateTreeNode> extends never
   ? I
   : TypeOfValue<I>["CreationType"] {
-  return snapshotOrInstance as any
+  return snapshotOrInstance
 }
 
 /**

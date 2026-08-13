@@ -171,7 +171,7 @@ export function resolveNodeByPathParts(
     for (let i = 0; i < pathParts.length; i++) {
       const part = pathParts[i]!
       if (part === "..") {
-        current = current!.parent
+        current = current.parent
         if (current) {
           continue
         } // not everything has a parent
@@ -209,7 +209,7 @@ export function resolveNodeByPathParts(
     }
     throw e
   }
-  return current!
+  return current
 }
 
 /**

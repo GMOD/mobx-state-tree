@@ -1,6 +1,5 @@
 import {
   EMPTY_ARRAY,
-  type IAnyStateTreeNode,
   type IHooksGetter,
   addHiddenFinalProp,
   addHiddenWritableProp,
@@ -48,11 +47,7 @@ export function installHookInitializers<T>(
     const hooks = initializer(instance)
     for (const name of Object.keys(hooks)) {
       const hook = hooks[name as keyof typeof hooks]!
-      addProp(
-        instance,
-        name,
-        createActionInvoker(instance as IAnyStateTreeNode, name, hook)
-      )
+      addProp(instance, name, createActionInvoker(instance, name, hook))
     }
   }
 }

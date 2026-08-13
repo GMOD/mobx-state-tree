@@ -116,7 +116,7 @@ class StoredReference<IT extends IAnyType> {
       }
 
       this.resolvedReference = {
-        node: target!,
+        node: target,
         lastCacheModification
       }
     }
@@ -216,7 +216,7 @@ export abstract class BaseReferenceType<
       },
       removeRef() {
         if (isModelType(storedRefParentNode.type)) {
-          this.replaceRef(undefined as any)
+          this.replaceRef(undefined)
         } else {
           applyPatch(storedRefNode.root.storedValue, {
             op: "remove",
@@ -457,7 +457,7 @@ export class CustomReferenceType<
     newValue: this["C"] | this["T"]
   ): this["N"] {
     const identifier = isStateTreeNode(newValue)
-      ? this.options.set(newValue as any, parent ? parent.storedValue : null)
+      ? this.options.set(newValue, parent ? parent.storedValue : null)
       : newValue
     const storedRefNode: this["N"] = createScalarNode(
       this,
@@ -481,7 +481,7 @@ export class CustomReferenceType<
     subpath: string
   ): this["N"] {
     const newIdentifier = isStateTreeNode(newValue)
-      ? this.options.set(newValue as any, current ? current.storedValue : null)
+      ? this.options.set(newValue, current ? current.storedValue : null)
       : newValue
     if (
       !current.isDetaching &&

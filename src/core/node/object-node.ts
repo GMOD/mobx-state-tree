@@ -497,7 +497,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       return this._observableInstanceState ===
         ObservableInstanceLifecycle.CREATED
         ? this.type.getChildNode(this, subpath)
-        : this._childNodes![subpath]!
+        : this._childNodes[subpath]!
     } finally {
       this._autoUnbox = true
     }
@@ -603,7 +603,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
           return
         }
         // else, apply it by calling the type logic
-        return self.type.applySnapshot(self, snapshot as any)
+        return self.type.applySnapshot(self, snapshot)
       }
     )
 

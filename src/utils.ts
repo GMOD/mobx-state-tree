@@ -90,7 +90,7 @@ export function asArray<T>(
     return EMPTY_ARRAY as any as T[]
   }
   if (isArray(val)) {
-    return val as T[]
+    return val
   }
   return [val] as T[]
 }
@@ -168,7 +168,7 @@ export function deepFreeze<T>(value: T): T {
   if (devMode()) {
     freeze(value)
     if (isPlainObject(value)) {
-      for (const v of Object.values(value as Record<string, unknown>)) {
+      for (const v of Object.values(value)) {
         if (!isPrimitive(v) && !Object.isFrozen(v)) {
           deepFreeze(v)
         }
