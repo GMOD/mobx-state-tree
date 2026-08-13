@@ -16,10 +16,7 @@ import {
 } from "../../internal.ts"
 
 abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
-  // on the prototype, not an own slot per type: the same constant on every
-  // instance, never reassigned. Assigned below the class body; see
-  // agent-docs/adr/0004.
-  declare readonly flags: TypeFlags
+  readonly flags = TypeFlags.Identifier
 
   constructor(
     name: string,
@@ -73,10 +70,6 @@ abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
     return typeCheckSuccess()
   }
 }
-// see the `flags` declaration in the class body
-Object.assign(BaseIdentifierType.prototype as object, {
-  flags: TypeFlags.Identifier
-})
 
 /**
  * @internal

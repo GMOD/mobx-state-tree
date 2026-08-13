@@ -5,9 +5,14 @@
 // Why this exists: a change that removes an own slot from a type object — the
 // ADR 0003 / 0004 trick — moves *memory*, and the A/B timer cannot resolve it.
 // The timing harness bottoms out around 1.1x (see CLAUDE.md, "Benchmarking"),
-// while this reads the same to the byte on every run, so a sub-1% win is
-// reportable here and simply invisible there. Run it before concluding that a
-// slot-removal "did nothing".
+// while this reads the same to the byte on every run, so a sub-1% effect is
+// legible here and simply invisible there. Run it before concluding that a
+// slot removal "did nothing".
+//
+// Measurable is not the same as worth it: hoisting `flags` moved 1,582 slots
+// and 0.6% of heap and was still reverted, because the payoff of this trick
+// scales with how many *objects* carry the field, not how many classes declare
+// it. See the follow-up section of agent-docs/adr/0004.
 //
 // Reports, for the reachable type graph:
 //   heap        retained bytes, measured between two forced GCs

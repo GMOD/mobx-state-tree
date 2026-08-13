@@ -37,10 +37,7 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
   T,
   T
 > {
-  // on the prototype, not an own slot per type: the same constant on every
-  // instance, never reassigned. Assigned below the class body; see
-  // agent-docs/adr/0004.
-  declare readonly flags: TypeFlags
+  flags = TypeFlags.Lazy
 
   private loadedType: T | null = null
   private pendingNodeList: IObservableArray<AnyNode> = observable.array()
@@ -164,5 +161,3 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
     return super.reconcile(current, value, parent, subpath)
   }
 }
-// see the `flags` declaration in the class body
-Object.assign(Lazy.prototype as object, { flags: TypeFlags.Lazy })

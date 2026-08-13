@@ -82,10 +82,7 @@ export function custom<S, T>(
  * @hidden
  */
 export class CustomType<S, T> extends SimpleType<S | T, S, T> {
-  // on the prototype, not an own slot per type: the same constant on every
-  // instance, never reassigned. Assigned below the class body; see
-  // agent-docs/adr/0004.
-  declare readonly flags: TypeFlags
+  readonly flags = TypeFlags.Custom
 
   constructor(protected readonly options: CustomTypeOptions<S, T>) {
     super(options.name)
@@ -157,5 +154,3 @@ export class CustomType<S, T> extends SimpleType<S | T, S, T> {
     return newNode
   }
 }
-// see the `flags` declaration in the class body
-Object.assign(CustomType.prototype as object, { flags: TypeFlags.Custom })

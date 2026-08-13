@@ -105,10 +105,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   IT["SnapshotType"][],
   IMSTArray<IT>
 > {
-  // on the prototype, not an own slot per type: the same constant on every
-  // instance, never reassigned. Assigned below the class body; see
-  // agent-docs/adr/0004.
-  declare readonly flags: TypeFlags
+  readonly flags = TypeFlags.Array
 
   constructor(
     private readonly _subType: IT,
@@ -347,8 +344,6 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   }
 }
 ArrayType.prototype.applySnapshot = action(ArrayType.prototype.applySnapshot)
-// see the `flags` declaration in the class body
-Object.assign(ArrayType.prototype as object, { flags: TypeFlags.Array })
 
 /**
  * `types.array` - Creates an index based collection type who's children are all of a uniform declared type.

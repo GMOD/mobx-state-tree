@@ -20,10 +20,7 @@ import { assertArg } from "../../utils.ts"
  */
 export class Literal<T> extends SimpleType<T, T, T> {
   readonly value: T
-  // on the prototype, not an own slot per type: the same constant on every
-  // instance, never reassigned. Assigned below the class body; see
-  // agent-docs/adr/0004.
-  declare readonly flags: TypeFlags
+  readonly flags = TypeFlags.Literal
 
   constructor(value: T) {
     super(JSON.stringify(value))
@@ -57,8 +54,6 @@ export class Literal<T> extends SimpleType<T, T, T> {
     )
   }
 }
-// see the `flags` declaration in the class body
-Object.assign(Literal.prototype as object, { flags: TypeFlags.Literal })
 
 /**
  * `types.literal` - The literal type will return a type that will match only the exact given type.
