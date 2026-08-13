@@ -4,10 +4,13 @@ Our fork of mobx-state-tree, published to npm and consumed by JBrowse and by
 third parties. `agent-docs/adr/` holds the decisions where the obvious change is
 wrong for a measured reason — read
 [0001](agent-docs/adr/0001-keyed-array-reconcile-and-no-validation-cache.md)
-before touching array reconciliation or union dispatch, and
+before touching array reconciliation or union dispatch,
 [0002](agent-docs/adr/0002-mobx-proxy-traps-and-per-property-lookups.md) before
 touching how `ModelType` reaches a property's mobx observable — or when
-upgrading mobx, since it depends on the internal `values_` field.
+upgrading mobx, since it depends on the internal `values_` field — and
+[0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) before adding
+anything to a type's constructor, or touching `BaseType.name` / the `flags`
+getters.
 
 ## Verification norm
 
@@ -25,7 +28,7 @@ Build output is `dist/mobx-state-tree.mjs` / `.cjs`.
 
 JBrowse plugins depend on it, and so do out-of-tree consumers like Apollo3.
 
-**`~/src/jbrowse-components` installs the *published* fork from the pnpm store —
+**`~/src/jbrowse-components` installs the _published_ fork from the pnpm store —
 it is not symlinked to this repo, so editing source here does nothing there.** To
 A/B a change against it:
 
@@ -60,10 +63,10 @@ bypasses the quick-match path entirely).
 **Where JBrowse's MST time actually goes — measure before optimizing for it.**
 Profiled `createTestSession` over the 262-track `test_data/config_demo.json`
 with MST forced to production mode (`setDevMode(false)`; jest otherwise runs
-`NODE_ENV=test`, which leaves full validation on and is *not* what ships):
+`NODE_ENV=test`, which leaves full validation on and is _not_ what ships):
 
 - **~44% of the run is MST, and roughly 27 points of that is building model
-  *types*, not instances** — `ModelType` constructor, `cloneAndEnhance`,
+  _types_, not instances** — `ModelType` constructor, `cloneAndEnhance`,
   `toPropertiesObject`, `union()`, `BaseType`/`ComplexType`, plus the GC
   pressure they generate. JBrowse constructs a config-schema type per track at
   runtime via `makeConfigurationSchemaModel`.
@@ -84,18 +87,38 @@ instance-path wins (however large in isolation) will not show up there. Note
 also that a cross-process jest A/B of `createTestSession` is far too noisy to
 resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
 
+**Type construction is now ~1.65x faster** — see
+[ADR 0003](agent-docs/adr/0003-type-construction-is-per-type-work.md). The
+lesson generalizes: JBrowse builds ~20k unions and ~20k optionals per session
+load (one of each per config slot), so **anything a type's constructor does is
+multiplied by twenty thousand**. Name folding and flag folding both moved to
+first read, and five phantom `BaseType` fields that exist only for the type
+system were being materialized on every type object. Reproduce with
+`scripts/config-schema-profile.mjs`, A/B with `scripts/ab-config-schema.mjs`,
+and read a profile with `scripts/prof-summary.mjs <file.cpuprofile>`.
+
+**Watch out for `abi.test.ts` when you change a type's own properties.**
+JBrowse's `packages/core/src/ReExports/abi.test.ts` pins the export names
+plugins may have linked against, and `@jbrowse/core/util/Base1DViewModel` is
+served as an MST **type object**, so its baseline enumerated MST's internals —
+`C`, `N`, `S`, `T`, `propertiesArePreProcessed`, `preProcessor`,
+`duplicateKeysChecked` and friends — as if they were ABI. Removing any of them
+fails that one test while everything else passes (3017/3018 in its group, 7890/7890
+in `plugins`). It is over-capture on their side — a module served as a value,
+not as a namespace of names — not a real plugin contract, but it _will_ go red.
+
 **Startup is not the interesting workload, though — value churn is.** For rapid
 value changes (dragging/scrolling a view, where one prop is written per frame
 and everything observing it re-derives), the cost of a single typed write on a
 JBrowse-shaped session, measured in-process with alternating rounds:
 
-| what is listening | µs per write |
-| --- | --- |
-| nothing | ~9 µs |
-| `onPatch(root)` | ~9 µs — essentially free |
-| an `autorun` over derived computeds | ~18 µs |
-| **`onSnapshot(root)`** | **~75 µs (was ~150 µs)** |
-| an `autorun` reading `getSnapshot(view)` | ~28 µs (was ~70 µs) |
+| what is listening                        | µs per write             |
+| ---------------------------------------- | ------------------------ |
+| nothing                                  | ~9 µs                    |
+| `onPatch(root)`                          | ~9 µs — essentially free |
+| an `autorun` over derived computeds      | ~18 µs                   |
+| **`onSnapshot(root)`**                   | **~75 µs (was ~150 µs)** |
+| an `autorun` reading `getSnapshot(view)` | ~28 µs (was ~70 µs)      |
 
 Two things follow, and the first matters more than any MST change:
 
@@ -106,7 +129,7 @@ Two things follow, and the first matters more than any MST change:
   Debounce it or switch to patches.
 - The cost is **flat in tree size** (measured 10 → 800 tracks): child snapshots
   are memoized, so only the path from the changed node to the root re-serializes.
-  It scales with the *width of the models on that path*, not the size of the
+  It scales with the _width of the models on that path_, not the size of the
   tree — a 40-prop view costs 40 property reads per write.
 
 This is where the ADR 0002 work actually lands: 1.99x/2.19x on
@@ -130,7 +153,7 @@ LinearGenomeView over the volvox config, 120 frames of `horizontalScroll`:
   listener's own share drops from ~25 µs to ~2–10 µs.
 
 **The `onSnapshot` + `setTimeout` debounce is the trap; `autorun(..., {delay})`
-is not.** TimeTraveller debounces *recording* with a 300 ms `setTimeout` inside
+is not.** TimeTraveller debounces _recording_ with a 300 ms `setTimeout` inside
 the callback — but MST must compute the snapshot to invoke the callback at all,
 so 119 of 120 frames serialize the session and throw it away. Compare
 `setupSessionStorageAutosave` (`products/jbrowse-web/src/rootModel/persistence.ts`),
@@ -144,7 +167,7 @@ three real `onSnapshot(` call sites in non-test source.)
 every change for undo`): TimeTraveller now triggers on `onPatch`, which fires
 synchronously on the same changes but costs nothing, and takes the snapshot once
 inside the debounce window. 194 → 67 µs per frame, 2.89x, measured against the
-*published* 6.1.0 dist so it stacks with the ADR 0002 work rather than
+_published_ 6.1.0 dist so it stacks with the ADR 0002 work rather than
 overlapping it.
 
 **Cheap safety check for any change:** diff the runtime export list
@@ -166,11 +189,23 @@ Treat anything under ~1.3x from it as noise.
 **What works:** an alternating-round harness. Per round, time A then B back to
 back; flip the leading side each round; compare per-round **medians**, not means,
 since GC spikes skew means. ~25 rounds with an inner loop sized to ~1 ms+ per
-sample resolves 1.03x reproducibly.
+sample resolves 1.03x reproducibly. Two are checked in — both take
+`<baselineDist> <newDist> [rounds]`:
+
+- `scripts/ab-config-schema.mjs` — type construction, 262 jbrowse-shaped config
+  schemas.
+- `scripts/ab-value-churn.mjs` — one typed write per frame on a jbrowse-shaped
+  session. `MODE=onSnapshot|bare|autorunSnapshot`. **Size the inner loop or it
+  lies:** at the default `INNER=400` a no-op change reads a steady 0.96–0.99x;
+  at `INNER=2000`+ the same pair reads 1.00–1.03x. A _consistent_ direction is
+  not by itself evidence when each sample is near timer granularity.
+
+Put the baseline dist **inside** the worktree (`./dist-base`) — an `.mjs` under
+`/tmp` cannot resolve `import "mobx"`.
 
 **Neutralize `process.env` in any node benchmark, or you will profile the wrong
 thing.** Node serves `process.env` from a live getenv proxy, and mobx reads
-`process.env.NODE_ENV` on *every* observable read and write — branches a bundler
+`process.env.NODE_ENV` on _every_ observable read and write — branches a bundler
 dead-code-eliminates for real consumers. Left alone, that one guard
 (`checkIfStateReadsAreAllowed`) measured **38.8% of `getSnapshot`**, drowning out
 every MST frame. Put this above the imports:
@@ -180,7 +215,7 @@ process.env.NODE_ENV = "production"
 Object.defineProperty(process, "env", { value: { ...process.env } })
 ```
 
-A/B *ratios* survive without it — both sides pay equally — but profiles do not,
+A/B _ratios_ survive without it — both sides pay equally — but profiles do not,
 and the ratios understate MST-side wins.
 
 Also note the ESM entry: `import "mobx"` resolves to `dist/mobx.mjs`, the
@@ -195,7 +230,7 @@ it is empty. Printing a `{"systemMessage": ...}` blob there (the earlier bug)
 makes it chdir into a directory by that name. Status goes to
 `~/.claude/worktree-hook.log`. Don't symlink the
 main checkout's `node_modules` instead: it happens to work here (single package)
-but not in a pnpm *workspace* like jbrowse, where each package's deps and the
+but not in a pnpm _workspace_ like jbrowse, where each package's deps and the
 links between packages live in `<pkg>/node_modules` — there, a root-only symlink
 gives `tsc` 12k unresolved-import errors. Run the script by hand for a worktree
 you made with plain `git worktree add` (it echoes the path; status is in the log):
@@ -220,7 +255,7 @@ uncommitted changes anyway. Instead:
    bundles from one node process.
 5. `git worktree remove --force <path>` when done.
 
-The same trick isolates a *single* change: copy current `src` into the baseline
+The same trick isolates a _single_ change: copy current `src` into the baseline
 worktree, revert just the one thing there, and A/B against the full build. That
 is how the `getSnapshot` strip-default `instanceof` check was shown to cost
 nothing measurable (idea dropped), and how memoizing `Union.flags` was sized at

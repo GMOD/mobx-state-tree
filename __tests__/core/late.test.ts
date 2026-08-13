@@ -1,5 +1,5 @@
 import { test, expect, vi } from "vitest"
-import { types, typecheck, IAnyModelType } from "../../src"
+import { types, typecheck, isModelType, IAnyModelType } from "../../src"
 
 if (process.env.NODE_ENV !== "production") {
   test("it should throw if late doesnt received a function as parameter", () => {
@@ -136,4 +136,35 @@ test("#916 - 3", () => {
   })
 
   expect(t.newTodo!.title).toBe("test")
+})
+
+// The flags of a union/optional wrapping a late type are memoized only once the
+// fold is stable, and a late member is exactly what makes it unstable: it
+// reports nothing for its subtype until the definition resolves. Caching the
+// pre-resolution answer would freeze it forever. See agent-docs/adr/0003.
+test("flags folded over a late member are not cached before it resolves", () => {
+  let Inner: IAnyModelType | undefined
+  const Late = types.late((): IAnyModelType => Inner!)
+  const U = types.union(types.string, Late)
+  const Opt = types.optional(U, "x")
+
+  // nothing has resolved yet, so neither reports the model flag
+  expect(isModelType(U)).toBe(false)
+  expect(isModelType(Opt)).toBe(false)
+
+  Inner = types.model("Inner", { a: types.string })
+  // force the late type to evaluate its definition
+  expect(Late.describe()).toBe("Inner")
+
+  // the earlier reads must not have frozen the pre-resolution fold
+  expect(isModelType(U)).toBe(true)
+  expect(isModelType(Opt)).toBe(true)
+})
+
+test("a union with no late member still folds its flags correctly", () => {
+  const U = types.union(types.string, types.model("M", {}))
+  expect(isModelType(U)).toBe(true)
+  // second read comes from the memo
+  expect(isModelType(U)).toBe(true)
+  expect(isModelType(types.union(types.string, types.number))).toBe(false)
 })
