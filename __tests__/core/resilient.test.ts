@@ -3,6 +3,8 @@ import {
   types,
   getSnapshot,
   applySnapshot,
+  isAlive,
+  resolveIdentifier,
   unprotect,
   getType
 } from "../../src"
@@ -262,6 +264,57 @@ describe("types.resilient", () => {
       type: "A",
       value: "recovered"
     })
+  })
+
+  // as a model property, rather than an array element: the array reconciler
+  // kills a replaced child itself, so only this path exposes the leak
+  test("recovering from the fallback kills the fallback node", () => {
+    const Store = types.model({ item: ResilientUnion })
+    const store = Store.create({ item: { type: "BROKEN" } })
+    const fallbackNode = store.item
+    unprotect(store)
+
+    applySnapshot(store, { item: { type: "A", value: "recovered" } })
+
+    expect(getSnapshot(store.item)).toEqual({ type: "A", value: "recovered" })
+    expect(isAlive(fallbackNode)).toBe(false)
+  })
+
+  test("recovering from the fallback frees the identifier for reference resolution", () => {
+    const Identified = types.model("Identified", {
+      type: types.literal("Identified"),
+      id: types.identifier,
+      value: types.string
+    })
+    const Fallback = types.model("Fallback", {
+      id: types.identifier,
+      errorMessage: types.string
+    })
+    const Resilient = types.resilient(
+      types.union({
+        dispatcher: (sn: any) => {
+          if (sn?.type !== "Identified") {
+            throw new Error(`Unknown type: ${sn?.type}`)
+          }
+          return Identified
+        }
+      }),
+      Fallback,
+      (error, snapshot) => ({ id: snapshot.id, errorMessage: String(error) })
+    )
+    const Store = types.model({ item: Resilient })
+
+    const store = Store.create({ item: { type: "BROKEN", id: "one" } as any })
+    expect(getType(store.item).name).toBe("Fallback")
+    unprotect(store)
+
+    applySnapshot(store, {
+      item: { type: "Identified", id: "one", value: "ok" }
+    })
+
+    // the dead fallback must not linger in the cache under the same identifier
+    expect(resolveIdentifier(Fallback, store, "one")).toBeUndefined()
+    expect(resolveIdentifier(Identified, store, "one")).toBe(store.item)
   })
 
   test("reconciling a fallback node with another bad snapshot stays as fallback", () => {

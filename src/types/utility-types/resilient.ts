@@ -117,8 +117,11 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
       ) as this["N"]
     }
     if (this._fallbackType.isAssignableFrom(current.type)) {
+      // `current` holds the fallback. Try the real type again, but keep the
+      // fallback node around while doing so — it is what the catch reconciles.
+      let recovered: this["N"]
       try {
-        return this._subtype.instantiate(
+        recovered = this._subtype.instantiate(
           parent,
           subpath,
           undefined,
@@ -132,6 +135,11 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
           subpath
         ) as this["N"]
       }
+      // the fallback node has been replaced, so it has to die: otherwise it
+      // stays alive in the tree and its identifier stays in the root's cache,
+      // where it collides with the recovered node's
+      current.die()
+      return recovered
     }
     try {
       return this._subtype.reconcile(
