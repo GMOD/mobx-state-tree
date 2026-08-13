@@ -81,11 +81,12 @@ function resolveModelType(
  * @hidden
  */
 export class Union extends BaseType<any, any, any> {
-  // All three live on the prototype and only become own slots on the rare union
-  // that needs one: an eager, dispatcher-less union that never fails a
-  // typecheck — which is every union jbrowse builds per config slot, tens of
-  // thousands per session load — carries none of them. Same reasoning as
-  // `BaseType.isType`; see agent-docs/adr/0003.
+  // These, plus `_discriminatorCache` and `_allMembersDiscriminated` below,
+  // live on the prototype and only become own slots on the union that needs
+  // one. An eager, dispatcher-less union that is never instantiated and never
+  // fails a typecheck carries none of them — which is every union jbrowse
+  // builds per config slot, tens of thousands per session load. Same reasoning
+  // as `BaseType.isType`; see agent-docs/adr/0003.
   declare private readonly _dispatcher?: ITypeDispatcher
   declare private readonly _eager: boolean
 
@@ -263,7 +264,7 @@ export class Union extends BaseType<any, any, any> {
   // discriminator — i.e. a fully discriminated union, where a snapshot's `type`
   // uniquely identifies the intended member and no untagged catch-all member
   // could also accept it. Cached: membership is fixed at construction.
-  private _allMembersDiscriminated?: boolean
+  declare private _allMembersDiscriminated?: boolean
   private allMembersDiscriminated(): boolean {
     if (this._allMembersDiscriminated === undefined) {
       this._allMembersDiscriminated = this._types.every(t => {
@@ -485,7 +486,8 @@ export class Union extends BaseType<any, any, any> {
 Object.assign(Union.prototype as object, {
   _dispatcher: undefined,
   _eager: true,
-  _discriminatorCache: undefined
+  _discriminatorCache: undefined,
+  _allMembersDiscriminated: undefined
 })
 
 /**

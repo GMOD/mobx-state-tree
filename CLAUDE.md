@@ -8,9 +8,10 @@ before touching array reconciliation or union dispatch,
 [0002](agent-docs/adr/0002-mobx-proxy-traps-and-per-property-lookups.md) before
 touching how `ModelType` reaches a property's mobx observable — or when
 upgrading mobx, since it depends on the internal `values_` field — and
-[0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) before adding
-anything to a type's constructor, or touching `BaseType.name` / the `flags`
-getters.
+[0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) and
+[0004](agent-docs/adr/0004-a-type-object-is-its-field-list.md) before adding
+anything to a type's constructor — including a field — or touching
+`BaseType.name` / the `flags` getters.
 
 ## Verification norm
 
@@ -87,21 +88,28 @@ instance-path wins (however large in isolation) will not show up there. Note
 also that a cross-process jest A/B of `createTestSession` is far too noisy to
 resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
 
-**Type construction is now ~1.65x faster** — see
-[ADR 0003](agent-docs/adr/0003-type-construction-is-per-type-work.md). The
-lesson generalizes: JBrowse builds ~20k unions and ~20k optionals per session
-load (one of each per config slot), so **anything a type's constructor does is
-multiplied by twenty thousand**. Name folding and flag folding both moved to
-first read, and five phantom `BaseType` fields that exist only for the type
-system were being materialized on every type object. Reproduce with
-`scripts/config-schema-profile.mjs`, A/B with `scripts/ab-config-schema.mjs`,
-and read a profile with `scripts/prof-summary.mjs <file.cpuprofile>`.
+**Type construction is now ~2.4x faster** — see
+[ADR 0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) (1.65x)
+and [ADR 0004](agent-docs/adr/0004-a-type-object-is-its-field-list.md) (a
+further 1.4-1.5x). The lesson generalizes: JBrowse builds ~20k unions and ~20k
+optionals per session load (one of each per config slot), so **anything a
+type's constructor does is multiplied by twenty thousand**. Name folding and
+flag folding moved to first read; and **every field declared on a type class is
+materialized on every type object**, whether it is a phantom that has no runtime
+meaning (ADR 0003) or a real one that only ever holds its default (ADR 0004) —
+those go on the prototype. Reproduce with `scripts/config-schema-profile.mjs`,
+A/B with `scripts/ab-config-schema.mjs`, and read a profile with
+`scripts/prof-summary.mjs <file.cpuprofile>`.
+
+**ADR 0004 also lists four changes that looked obviously right and measured
+neutral or worse** — read it before re-trying anything in `cloneAndEnhance` or
+`toPropertiesObject`.
 
 **Watch out for `abi.test.ts` when you change a type's own properties.**
 JBrowse's `packages/core/src/ReExports/abi.test.ts` pins the export names
 plugins may have linked against, and `@jbrowse/core/util/Base1DViewModel` is
 served as an MST **type object**, so its baseline enumerated MST's internals —
-`C`, `N`, `S`, `T`, `propertiesArePreProcessed`, `preProcessor`,
+`C`, `N`, `S`, `T`, `isType`, `propertiesArePreProcessed`, `preProcessor`,
 `duplicateKeysChecked` and friends — as if they were ABI. Removing any of them
 fails that one test while everything else passes (3017/3018 in its group, 7890/7890
 in `plugins`). It is over-capture on their side — a module served as a value,
@@ -188,8 +196,7 @@ Treat anything under ~1.3x from it as noise.
 
 **What works:** an alternating-round harness. Per round, time A then B back to
 back; flip the leading side each round; compare per-round **medians**, not means,
-since GC spikes skew means. ~25 rounds with an inner loop sized to ~1 ms+ per
-sample resolves 1.03x reproducibly. Two are checked in — both take
+since GC spikes skew means. Two are checked in — both take
 `<baselineDist> <newDist> [rounds]`:
 
 - `scripts/ab-config-schema.mjs` — type construction, 262 jbrowse-shaped config
@@ -199,6 +206,15 @@ sample resolves 1.03x reproducibly. Two are checked in — both take
   lies:** at the default `INNER=400` a no-op change reads a steady 0.96–0.99x;
   at `INNER=2000`+ the same pair reads 1.00–1.03x. A _consistent_ direction is
   not by itself evidence when each sample is near timer granularity.
+
+**One invocation resolves nothing under ~1.1x, whatever the round count.** Two
+byte-identical dists at 41 rounds, eight invocations, read **0.933x to 1.022x**
+— and six same-direction results in a row happened on those identical builds, so
+a consistent direction is not by itself evidence. Worse, **load inflates the
+winner rather than just widening the spread**: one change here measured 1.22x at
+load average 16 and 1.12x quiet. This checkout is shared with other agents
+running `tsc`, so check `uptime`, take several invocations, and re-measure
+anything you intend to write down once the machine is idle.
 
 Put the baseline dist **inside** the worktree (`./dist-base`) — an `.mjs` under
 `/tmp` cannot resolve `import "mobx"`.
