@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    // the perf helpers call process.hrtime, which src/globals.d.ts deliberately
+    // does not declare — src is built with no ambient types at all
+    "types": ["node"],
+    // Tests index into arrays and recorded-call lists constantly
+    // (`recorder.patches[0]`, `warnMock.mock.calls[0][0]`); a guard or a `!` at
+    // each of those ~130 sites buys no library correctness.
+    "noUncheckedIndexedAccess": false,
+    // and they read named keys off the reflection API's index-signature records,
+    // e.g. `getMembers(m).properties.users`
+    "noPropertyAccessFromIndexSignature": false,
+    // nothing here is emitted, which is the only thing this flag governs, and
+    // the 63 value-imports-of-types it reports in the suite are eslint's
+    // consistent-type-imports job — see the ignore note in eslint.config.mjs
+    "verbatimModuleSyntax": false
+  },
+  // mst.bench.ts imports dist_branch1/dist_branch2, which exist only after
+  // scripts/build-both-branches.sh has run
+  "exclude": ["__tests__/perf/mst.bench.ts"],
+  "include": ["src", "__tests__"]
+}

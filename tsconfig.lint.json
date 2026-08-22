@@ -1,4 +1,13 @@
 {
+  // The project eslint's type-aware rules run against. It must keep src's own
+  // strictness: pointed at tsconfig.test.json instead, no-unnecessary-type-
+  // assertion reports 23 `!`s in src that are load-bearing under
+  // noUncheckedIndexedAccess, and --fix would break the build.
+  //
+  // The test suite is typechecked by tsconfig.test.json, not from here. This
+  // file used to include a "test" directory that has never existed in this
+  // repo — the tests live in __tests__ — which is why 70 test files went
+  // unchecked.
   "extends": "./tsconfig",
-  "include": ["src", "test"]
+  "include": ["src"]
 }
