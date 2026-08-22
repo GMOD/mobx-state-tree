@@ -682,3 +682,102 @@ describe("union quick-match on literal discriminators", () => {
     ).toThrow()
   })
 })
+
+describe("structurally identical unions are interned", () => {
+  const A = types.model("A", { a: types.number })
+  const B = types.model("B", { b: types.number })
+  const C = types.model("C", { c: types.number })
+
+  test("the same member sequence yields the same object", () => {
+    expect(types.union(A, B)).toBe(types.union(A, B))
+    expect(types.union(A, B, C)).toBe(types.union(A, B, C))
+    expect(types.union(types.string, types.number)).toBe(
+      types.union(types.string, types.number)
+    )
+  })
+
+  test("different member sequences yield different objects", () => {
+    expect(types.union(A, B)).not.toBe(types.union(A, C))
+    expect(types.union(A, B)).not.toBe(types.union(B, A))
+    expect(types.union(A, B)).not.toBe(
+      types.union(A, types.model("A", { a: types.number }))
+    )
+  })
+
+  test("a prefix of a member sequence does not collide with it", () => {
+    expect(types.union(A)).not.toBe(types.union(A, B))
+    expect(types.union(A, B)).not.toBe(types.union(A, B, C))
+    expect(types.union(A).getSubTypes()).toEqual([A])
+    expect(types.union(A, B).getSubTypes()).toEqual([A, B])
+  })
+
+  test("the options overload is never interned", () => {
+    expect(types.union({ eager: false }, A, B)).not.toBe(
+      types.union({ eager: false }, A, B)
+    )
+    expect(types.union({ eager: false }, A, B)).not.toBe(types.union(A, B))
+    const dispatch = () => A
+    expect(types.union({ dispatcher: dispatch }, A, B)).not.toBe(
+      types.union({ dispatcher: dispatch }, A, B)
+    )
+  })
+
+  test("maybe and maybeNull fall out of the same intern table", () => {
+    expect(types.maybe(A)).toBe(types.maybe(A))
+    expect(types.maybeNull(A)).toBe(types.maybeNull(A))
+    expect(types.maybe(A)).not.toBe(types.maybeNull(A))
+    expect(types.maybe(A)).not.toBe(types.maybe(B))
+  })
+
+  test("a shared union serves two parents in two trees", () => {
+    const Shared = types.union(A, B)
+    expect(types.union(A, B)).toBe(Shared)
+
+    const First = types.model("First", { slot: Shared })
+    const Second = types.model("Second", {
+      slot: types.union(A, B),
+      other: types.optional(types.union(A, B), { a: 0 })
+    })
+
+    const first = First.create({ slot: { a: 1 } })
+    const second = Second.create({ slot: { b: 2 } })
+
+    expect(getType(first.slot)).toBe(A)
+    expect(getType(second.slot)).toBe(B)
+    expect(getSnapshot(second.other)).toEqual({ a: 0 })
+    expect(Shared.is({ a: 1 })).toBe(true)
+    expect(Shared.is({ c: 1 })).toBe(false)
+
+    applySnapshot(first, { slot: { b: 3 } })
+    expect(getType(first.slot)).toBe(B)
+    expect(getType(second.slot)).toBe(B)
+    expect(getSnapshot(second)).toEqual({ slot: { b: 2 }, other: { a: 0 } })
+
+    expect(() => First.create({ slot: { c: 1 } as { a: number } })).toThrow()
+    expect(getSnapshot(second.slot)).toEqual({ b: 2 })
+  })
+
+  test("dispatcher unions are unaffected by interning", () => {
+    const toA = types.union({ dispatcher: () => A }, A, B)
+    const toB = types.union({ dispatcher: () => B }, A, B)
+    expect(toA).not.toBe(toB)
+    expect(getType(toA.create({ a: 1 }))).toBe(A)
+    expect(getType(toB.create({ b: 1 }))).toBe(B)
+    expect(types.union(A, B).getSubTypes()).toEqual([A, B])
+  })
+
+  test("enumeration names do not leak between enumerations", () => {
+    const color = types.enumeration("Color", ["red", "green"])
+    const hue = types.enumeration("Hue", ["red", "green"])
+    expect(color).not.toBe(hue)
+    expect(color.name).toBe("Color")
+    expect(hue.name).toBe("Hue")
+  })
+
+  test("an interned union folds its name and flags from its members", () => {
+    const named = types.union(A, B)
+    expect(named.name).toBe("(A | B)")
+    expect(named.describe()).toBe(types.union(A, B).describe())
+    expect(types.union(A, B).flags).toBe(named.flags)
+  })
+})

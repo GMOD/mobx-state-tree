@@ -11,7 +11,10 @@ upgrading mobx, since it depends on the internal `values_` field — and
 [0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) and
 [0004](agent-docs/adr/0004-a-type-object-is-its-field-list.md) before adding
 anything to a type's constructor — including a field — or touching
-`BaseType.name` / the `flags` getters.
+`BaseType.name` / the `flags` getters, and
+[0005](agent-docs/adr/0005-a-union-is-a-pure-function-of-its-members.md) before
+touching `union()`'s construction path or adding any per-instance state to
+`Union`, since no-options unions are interned and shared.
 
 ## Verification norm
 

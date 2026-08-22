@@ -496,6 +496,40 @@ Object.assign(Union.prototype as object, {
   _allMembersDiscriminated: undefined
 })
 
+// Structurally identical unions are the same object. A union built without
+// options is a pure function of its member list — `_types` is the members,
+// `_flags`, `_name`, `_discriminatorCache` and `_allMembersDiscriminated` are
+// all folds over them, and `_dispatcher`/`_eager` come only from the options
+// overload, which is never interned because a dispatcher closure is not
+// comparable. Types carry no parent, so one object can serve every use.
+//
+// jbrowse builds a union per config slot — ~20k per session load — from a
+// handful of module-level singletons, so the member tuples number in the
+// dozens. A trie of WeakMaps keyed on member identity keeps dynamically built
+// members collectable: a node is reachable only through its own key, and the
+// union it terminates is reachable only through the node.
+interface UnionInternNode {
+  union?: Union
+  next?: WeakMap<IAnyType, UnionInternNode>
+}
+
+const unionInternRoot: UnionInternNode = {}
+
+function internUnion(types: IAnyType[]): Union {
+  let node = unionInternRoot
+  for (const type of types) {
+    const level = (node.next ??= new WeakMap())
+    const existing = level.get(type)
+    if (existing) {
+      node = existing
+    } else {
+      node = {}
+      level.set(type, node)
+    }
+  }
+  return (node.union ??= new Union(types))
+}
+
 /**
  * Transform _NotCustomized | _NotCustomized... to _NotCustomized, _NotCustomized | A | B to A | B
  * @hidden
@@ -572,7 +606,7 @@ export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
       assertIsType(type, options ? i + 2 : i + 1)
     })
   }
-  return new Union(types, options)
+  return options === undefined ? internUnion(types) : new Union(types, options)
 }
 
 /**
