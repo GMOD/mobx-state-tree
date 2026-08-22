@@ -70,10 +70,11 @@ signatures, redundant-assertion removal): `packages/core+product-core+app-core`
 **3039/3039** on both sides, `plugins` **7996/7996**, `products` **1870/1870**,
 and `pnpm typecheck` **0 errors** on both sides — that last one is the only run
 that exercises a `.d.ts` change, since jest transforms with babel and never
-typechecks. Note jbrowse's `packages/core/src/util/mst-reflection.ts` carries
-hand-written workarounds for the `never`-narrowing those guards used to cause
-("the negated identity guards above narrow `maybeLate` to `never`, so route it
-through a function arg"); they still compile, they are just unnecessary now.
+typechecks. Note jbrowse dropped its `never`-narrowing workaround in
+`packages/core/src/util/mst-reflection.ts` (`b16ba6adf3`); the casts that
+remain there are a different gap — guard signatures whose leftover generic
+constraints reject concrete types, and missing `ILiteralType`/
+`cannotDetermineSubtype` exports.
 
 **What the consumers actually exercise**, so you know what a change can break.
 JBrowse's imports are all public API — `types` by a wide margin, then
