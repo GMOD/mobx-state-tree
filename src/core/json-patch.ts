@@ -27,11 +27,7 @@ export function splitPatch(
   return [stripPatch(patch), invertPatch(patch)]
 }
 
-/**
- * @internal
- * @hidden
- */
-export function stripPatch(patch: IReversibleJsonPatch): IJsonPatch {
+function stripPatch(patch: IReversibleJsonPatch): IJsonPatch {
   // strips `oldvalue` information from the patch, so that it becomes a patch conform the json-patch spec
   // this removes the ability to undo the patch
   switch (patch.op) {

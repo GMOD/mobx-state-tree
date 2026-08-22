@@ -84,11 +84,7 @@ function safeStringify(value: any) {
   }
 }
 
-/**
- * @internal
- * @hidden
- */
-export function prettyPrintValue(value: any) {
+function prettyPrintValue(value: any) {
   return typeof value === "function"
     ? `<function${value.name ? ` ${value.name}` : ""}>`
     : isStateTreeNode(value)
@@ -124,14 +120,10 @@ function toErrorString(error: IValidationError): string {
   if (isPrimitiveType(type) || isPrimitive(value)) {
     expectation = "."
   } else {
-    // `isPrimitiveType` is declared `(type: IT) => type is IT`, so its negative
-    // branch narrows to `never` rather than to "some non-primitive type"; the
-    // annotation restores the type it actually has here.
-    const complexType: IAnyType = type
     const isSnapshotCompatible =
-      isStateTreeNode(value) && complexType.is(getStateTreeNode(value).snapshot)
-    expectation = `, expected an instance of \`${complexType.name}\` or a snapshot like \`${shortenPrintValue(
-      complexType.describe()
+      isStateTreeNode(value) && type.is(getStateTreeNode(value).snapshot)
+    expectation = `, expected an instance of \`${type.name}\` or a snapshot like \`${shortenPrintValue(
+      type.describe()
     )}\` instead.${
       isSnapshotCompatible
         ? " (Note that a snapshot of the provided value is compatible with the targeted type)"

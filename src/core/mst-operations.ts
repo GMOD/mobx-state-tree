@@ -325,6 +325,9 @@ export function unprotect(target: IAnyStateTreeNode): void {
  * Returns true if the object is in protected mode, @see protect
  */
 export function isProtected(target: IAnyStateTreeNode): boolean {
+  // check all arguments
+  assertIsStateTreeNode(target, 1)
+
   return getStateTreeNode(target).isProtected
 }
 
@@ -368,6 +371,29 @@ export function getSnapshot<S>(
   return freeze(node.type.getSnapshot(node, false))
 }
 
+function findParentAtDepth(node: AnyObjectNode, depth: number) {
+  let remaining = depth
+  let parent: AnyObjectNode | null = node.parent
+  while (parent) {
+    if (--remaining === 0) {
+      return parent
+    }
+    parent = parent.parent
+  }
+  return null
+}
+
+function findParentOfType(node: AnyObjectNode, type: IAnyComplexType) {
+  let parent: AnyObjectNode | null = node.parent
+  while (parent) {
+    if (type.is(parent.storedValue)) {
+      return parent
+    }
+    parent = parent.parent
+  }
+  return null
+}
+
 /**
  * Given a model instance, returns `true` if the object has a parent, that is, is part of another object, map or array.
  *
@@ -380,14 +406,7 @@ export function hasParent(target: IAnyStateTreeNode, depth = 1): boolean {
   assertIsStateTreeNode(target, 1)
   assertIsNumber(depth, 2, 0)
 
-  let parent: AnyObjectNode | null = getStateTreeNode(target).parent
-  while (parent) {
-    if (--depth === 0) {
-      return true
-    }
-    parent = parent.parent
-  }
-  return false
+  return findParentAtDepth(getStateTreeNode(target), depth) !== null
 }
 
 /**
@@ -411,17 +430,13 @@ export function getParent<IT extends IAnyStateTreeNode | IAnyComplexType>(
   assertIsStateTreeNode(target, 1)
   assertIsNumber(depth, 2, 0)
 
-  let d = depth
-  let parent: AnyObjectNode | null = getStateTreeNode(target).parent
-  while (parent) {
-    if (--d === 0) {
-      return parent.storedValue
-    }
-    parent = parent.parent
+  const parent = findParentAtDepth(getStateTreeNode(target), depth)
+  if (!parent) {
+    throw fail(
+      `Failed to find the parent of ${getStateTreeNode(target)} at depth ${depth}`
+    )
   }
-  throw fail(
-    `Failed to find the parent of ${getStateTreeNode(target)} at depth ${depth}`
-  )
+  return parent.storedValue
 }
 
 /**
@@ -439,14 +454,7 @@ export function hasParentOfType(
   assertIsStateTreeNode(target, 1)
   assertIsType(type, 2)
 
-  let parent: AnyObjectNode | null = getStateTreeNode(target).parent
-  while (parent) {
-    if (type.is(parent.storedValue)) {
-      return true
-    }
-    parent = parent.parent
-  }
-  return false
+  return findParentOfType(getStateTreeNode(target), type) !== null
 }
 
 /**
@@ -464,16 +472,13 @@ export function getParentOfType<IT extends IAnyComplexType>(
   assertIsStateTreeNode(target, 1)
   assertIsType(type, 2)
 
-  let parent: AnyObjectNode | null = getStateTreeNode(target).parent
-  while (parent) {
-    if (type.is(parent.storedValue)) {
-      return parent.storedValue
-    }
-    parent = parent.parent
+  const parent = findParentOfType(getStateTreeNode(target), type)
+  if (!parent) {
+    throw fail(
+      `Failed to find the parent of ${getStateTreeNode(target)} of a given type`
+    )
   }
-  throw fail(
-    `Failed to find the parent of ${getStateTreeNode(target)} of a given type`
-  )
+  return parent.storedValue
 }
 
 /**

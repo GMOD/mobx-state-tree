@@ -275,10 +275,6 @@ class EventHandler<F extends (...args: any[]) => any> {
     }
   }
 
-  clear() {
-    this.handlers.length = 0
-  }
-
   emit(...args: ArgumentTypes<F>) {
     const handlers = this.handlers
     // 0 and 1 handlers are by far the common cases (a patch/snapshot listener, a
@@ -469,19 +465,5 @@ export function assertIsString(
   assertArg(value, s => typeof s === "string", "string", argNumber)
   if (!canBeEmpty) {
     assertArg(value, s => s !== "", "not empty string", argNumber)
-  }
-}
-
-/**
- * @internal
- * @hidden
- */
-export function setImmediateWithFallback(fn: (...args: any[]) => void) {
-  if (typeof queueMicrotask === "function") {
-    queueMicrotask(fn)
-  } else if (typeof setImmediate === "function") {
-    setImmediate(fn)
-  } else {
-    setTimeout(fn, 1)
   }
 }

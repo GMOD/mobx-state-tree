@@ -1,4 +1,4 @@
-import { fail, setImmediateWithFallback } from "../utils.ts"
+import { fail } from "../utils.ts"
 import {
   getCurrentActionContext,
   getNextActionId,
@@ -90,11 +90,7 @@ export function* toGenerator<R>(p: Promise<R>) {
   return (yield p) as R
 }
 
-/**
- * @internal
- * @hidden
- */
-export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
+function createFlowSpawner(name: string, generator: FunctionWithFlag) {
   const spawner = function flowSpawner(this: any, ...flowArgs: any[]) {
     // Implementation based on https://github.com/tj/co/blob/master/index.js
     const runId = getNextActionId()
@@ -162,7 +158,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
           }
         } catch (e) {
           // prettier-ignore
-          setImmediateWithFallback(() => {
+          queueMicrotask(() => {
                         wrap((_r: any) => { reject(e) }, "flow_throw", e)
                     })
           return
@@ -178,7 +174,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
           wrap((_r: any) => { ret = gen.throw(_r) }, "flow_resume_error", err) // or yieldError?
         } catch (e) {
           // prettier-ignore
-          setImmediateWithFallback(() => {
+          queueMicrotask(() => {
                         wrap((_r: any) => { reject(e) }, "flow_throw", e)
                     })
           return
@@ -189,7 +185,7 @@ export function createFlowSpawner(name: string, generator: FunctionWithFlag) {
       function next(ret: any) {
         if (ret.done) {
           // prettier-ignore
-          setImmediateWithFallback(() => {
+          queueMicrotask(() => {
                         wrap((r: any) => { resolve(r) }, "flow_return", ret.value)
                     })
           return

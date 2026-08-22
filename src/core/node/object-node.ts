@@ -187,10 +187,11 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.unnormalizedIdentifier = id
     }
 
-    if (!parent) {
-      this.identifierCache!.addNodeToCache(this)
-    } else {
-      parent.root.identifierCache!.addNodeToCache(this)
+    // addNodeToCache no-ops without an identifier attribute, and reaching the
+    // root to ask it is a walk up the whole parent chain
+    if (this.identifierAttribute) {
+      const cache = parent ? parent.root.identifierCache : this.identifierCache
+      cache!.addNodeToCache(this)
     }
   }
 
@@ -377,14 +378,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       typeof this.storedValue === "object" &&
       (this.storedValue as any)[name]
     if (typeof fn === "function") {
-      // we check for it to allow old mobx peer dependencies that don't have the method to work (even when still bugged)
-      if (_allowStateChangesInsideComputed) {
-        _allowStateChangesInsideComputed(() => {
-          fn.apply(this.storedValue)
-        })
-      } else {
+      _allowStateChangesInsideComputed(() => {
         fn.apply(this.storedValue)
-      }
+      })
     }
   }
 
