@@ -65,6 +65,33 @@ If you encounter a bug while using MobX-State-Tree, please help us by reporting 
 
 If you want to contribute a large or significant change to MST, we'd love to connect with you ahead of time to make sure it fits in with our overall road map, meets our stability requirements, and make sure you are set up for success. Please consider [asking around in the discussion forum](https://github.com/mobxjs/mobx-state-tree/discussions) if you have a big idea you want to implement, or if you want to work on some existing big ideas out therein the communit.
 
+## Releasing
+
+Use `pnpm version patch/minor/major` to release. `preversion` builds and runs
+the full CI suite (`test:types`, dev-mode and prod-mode vitest), the `version`
+script regenerates CHANGELOG.md with git-cliff, and `postversion` pushes the
+version tag — which is what triggers the publish workflow.
+
+Because the changelog is generated from commit subjects, a commit whose subject
+is not in conventional-commit form still appears, but under "Other Changes"
+rather than a useful heading. `perf:`, `fix:`, `types:` and friends are worth the
+keystrokes.
+
+## Publishing
+
+Publishing happens in GitHub Actions on a `v*` tag, via npm trusted publishing
+(OIDC, no stored token) — hence `--provenance` and `id-token: write` in
+`.github/workflows/publish.yml`.
+
+Once `npm publish` succeeds, the `release` job creates the GitHub release for
+that tag. Its notes are the tag's CHANGELOG.md section, extracted by
+`scripts/release-notes.sh` — run that with a version to preview what a release
+will say:
+
+```sh
+./scripts/release-notes.sh v6.4.0
+```
+
 ## Code of Conduct
 
 We strive to maintain a friendly and welcoming community. Please read and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions within the MobX-State-Tree project.
