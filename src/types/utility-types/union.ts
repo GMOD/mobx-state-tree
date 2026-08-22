@@ -546,24 +546,59 @@ export interface ITypeUnion<C, S, T> extends IType<
   T
 > {}
 
-// Two variadic-tuple signatures in place of the 2-to-9-member overload block
-// that `scripts/generate-union-types.js` used to emit: the member types are
-// captured as a tuple, so the result stays precise past nine members instead of
-// falling through to the `IAnyType` signature below.
+// Variadic-tuple signatures in place of the 2-to-9-member overload block that
+// `scripts/generate-union-types.js` used to emit: the member types are captured
+// as a tuple, so the result stays precise past nine members instead of falling
+// through to the `IAnyType` signature below.
+//
+// The member projections go through a mapped tuple indexed by `number` rather
+// than the direct `Types[number]["CreationType"]`. Both describe the same set,
+// but the direct form is one indexed access over a *union* of type parameters,
+// which TypeScript leaves deferred; mapping first resolves each member in its
+// own tuple position, so the result reduces to a plain union.
+/** @hidden */
+export type _UnionMembersCreationType<Types extends readonly IAnyType[]> = {
+  [K in keyof Types]: Types[K]["CreationType"]
+}[number]
+/** @hidden */
+export type _UnionMembersSnapshotType<Types extends readonly IAnyType[]> = {
+  [K in keyof Types]: Types[K]["SnapshotType"]
+}[number]
+/** @hidden */
+export type _UnionMembersTypeWithoutSTN<Types extends readonly IAnyType[]> = {
+  [K in keyof Types]: Types[K]["TypeWithoutSTN"]
+}[number]
+
+// The two-member form keeps one type parameter per member, ahead of the
+// variadic signatures. Reducing the mapped tuple still leaves each member's C/S/T
+// as an indexed access, and when a member is itself a bare type parameter —
+// `union(reference(schema), schema)` inside a generic function, which is how
+// jbrowse's `ConfigurationReference` is written — `S["CreationType"]` is a
+// deferred lookup that TypeScript will not relate to the `SnapshotIn<S>` such a
+// function declares as its return. Inferring C/S/T through `IType` reads them
+// off the argument's constraint instead of deferring a lookup, so the result is
+// a type the checker can relate — at the cost of a member that is itself a bare
+// parameter contributing its constraint's C/S/T rather than its own. Two members
+// is where such call sites sit (`maybe`/`maybeNull` included); wider unions keep
+// the variadic precision.
+export function union<CA, SA, TA, CB, SB, TB>(
+  A: IType<CA, SA, TA>,
+  B: IType<CB, SB, TB>
+): ITypeUnion<CA | CB, SA | SB, TA | TB>
 export function union<Types extends [IAnyType, ...IAnyType[]]>(
   ...types: Types
 ): ITypeUnion<
-  Types[number]["CreationType"],
-  Types[number]["SnapshotType"],
-  Types[number]["TypeWithoutSTN"]
+  _UnionMembersCreationType<Types>,
+  _UnionMembersSnapshotType<Types>,
+  _UnionMembersTypeWithoutSTN<Types>
 >
 export function union<Types extends [IAnyType, ...IAnyType[]]>(
   options: UnionOptions,
   ...types: Types
 ): ITypeUnion<
-  Types[number]["CreationType"],
-  Types[number]["SnapshotType"],
-  Types[number]["TypeWithoutSTN"]
+  _UnionMembersCreationType<Types>,
+  _UnionMembersSnapshotType<Types>,
+  _UnionMembersTypeWithoutSTN<Types>
 >
 
 // manually written

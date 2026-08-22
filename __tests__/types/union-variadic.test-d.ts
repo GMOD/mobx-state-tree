@@ -3,7 +3,10 @@
 
 import {
   types,
+  type IAnyModelType,
+  type IType,
   type Instance,
+  type ReferenceIdentifier,
   type SnapshotIn,
   type SnapshotOut
 } from "../../src/index.ts"
@@ -93,12 +96,31 @@ const first: Twelve = "a"
 // @ts-expect-error "z" is not one of the twelve literals
 const notAMember: Twelve = "z"
 
+// a two-member union built inside a generic function, over a member that is
+// itself the bare type parameter, still satisfies a return type spelled out with
+// SnapshotIn/SnapshotOut. This is jbrowse's `ConfigurationReference`, and the
+// variadic signature alone cannot type it: `S["CreationType"]` stays a deferred
+// lookup that does not relate to `SnapshotIn<S>`.
+type IdOrSnapshot<S extends IAnyModelType> = Omit<
+  IType<
+    ReferenceIdentifier | SnapshotIn<S>,
+    ReferenceIdentifier | SnapshotOut<S>,
+    Instance<S>
+  >,
+  "Type"
+> & { readonly Type: Instance<S> }
+
+function idOrSnapshotRef<S extends IAnyModelType>(schema: S): IdOrSnapshot<S> {
+  return types.union(types.reference(schema), schema)
+}
+
 // a spread of a plain array still resolves, via the IAnyType fallback signature
 declare const manyTypes: (typeof A)[]
 const spread = types.union(...manyTypes)
 console.log(spread.name)
 
 console.log(
+  idOrSnapshotRef,
   models,
   scalars,
   withUndefined,

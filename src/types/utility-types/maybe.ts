@@ -42,12 +42,7 @@ export interface IMaybeNull<IT extends IAnyType> extends IMaybeIType<
 export function maybe<IT extends IAnyType>(type: IT): IMaybe<IT> {
   assertIsType(type, 1)
 
-  // `union`'s variadic signature reports `(IT | typeof optionalUndefinedType)`
-  // indexed by "CreationType" & co. TypeScript cannot reduce that indexed
-  // access while `IT` is still an unresolved type parameter, so it cannot see
-  // it as the `IT["CreationType"] | undefined` that IMaybe spells out. The two
-  // are the same type once IT is known.
-  return union(type, optionalUndefinedType) as IMaybe<IT>
+  return union(type, optionalUndefinedType)
 }
 
 /**
@@ -60,6 +55,5 @@ export function maybe<IT extends IAnyType>(type: IT): IMaybe<IT> {
 export function maybeNull<IT extends IAnyType>(type: IT): IMaybeNull<IT> {
   assertIsType(type, 1)
 
-  // see the note in `maybe` above
-  return union(type, optionalNullType) as IMaybeNull<IT>
+  return union(type, optionalNullType)
 }
