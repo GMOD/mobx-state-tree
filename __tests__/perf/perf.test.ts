@@ -16,18 +16,22 @@ test("performs well on large scenario", () => {
   expect(largeScenario(10, 0, 10).elapsed < TOO_SLOW_MS).toBe(true)
   expect(largeScenario(10, 10, 10).elapsed < TOO_SLOW_MS).toBe(true)
 })
+// The delays are 10ms rather than 2ms, and the assertions are ordering rather
+// than inequality with 0: `start()` reports whole milliseconds, so a 2ms timer
+// firing a shade early rounded to 0 and failed `expect(lap).not.toBe(0)` — seen
+// on CI, after which the assertion throwing inside the setTimeout left the
+// promise unresolved and the test hit its 5s timeout instead.
 test("timer", () => {
   return new Promise<void>(resolve => {
     const go = start()
     setTimeout(function () {
       const lap = go(true)
       setTimeout(function () {
-        const d = go()
-        expect(lap).not.toBe(0)
-        expect(d).not.toBe(0)
-        expect(lap).not.toBe(d)
+        const total = go()
+        expect(lap).toBeGreaterThan(0)
+        expect(total).toBeGreaterThan(lap)
         resolve()
-      }, 2)
-    }, 2)
+      }, 10)
+    }, 10)
   })
 })
