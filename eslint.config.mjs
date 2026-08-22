@@ -13,6 +13,9 @@ export default defineConfig(
       "scripts/*",
       "lib/*",
       "vitest.config.ts",
+      // linting the test suite is a separate job from typechecking it: it
+      // reports 454 problems, nearly all stylistic (unused bindings and
+      // deliberate `@ts-ignore`s in shape assertions)
       "__tests__/*"
     ]
   },
