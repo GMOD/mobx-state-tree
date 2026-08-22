@@ -2,8 +2,7 @@ import { test, expect, describe, vi, beforeEach, it } from "vitest"
 import { t } from "../../src/index"
 import { Hook, ObjectNode, onPatch, unprotect } from "../../src/internal"
 
-const warnMock = vi.fn()
-vi.spyOn(console, "warn").mockImplementation(warnMock)
+const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
 const TestModel = t.model("TestModel", {
   title: t.string
@@ -156,7 +155,7 @@ describe("ObjectNode", () => {
             value: { title: "hello" }
           })
 
-          expect(console.warn).toBeCalled()
+          expect(warnSpy).toBeCalled()
         })
       })
       describe("when the node is alive and not protected", () => {
@@ -377,7 +376,7 @@ describe("ObjectNode", () => {
             { title: "hello" }
           )
           node.assertAlive({})
-          expect(console.warn).not.toBeCalled()
+          expect(warnSpy).not.toBeCalled()
         })
       })
       describe("when the node is not alive", () => {
@@ -391,8 +390,7 @@ describe("ObjectNode", () => {
           )
           node.die()
           node.assertAlive({})
-          // @ts-ignore
-          const receivedErrorMessage = console.warn.mock.calls[0][0].toString()
+          const receivedErrorMessage = warnSpy.mock.calls[0][0].toString()
           expect(receivedErrorMessage).toBe(
             "Error: [mobx-state-tree] You are trying to read or write to an object that is no longer part of a state tree. (Object type: 'TestModel', Path upon death: '', Subpath: '', Action: ''). Either detach nodes first, or don't use objects after removing / replacing them in the tree."
           )
@@ -999,9 +997,7 @@ describe("ObjectNode", () => {
             )
             node.die()
             node.getChildNode("title")
-            // @ts-ignore
-            const receivedErrorMessage =
-              console.warn.mock.calls[0][0].toString()
+            const receivedErrorMessage = warnSpy.mock.calls[0][0].toString()
             expect(receivedErrorMessage).toBe(
               "Error: [mobx-state-tree] You are trying to read or write to an object that is no longer part of a state tree. (Object type: 'TestModel', Path upon death: '', Subpath: 'title', Action: ''). Either detach nodes first, or don't use objects after removing / replacing them in the tree."
             )
@@ -1049,8 +1045,7 @@ describe("ObjectNode", () => {
           )
           node.die()
           node.getChildren()
-          // @ts-ignore
-          const receivedErrorMessage = console.warn.mock.calls[0][0].toString()
+          const receivedErrorMessage = warnSpy.mock.calls[0][0].toString()
           expect(receivedErrorMessage).toBe(
             "Error: [mobx-state-tree] You are trying to read or write to an object that is no longer part of a state tree. (Object type: 'TestModel', Path upon death: '', Subpath: '', Action: ''). Either detach nodes first, or don't use objects after removing / replacing them in the tree."
           )

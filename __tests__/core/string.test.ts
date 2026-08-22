@@ -10,6 +10,9 @@ describe("types.string", () => {
         () => {
           it("should throw an error in development", () => {
             expect(() => {
+              // @ts-expect-error the compile error is the point: a simple type has no
+              // default snapshot, so the runtime throw below is what callers get if
+              // they get past the type
               types.string.create()
             }).toThrow()
           })

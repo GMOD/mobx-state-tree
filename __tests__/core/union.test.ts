@@ -624,7 +624,7 @@ describe("union quick-match on literal discriminators", () => {
   })
 
   test("a bare literal discriminator selects the member, structure alone being ambiguous", () => {
-    expect(Circle.propertyNames).toEqual(Rect.propertyNames)
+    expect(Object.keys(Circle.properties)).toEqual(Object.keys(Rect.properties))
 
     const holder = Holder.create({ shape: { kind: "rect", size: 1 } })
     expect(getType(holder.shape)).toBe(Rect)
@@ -753,7 +753,9 @@ describe("structurally identical unions are interned", () => {
     expect(getType(second.slot)).toBe(B)
     expect(getSnapshot(second)).toEqual({ slot: { b: 2 }, other: { a: 0 } })
 
-    expect(() => First.create({ slot: { c: 1 } as { a: number } })).toThrow()
+    // @ts-expect-error a snapshot matching neither member is rejected at compile
+    // time as well as at runtime
+    expect(() => First.create({ slot: { c: 1 } })).toThrow()
     expect(getSnapshot(second.slot)).toEqual({ b: 2 })
   })
 

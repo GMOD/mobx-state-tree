@@ -215,6 +215,15 @@ test("lifecycle hooks can access their children", () => {
   ])
 })
 
+// The Car model below takes `types.number` for `id` and a preprocessor that
+// accepts `{ id: string }`, so every call under it feeds a string where the
+// creation type says number. That is deliberate on both sides: the runtime
+// converts, and `preProcessSnapshot<NewC>` in this fork keeps `CustomC` as the
+// creation type rather than widening it to `NewC` (see the comment on the
+// signature in src/types/complex-types/model.ts), so the loose input snapshot
+// never reaches `.create()`'s contract. The `@ts-expect-error`s below pin that
+// divergence: if the signature is ever changed to widen, they fail and force
+// the conversation.
 type CarSnapshot = { id: string }
 const Car = types
   .model("Car", {
@@ -246,21 +255,26 @@ const MotorcycleFactory = types.model("MotorcycleFactory", {
 })
 
 test("it should preprocess snapshots when creating", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const car = Car.create({ id: "1" })
   expect(car.id).toBe(2)
 })
 test("it should preprocess snapshots when updating", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const car = Car.create({ id: "1" })
   expect(car.id).toBe(2)
+  // @ts-expect-error preprocessed input, not the creation type
   applySnapshot(car, { id: "6" })
   expect(car.id).toBe(12)
 })
 test("it should postprocess snapshots when generating snapshot - 1", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const car = Car.create({ id: "1" })
   expect(car.id).toBe(2)
   expect(getSnapshot(car)).toEqual({ id: "1" })
 })
 test("it should not apply postprocessor to snapshot on getSnapshot", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const car = Car.create({ id: "1" })
   let error = false
   onSnapshot(car, snapshot => {
@@ -271,16 +285,20 @@ test("it should not apply postprocessor to snapshot on getSnapshot", () => {
   expect(error).toBeFalsy()
 })
 test("it should preprocess snapshots when creating as property type", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const f = Factory.create({ car: { id: "1" } })
   expect(f.car.id).toBe(2)
 })
 test("it should preprocess snapshots when updating", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const f = Factory.create({ car: { id: "1" } })
   expect(f.car.id).toBe(2)
+  // @ts-expect-error preprocessed input, not the creation type
   applySnapshot(f, { car: { id: "6" } })
   expect(f.car.id).toBe(12)
 })
 test("it should postprocess snapshots when generating snapshot - 2", () => {
+  // @ts-expect-error preprocessed input, not the creation type
   const f = Factory.create({ car: { id: "1" } })
   expect(f.car.id).toBe(2)
   expect(getSnapshot(f)).toEqual({ car: { id: "1" } })
