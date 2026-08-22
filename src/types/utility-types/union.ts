@@ -27,6 +27,15 @@ export type ITypeDispatcher = (snapshot: any) => IAnyType
 export interface UnionOptions {
   eager?: boolean
   dispatcher?: ITypeDispatcher
+  // Late-bound membership: the union re-reads this thunk on every operation, so
+  // members registered after construction participate in dispatch, validation
+  // and — critically — reference resolution (`isAssignableFrom` is how the
+  // identifier cache decides whether a node can satisfy a reference). Cannot be
+  // combined with positional member types. See DynamicUnion below.
+  members?: () => IAnyType[]
+  // With `members` the folded name would be a moving target, so a stable
+  // explicit name is offered; it is honored on any options union.
+  name?: string
 }
 
 // Drill through single-subtype wrappers — optional(), refinement(),
@@ -118,7 +127,7 @@ export class Union extends BaseType<any, any, any> {
       return cached
     }
     let result: TypeFlags = TypeFlags.Union
-    for (const type of this._types) {
+    for (const type of this.members()) {
       result |= type.flags
     }
     if (!(result & TypeFlags.Late)) {
@@ -128,7 +137,9 @@ export class Union extends BaseType<any, any, any> {
   }
 
   protected override computeName(): string {
-    return `(${this._types.map(type => type.name).join(" | ")})`
+    return `(${this.members()
+      .map(type => type.name)
+      .join(" | ")})`
   }
 
   constructor(
@@ -136,7 +147,7 @@ export class Union extends BaseType<any, any, any> {
     options?: UnionOptions
   ) {
     super()
-    // read the two options directly rather than spreading defaults into a fresh
+    // read the options directly rather than spreading defaults into a fresh
     // object: this constructor runs once per config slot in jbrowse, and the
     // merged object was allocated only to be read twice and dropped
     if (options !== undefined) {
@@ -146,15 +157,26 @@ export class Union extends BaseType<any, any, any> {
       if (options.eager === false) {
         this._eager = false
       }
+      if (options.name !== undefined) {
+        this.name = options.name
+      }
     }
   }
 
+  // The one point membership is read through, so DynamicUnion can substitute
+  // its thunk without duplicating any of the scanning logic below.
+  protected members(): IAnyType[] {
+    return this._types
+  }
+
   override isAssignableFrom(type: IAnyType) {
-    return this._types.some(subType => subType.isAssignableFrom(type))
+    return this.members().some(subType => subType.isAssignableFrom(type))
   }
 
   override describe() {
-    return `(${this._types.map(factory => factory.describe()).join(" | ")})`
+    return `(${this.members()
+      .map(factory => factory.describe())
+      .join(" | ")})`
   }
 
   instantiate(
@@ -222,7 +244,7 @@ export class Union extends BaseType<any, any, any> {
   // element. With it, each distinct discriminator scans once; the rest are
   // O(1) map hits. `undefined` (no match OR ambiguous) is cached too.
   declare private _discriminatorCache?: Map<string, IAnyType | undefined>
-  private _findCandidateByTypeDiscriminator(
+  protected _findCandidateByTypeDiscriminator(
     discriminator: string
   ): IAnyType | undefined {
     const cache = (this._discriminatorCache ??= new Map())
@@ -234,11 +256,11 @@ export class Union extends BaseType<any, any, any> {
     return found
   }
 
-  private _scanForTypeDiscriminator(
+  protected _scanForTypeDiscriminator(
     discriminator: string
   ): IAnyType | undefined {
     let found: IAnyType | undefined
-    for (const t of this._types) {
+    for (const t of this.members()) {
       const model = resolveModelType(t)
       if (!model) {
         continue
@@ -271,17 +293,21 @@ export class Union extends BaseType<any, any, any> {
   // uniquely identifies the intended member and no untagged catch-all member
   // could also accept it. Cached: membership is fixed at construction.
   declare private _allMembersDiscriminated?: boolean
-  private allMembersDiscriminated(): boolean {
+  protected allMembersDiscriminated(): boolean {
     if (this._allMembersDiscriminated === undefined) {
-      this._allMembersDiscriminated = this._types.every(t => {
-        const model = resolveModelType(t)
-        const typeProp =
-          model &&
-          (model.properties as Record<string, IAnyType | undefined>)["type"]
-        return !!typeProp && (typeProp.flags & TypeFlags.Literal) !== 0
-      })
+      this._allMembersDiscriminated = this.computeAllMembersDiscriminated()
     }
     return this._allMembersDiscriminated
+  }
+
+  protected computeAllMembersDiscriminated(): boolean {
+    return this.members().every(t => {
+      const model = resolveModelType(t)
+      const typeProp =
+        model &&
+        (model.properties as Record<string, IAnyType | undefined>)["type"]
+      return !!typeProp && (typeProp.flags & TypeFlags.Literal) !== 0
+    })
   }
 
   determineType(
@@ -309,11 +335,11 @@ export class Union extends BaseType<any, any, any> {
       if (reconcileCurrentType.is(value)) {
         return reconcileCurrentType
       }
-      return this._types.find(
+      return this.members().find(
         type => type !== reconcileCurrentType && type.is(value)
       )
     }
-    return this._types.find(type => type.is(value))
+    return this.members().find(type => type.is(value))
   }
 
   private tryQuickMatch(
@@ -341,7 +367,7 @@ export class Union extends BaseType<any, any, any> {
     ) {
       return reconcileCurrentType
     }
-    for (const type of this._types) {
+    for (const type of this.members()) {
       if (
         type !== reconcileCurrentType &&
         this.snapshotLooksLikeType(value, type)
@@ -354,7 +380,7 @@ export class Union extends BaseType<any, any, any> {
 
   private tryMatchPrimitive(value: any): IAnyType | undefined {
     const valueType = typeof value
-    for (const type of this._types) {
+    for (const type of this.members()) {
       const flags = type.flags
       if (
         (valueType === "string" && flags & TypeFlags.String) ||
@@ -452,10 +478,11 @@ export class Union extends BaseType<any, any, any> {
     // for plain-object snapshots, prefer union members whose literal-typed
     // discriminator properties match the value (e.g. {type: "MsaView"})
     // so error output is scoped to the intended branch instead of every member
+    const members = this.members()
     const candidates = isSnapshotObject
-      ? this._types.filter(t => this.snapshotLooksLikeType(value, t))
+      ? members.filter(t => this.snapshotLooksLikeType(value, t))
       : []
-    const typesToValidate = candidates.length > 0 ? candidates : this._types
+    const typesToValidate = candidates.length > 0 ? candidates : members
 
     const allErrors: IValidationResult[] = []
     let applicableTypes = 0
@@ -483,7 +510,7 @@ export class Union extends BaseType<any, any, any> {
   }
 
   getSubTypes() {
-    return this._types
+    return this.members()
   }
 }
 
@@ -495,6 +522,69 @@ Object.assign(Union.prototype as object, {
   _discriminatorCache: undefined,
   _allMembersDiscriminated: undefined
 })
+
+/**
+ * @internal
+ * @hidden
+ *
+ * A union whose membership is read fresh from a thunk on every operation, so
+ * members that come into existence after the union was built — a registry of
+ * pluggable types whose modules load on demand — still dispatch, validate, and
+ * satisfy references. That last one is the reason this exists: reference
+ * resolution asks the target type `isAssignableFrom(node.type)` through the
+ * identifier cache, and a membership list frozen at construction would reject
+ * every late-loaded member's instances.
+ *
+ * Every membership-derived cache the base class keeps is bypassed here: flags
+ * and the folded name are recomputed per read, and the discriminator scan is
+ * uncached so a miss stays retryable once the missing member registers. A hit
+ * for a given discriminator is assumed stable — registering two members with
+ * the same `type` literal at different times can leave a stale unambiguous
+ * answer where the base class would have reported ambiguity.
+ */
+class DynamicUnion extends Union {
+  private readonly _members: () => IAnyType[]
+
+  // `declare` + the setter below, not a field: a field initializer would run
+  // after super() and clobber the name the Union constructor assigns through
+  // the overridden setter.
+  declare private _explicitName?: string
+
+  constructor(members: () => IAnyType[], options: UnionOptions) {
+    super([], options)
+    this._members = members
+  }
+
+  protected override members() {
+    return this._members()
+  }
+
+  override get flags(): TypeFlags {
+    let result: TypeFlags = TypeFlags.Union
+    for (const type of this.members()) {
+      result |= type.flags
+    }
+    return result
+  }
+
+  override get name(): string {
+    return this._explicitName !== undefined
+      ? this._explicitName
+      : this.computeName()
+  }
+
+  override set name(value: string) {
+    this._explicitName = value
+  }
+
+  protected override _findCandidateByTypeDiscriminator(discriminator: string) {
+    return this._scanForTypeDiscriminator(discriminator)
+  }
+
+  protected override allMembersDiscriminated() {
+    return this.computeAllMembersDiscriminated()
+  }
+}
 
 // Structurally identical unions are the same object. A union built without
 // options is a pure function of its member list — `_types` is the members,
@@ -600,6 +690,13 @@ export function union<Types extends [IAnyType, ...IAnyType[]]>(
   _UnionMembersSnapshotType<Types>,
   _UnionMembersTypeWithoutSTN<Types>
 >
+export function union<Types extends readonly IAnyType[]>(
+  options: UnionOptions & { members: () => Types }
+): ITypeUnion<
+  _UnionMembersCreationType<Types>,
+  _UnionMembersSnapshotType<Types>,
+  _UnionMembersTypeWithoutSTN<Types>
+>
 
 // manually written
 export function union(...types: IAnyType[]): IAnyType
@@ -609,6 +706,13 @@ export function union(
 ): IAnyType
 /**
  * `types.union` - Create a union of multiple types. If the correct type cannot be inferred unambiguously from a snapshot, provide a dispatcher function of the form `(snapshot) => Type`.
+ *
+ * Passing `members: () => Type[]` in the options (with no positional member
+ * types) creates a union whose membership is re-read from the thunk on every
+ * operation, so types registered after construction — e.g. from a lazily
+ * loaded module — participate in dispatch, validation and reference
+ * resolution. Pair it with a `dispatcher` for snapshot dispatch and a `name`
+ * for stable error messages.
  *
  * @param optionsOrType
  * @param otherTypes
@@ -633,13 +737,21 @@ export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
       assertArg(
         options,
         o => isPlainObject(o),
-        "object { eager?: boolean, dispatcher?: Function }",
+        "object { eager?: boolean, dispatcher?: Function, members?: Function, name?: string }",
         1
       )
     }
     types.forEach((type, i) => {
       assertIsType(type, options ? i + 2 : i + 1)
     })
+  }
+  if (options?.members !== undefined) {
+    if (types.length > 0) {
+      throw fail(
+        "union(): the members option cannot be combined with positional member types"
+      )
+    }
+    return new DynamicUnion(options.members, options)
   }
   return options === undefined ? internUnion(types) : new Union(types, options)
 }

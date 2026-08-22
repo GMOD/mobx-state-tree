@@ -91,3 +91,23 @@ The interned dist was swapped into both jbrowse pnpm-store copies (mv-aside,
 **3574/3574**, `plugins` **9978/9984 with 0 failed** (6 skipped). All-pass, so
 no baseline run was needed. Runtime export list and `index.d.ts` are
 byte-identical to the pre-change build.
+
+## Follow-up (August 2026): `members` thunk unions are the sanctioned exception
+
+`types.union({ members: () => IAnyType[], dispatcher?, name? })` builds a
+`DynamicUnion` whose membership is re-read from the thunk on every operation —
+the primitive for registry-backed pluggable unions whose member types load
+after construction (the jbrowse lazy-stateModel design). It deliberately breaks
+this ADR's premise for itself and only itself:
+
+- It is **never interned** (it always has options, and the thunk closure is not
+  comparable), so the identity guarantee for no-options unions is untouched.
+- Every membership-derived cache is bypassed in the subclass — `flags` and the
+  folded name recompute per read, the discriminator scan is uncached so misses
+  stay retryable — while the base class keeps all its caching. Membership flows
+  through the one `protected members()` accessor; `scripts/mem-config-schema.mjs`
+  is byte-identical before/after, and the construction A/B reads 0.96–1.03x
+  (measured at load 38, i.e. noise).
+- `isAssignableFrom` folding over live members is the load-bearing part:
+  reference resolution asks it through the identifier cache, so instances of
+  late-registered members can satisfy `safeReference`s.
