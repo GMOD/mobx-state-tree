@@ -20,6 +20,15 @@ ADR 0003 already named the property that makes deduplication safe as
 *desirable*: "two separately built but equivalent types compare equal" is the
 stated reason `computeName()` beat a constructor thunk.
 
+Scale caveat on the workload: 262 hydrated track schemas is an upper bound,
+not a typical session. jbrowse keeps configs as `types.frozen` snapshots in
+`jbrowse.tracks` and only builds a track's config-schema type when it becomes
+an active track, so real sessions build schemas for the handful of displayed
+tracks plus the registration-time types (per track/display/adapter *type*,
+including the `pluggableConfigSchemaType` unions). The percentages below hold
+at any scale; the absolute MB saved scales with how many schemas actually get
+built.
+
 ## Decision
 
 **`union(...types)` with no options is interned on the identity tuple of its
