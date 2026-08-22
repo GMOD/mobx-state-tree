@@ -1,3 +1,17 @@
+## [6.5.0](https://github.com/GMOD/mobx-state-tree/compare/v6.4.0...v6.5.0) (2026-08-22)
+
+### Bug Fixes
+
+- Reconcile through the loaded type instead of recreating the node ([3741894](https://github.com/GMOD/mobx-state-tree/commit/37418940fe11bc243b77d389f8e6e95cf77d2abe))
+
+### Chores
+
+- Create a GitHub release on publish, with git-cliff changelog notes ([3f1e16f](https://github.com/GMOD/mobx-state-tree/commit/3f1e16f455066ee8aabc975ea7bb72e328e3ad00))
+
+### Features
+
+- Late-bound membership via a members thunk, plus a name option ([af4084d](https://github.com/GMOD/mobx-state-tree/commit/af4084d35a40783c9af5fce6ee7c18b155e8b12f))
+
 ## [6.4.0](https://github.com/GMOD/mobx-state-tree/compare/v6.3.0...v6.4.0) (2026-08-22)
 
 ### Chores
