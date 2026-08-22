@@ -6,6 +6,7 @@ import {
   type IType,
   type IValidationContext,
   type IValidationResult,
+  ModelType,
   TypeFlags,
   assertIsType,
   devMode,
@@ -71,7 +72,7 @@ export class OptionalValue<
     return this._subtype.name
   }
 
-  describe() {
+  override describe() {
     return `${this._subtype.describe()}?`
   }
 
@@ -278,6 +279,34 @@ export function isOptionalType<IT extends IAnyType>(type: IT): boolean {
   return isType(type) && (type.flags & TypeFlags.Optional) > 0
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+/**
+ * The identifier attribute of the model a stripDefault ultimately wraps, or
+ * `null` when there is none. Drills through the single-subtype wrappers the way
+ * `resolveModelType` in union.ts does — that one is module-private there, and
+ * this file may not reach into it.
+ *
+ * `null` is also the answer for an unresolved `types.late`, which only costs the
+ * short-circuit, never correctness: the full structural walk still runs.
+ */
+function resolveIdentifierAttribute(type: IAnyType): string | null {
+  let current: IAnyType | undefined = type
+  for (let depth = 0; current && depth < 20; depth++) {
+    if (current instanceof ModelType) {
+      return current.identifierAttribute ? current.identifierAttribute : null
+    }
+    const wrapper = current as {
+      _subtype?: IAnyType
+      getSubType?: (mustSucceed: boolean) => IAnyType | undefined
+    }
+    current = wrapper._subtype ?? wrapper.getSubType?.(false)
+  }
+  return null
+}
+
 /**
  * Compare a child snapshot to a stripped-default's reference snapshot: identity
  * for primitives, structural for objects/arrays.
@@ -364,9 +393,29 @@ export class StripDefaultValue<
   IT extends IAnyType,
   OptionalVals extends ValidOptionalValues
 > extends OptionalValue<IT, OptionalVals> {
-  // on the prototype until a strip actually happens; jbrowse builds one of these
-  // per config slot and most are never serialized. See `BaseType.isType`.
+  // all three live on the prototype until a strip actually happens; jbrowse
+  // builds one of these per config slot and most are never serialized. See
+  // `BaseType.isType`.
   declare private _defaultSnapshot?: { value: IT["SnapshotType"] }
+  declare private _identifierAttribute?: string | null
+  declare private _equalsDefaultCache?: WeakMap<object, boolean>
+
+  private equalsDefault(snapshot: unknown, defaultSnapshot: unknown): boolean {
+    let identifierAttribute = this._identifierAttribute
+    if (identifierAttribute === undefined) {
+      identifierAttribute = resolveIdentifierAttribute(this.getSubTypes())
+      this._identifierAttribute = identifierAttribute
+    }
+    // an identified model's snapshot normally has the same shape as the default
+    // and differs only here, so answering from one key beats walking every key
+    // (including nested objects) until the walk reaches it
+    return identifierAttribute !== null &&
+      isRecord(snapshot) &&
+      isRecord(defaultSnapshot) &&
+      snapshot[identifierAttribute] !== defaultSnapshot[identifierAttribute]
+      ? false
+      : defaultSnapshotEquals(snapshot, defaultSnapshot)
+  }
 
   shouldStripFromSnapshot(snapshot: IT["SnapshotType"]): boolean {
     if (!this._defaultSnapshot) {
@@ -381,12 +430,34 @@ export class StripDefaultValue<
       )
       this._defaultSnapshot = { value: node.snapshot }
     }
-    return defaultSnapshotEquals(snapshot, this._defaultSnapshot.value)
+    const defaultSnapshot = this._defaultSnapshot.value
+    let result: boolean
+    if (isRecord(snapshot)) {
+      // a child node's snapshot is a keepAlive computed, so a stable reference
+      // means unchanged content: the same object always gets the same answer
+      let cache = this._equalsDefaultCache
+      if (!cache) {
+        cache = new WeakMap()
+        this._equalsDefaultCache = cache
+      }
+      const cached = cache.get(snapshot)
+      if (cached === undefined) {
+        result = this.equalsDefault(snapshot, defaultSnapshot)
+        cache.set(snapshot, result)
+      } else {
+        result = cached
+      }
+    } else {
+      result = defaultSnapshotEquals(snapshot, defaultSnapshot)
+    }
+    return result
   }
 }
 
 Object.assign(StripDefaultValue.prototype as object, {
-  _defaultSnapshot: undefined
+  _defaultSnapshot: undefined,
+  _identifierAttribute: undefined,
+  _equalsDefaultCache: undefined
 })
 
 /**

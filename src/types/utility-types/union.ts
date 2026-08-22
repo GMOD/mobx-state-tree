@@ -8,6 +8,7 @@ import {
   type IValidationContext,
   type IValidationError,
   type IValidationResult,
+  Literal,
   type ModelCreationType2,
   type ModelInstanceType,
   type ModelProperties,
@@ -74,6 +75,17 @@ function resolveModelType(
     current = wrapper._subtype ?? wrapper.getSubType?.(false)
   }
   return undefined
+}
+
+// The quick-match paths below already know a type carries TypeFlags.Literal,
+// but `is()` still routes through BaseType.validate — a context array, an entry
+// object and a `$treenode` probe per property, per candidate member. A real
+// `Literal` stores its primitive, and its isValidSnapshot is exactly value
+// equality against it, so compare directly. The `instanceof` gate is load
+// bearing: wrappers (optional, refinement, snapshotProcessor, late, union)
+// inherit the Literal flag from what they wrap and must keep the full check.
+function matchesLiteral(type: IAnyType, value: unknown): boolean {
+  return type instanceof Literal ? type.value === value : type.is(value)
 }
 
 /**
@@ -147,7 +159,7 @@ export class Union extends BaseType<any, any, any> {
     return this._types.some(subType => subType.isAssignableFrom(type))
   }
 
-  describe() {
+  override describe() {
     return `(${this._types.map(factory => factory.describe()).join(" | ")})`
   }
 
@@ -243,7 +255,7 @@ export class Union extends BaseType<any, any, any> {
       if (
         !typeProp ||
         !(typeProp.flags & TypeFlags.Literal) ||
-        !typeProp.is(discriminator)
+        !matchesLiteral(typeProp, discriminator)
       ) {
         continue
       }
@@ -366,7 +378,7 @@ export class Union extends BaseType<any, any, any> {
       }
       // for literals, check exact value match
       if (flags & TypeFlags.Literal) {
-        if (type.is(value)) {
+        if (matchesLiteral(type, value)) {
           return type
         }
       }
@@ -401,7 +413,7 @@ export class Union extends BaseType<any, any, any> {
         // for literal types, verify the value matches exactly
         // this is critical for discriminated unions
         if (flags & TypeFlags.Literal) {
-          if (!propType.is(propValue)) {
+          if (!matchesLiteral(propType, propValue)) {
             return false
           }
         }

@@ -90,6 +90,150 @@ test("array/object size short-circuit: differently-sized values are kept", () =>
   expect(getSnapshot(N.create({ arr: [8] }))).toEqual({ arr: [8] })
 })
 
+test("a child differing only in its identifier keeps every key", () => {
+  const Track = types.model("Track", {
+    trackId: types.identifier,
+    category: types.optional(types.string, "feature"),
+    displays: types.optional(types.array(types.string), ["linear"]),
+    renderer: types.optional(types.model({ type: "svg", height: 20 }), {})
+  })
+  const M = types.model({
+    track: types.stripDefault(Track, { trackId: "default" })
+  })
+  expect(getSnapshot(M.create({ track: { trackId: "other" } }))).toEqual({
+    track: {
+      trackId: "other",
+      category: "feature",
+      displays: ["linear"],
+      renderer: { type: "svg", height: 20 }
+    }
+  })
+  expect(getSnapshot(M.create({ track: { trackId: "default" } }))).toEqual({})
+})
+
+test("a child equal to the default, identifier included, is stripped", () => {
+  const Track = types.model({ trackId: types.identifier, color: "red" })
+  const M = types.model({
+    track: types.stripDefault(Track, { trackId: "t1" })
+  })
+  expect(
+    getSnapshot(M.create({ track: { trackId: "t1", color: "red" } }))
+  ).toEqual({})
+  expect(
+    getSnapshot(M.create({ track: { trackId: "t1", color: "blue" } }))
+  ).toEqual({ track: { trackId: "t1", color: "blue" } })
+})
+
+test("the identifier lookup drills through wrapper types", () => {
+  const Track = types.model({ trackId: types.identifier, color: "red" })
+  const M = types.model({
+    late: types.stripDefault(
+      types.late(() => Track),
+      { trackId: "t1" }
+    ),
+    refined: types.stripDefault(
+      types.refinement(Track, () => true),
+      { trackId: "t1" }
+    )
+  })
+  expect(getSnapshot(M.create())).toEqual({})
+  expect(
+    getSnapshot(
+      M.create({ late: { trackId: "t2" }, refined: { trackId: "t1" } })
+    )
+  ).toEqual({ late: { trackId: "t2", color: "red" } })
+})
+
+test("a postProcessor that drops the identifier key still compares fully", () => {
+  const Track = types.model({ trackId: types.identifier, color: "red" })
+  const Processed = types.snapshotProcessor(Track, {
+    preProcessor(sn: { key: string; color?: string }) {
+      return { trackId: sn.key, color: sn.color }
+    },
+    postProcessor(sn) {
+      return { key: sn.trackId, color: sn.color }
+    }
+  })
+  const M = types.model({
+    track: types.stripDefault(Processed, { key: "t1" })
+  })
+  expect(getSnapshot(M.create({ track: { key: "t1", color: "red" } }))).toEqual(
+    {}
+  )
+  expect(getSnapshot(M.create({ track: { key: "t2" } }))).toEqual({
+    track: { key: "t2", color: "red" }
+  })
+})
+
+test("re-serializing after writes keeps answering from the current value", () => {
+  const Sub = types.model({ a: 1, b: 2 })
+  const M = types
+    .model({
+      sub: types.stripDefault(Sub, { a: 1 }),
+      other: types.optional(types.string, "x")
+    })
+    .actions(self => ({
+      setA(value: number) {
+        self.sub.a = value
+      },
+      setOther(value: string) {
+        self.other = value
+      }
+    }))
+  const m = M.create()
+  expect(getSnapshot(m)).toEqual({ other: "x" })
+  expect(getSnapshot(m)).toEqual({ other: "x" })
+  m.setA(5)
+  expect(getSnapshot(m)).toEqual({ sub: { a: 5, b: 2 }, other: "x" })
+  expect(getSnapshot(m)).toEqual({ sub: { a: 5, b: 2 }, other: "x" })
+  m.setA(1)
+  expect(getSnapshot(m)).toEqual({ other: "x" })
+  // a sibling write re-runs the parent snapshot over an unchanged child
+  m.setOther("y")
+  expect(getSnapshot(m)).toEqual({ other: "y" })
+  m.setA(5)
+  m.setOther("z")
+  expect(getSnapshot(m)).toEqual({ sub: { a: 5, b: 2 }, other: "z" })
+  m.setA(1)
+  expect(getSnapshot(m)).toEqual({ other: "z" })
+})
+
+test("re-serializing an identified child after it is replaced", () => {
+  const Track = types.model({ trackId: types.identifier, color: "red" })
+  const M = types
+    .model({
+      track: types.stripDefault(Track, { trackId: "t1" }),
+      other: types.optional(types.string, "x")
+    })
+    .actions(self => ({
+      setTrack(value: { trackId: string; color?: string }) {
+        self.track = Track.create(value)
+      },
+      setOther(value: string) {
+        self.other = value
+      }
+    }))
+  const m = M.create()
+  expect(getSnapshot(m)).toEqual({ other: "x" })
+  m.setTrack({ trackId: "t2" })
+  expect(getSnapshot(m)).toEqual({
+    track: { trackId: "t2", color: "red" },
+    other: "x"
+  })
+  m.setOther("y")
+  expect(getSnapshot(m)).toEqual({
+    track: { trackId: "t2", color: "red" },
+    other: "y"
+  })
+  m.setTrack({ trackId: "t1" })
+  expect(getSnapshot(m)).toEqual({ other: "y" })
+  m.setTrack({ trackId: "t1", color: "blue" })
+  expect(getSnapshot(m)).toEqual({
+    track: { trackId: "t1", color: "blue" },
+    other: "y"
+  })
+})
+
 test("strips defaults for array/map element models (lazy snapshot path)", () => {
   // array/map children are serialized via processInitialSnapshot before they
   // become observable instances, a different path from ModelType.getSnapshot;

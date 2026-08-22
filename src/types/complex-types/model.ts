@@ -321,13 +321,6 @@ export interface IModelType<
  */
 export interface IAnyModelType extends IModelType<any, any, any, any> {}
 
-/** @hidden */
-export type ExtractProps<T extends IAnyModelType> =
-  T extends IModelType<infer P, any, any, any> ? P : never
-/** @hidden */
-export type ExtractOthers<T extends IAnyModelType> =
-  T extends IModelType<any, infer O, any, any> ? O : never
-
 function objectTypeToString(this: any) {
   return getStateTreeNode(this).toString()
 }
@@ -368,8 +361,8 @@ export interface ModelTypeConfig {
 const ANONYMOUS_MODEL_NAME = "AnonymousModel"
 
 /**
- * A plain loop rather than `forAllProps`, which allocated a closure and made an
- * indirect call per property. This runs once per `types.model()` over every
+ * A plain loop rather than a callback per property, which allocated a closure
+ * and made an indirect call. This runs once per `types.model()` over every
  * declared property, and jbrowse builds a ~40-slot schema per track.
  */
 function findIdentifierAttribute(
@@ -482,8 +475,8 @@ export class ModelType<
   public readonly initializers: ReadonlyArray<(instance: any) => any>
   public readonly properties: PROPS
 
-  private readonly preProcessor?: (snapshot: any) => any
-  private readonly postProcessor?: (snapshot: any) => any
+  readonly preProcessor?: (snapshot: any) => any
+  readonly postProcessor?: (snapshot: any) => any
   readonly propertyNames: string[]
   // member/property name collisions are a property of the type, so we only need
   // to check the first instance we finalize (see finalizeNewInstance)
@@ -634,13 +627,9 @@ export class ModelType<
     })
   }
 
-  named: MT["named"] = name => {
-    return this.cloneAndEnhance({ name })
-  }
+  declare named: MT["named"]
 
-  props: MT["props"] = properties => {
-    return this.cloneAndEnhance({ properties })
-  }
+  declare props: MT["props"]
 
   volatile<TP extends object>(fn: (self: Instance<this>) => TP) {
     if (typeof fn !== "function") {
@@ -761,27 +750,9 @@ export class ModelType<
     })
   }
 
-  preProcessSnapshot: MT["preProcessSnapshot"] = preProcessor => {
-    const currentPreprocessor = this.preProcessor
-    if (!currentPreprocessor) {
-      return this.cloneAndEnhance({ preProcessor })
-    } else {
-      return this.cloneAndEnhance({
-        preProcessor: snapshot => currentPreprocessor(preProcessor(snapshot))
-      })
-    }
-  }
+  declare preProcessSnapshot: MT["preProcessSnapshot"]
 
-  postProcessSnapshot: MT["postProcessSnapshot"] = postProcessor => {
-    const currentPostprocessor = this.postProcessor
-    if (!currentPostprocessor) {
-      return this.cloneAndEnhance({ postProcessor })
-    } else {
-      return this.cloneAndEnhance({
-        postProcessor: snapshot => postProcessor(currentPostprocessor(snapshot))
-      })
-    }
-  }
+  declare postProcessSnapshot: MT["postProcessSnapshot"]
 
   instantiate(
     parent: AnyObjectNode | null,
@@ -802,15 +773,16 @@ export class ModelType<
     initialSnapshot: any = {}
   ): IChildNodesMap {
     const type = objNode.type as this
+    const properties = type.properties
     const result: IChildNodesMap = {}
-    type.forAllProps((name, childType) => {
-      result[name] = childType.instantiate(
+    for (const name of type.propertyNames) {
+      result[name] = properties[name]!.instantiate(
         objNode,
         name,
         undefined,
         initialSnapshot[name]
       )
-    })
+    }
     return result
   }
 
@@ -831,9 +803,9 @@ export class ModelType<
         observables.get(name)!.dehancer = node.unbox
       }
     } else {
-      this.forAllProps(name => {
+      for (const name of this.propertyNames) {
         _interceptReads(instance, name, node.unbox)
-      })
+      }
     }
 
     this.initializers.reduce((self, fn) => fn(self), instance)
@@ -846,14 +818,14 @@ export class ModelType<
     // function/value stops being observable at all. The flag is only set on
     // success so a broken type keeps throwing on every create.
     if (!this.duplicateKeysChecked) {
-      this.forAllProps(name => {
+      for (const name of this.propertyNames) {
         if (
           isComputedProp(instance, name) ||
           !isObservableProp(instance, name)
         ) {
           throw fail(`${name} property is declared twice`)
         }
-      })
+      }
       this.duplicateKeysChecked = true
     }
 
@@ -922,24 +894,15 @@ export class ModelType<
     return res
   }
 
-  /**
-   * Same as {@link getChildNode} but for a key already known to be a declared
-   * property (callers iterating `propertyNames`), so the membership guard is
-   * skipped.
-   */
-  private getPropertyNode(node: this["N"], key: string): AnyNode {
+  getChildNode(node: this["N"], key: string): AnyNode {
+    if (!(key in this.properties)) {
+      throw fail(`Not a value property: ${key}`)
+    }
     const childNode = getPropObservable(node.storedValue, key).raw()
     if (!childNode) {
       throw fail(`Node not available for property ${key}`)
     }
     return childNode
-  }
-
-  getChildNode(node: this["N"], key: string): AnyNode {
-    if (!(key in this.properties)) {
-      throw fail(`Not a value property: ${key}`)
-    }
-    return this.getPropertyNode(node, key)
   }
 
   override getSnapshot(node: this["N"], applyPostProcess = true): this["S"] {
@@ -996,9 +959,9 @@ export class ModelType<
   applySnapshot(node: this["N"], snapshot: this["C"]): void {
     typecheckInternal(this, snapshot)
     const preProcessedSnapshot = this.applySnapshotPreProcessor(snapshot)
-    this.forAllProps(name => {
+    for (const name of this.propertyNames) {
       ;(node.storedValue as any)[name] = preProcessedSnapshot[name]
-    })
+    }
   }
 
   applySnapshotPreProcessor(snapshot: any) {
@@ -1042,14 +1005,7 @@ export class ModelType<
     return typeCheckSuccess()
   }
 
-  private forAllProps(fn: (name: string, type: IAnyType) => void) {
-    const properties = this.properties
-    for (const key of this.propertyNames) {
-      fn(key, properties[key]!)
-    }
-  }
-
-  describe() {
+  override describe() {
     // optimization: cache
     return `{ ${this.propertyNames
       .map(key => `${key}: ${this.properties[key]!.describe()}`)
@@ -1065,6 +1021,51 @@ export class ModelType<
   }
 }
 ModelType.prototype.applySnapshot = action(ModelType.prototype.applySnapshot)
+
+type ModelTypeSelf = ModelType<
+  ModelProperties,
+  unknown,
+  unknown,
+  unknown,
+  IAnyModelType
+>
+
+// Chain steps shared by every model type; see the field declarations in the
+// class for why they are not own slots.
+Object.assign(ModelType.prototype as object, {
+  named(this: ModelTypeSelf, name: string) {
+    return this.cloneAndEnhance({ name })
+  },
+  props(this: ModelTypeSelf, properties: ModelPropertiesDeclaration) {
+    return this.cloneAndEnhance({ properties })
+  },
+  preProcessSnapshot(
+    this: ModelTypeSelf,
+    preProcessor: (snapshot: unknown) => unknown
+  ) {
+    const currentPreprocessor = this.preProcessor
+    if (!currentPreprocessor) {
+      return this.cloneAndEnhance({ preProcessor })
+    } else {
+      return this.cloneAndEnhance({
+        preProcessor: snapshot => currentPreprocessor(preProcessor(snapshot))
+      })
+    }
+  },
+  postProcessSnapshot(
+    this: ModelTypeSelf,
+    postProcessor: (snapshot: unknown) => unknown
+  ) {
+    const currentPostprocessor = this.postProcessor
+    if (!currentPostprocessor) {
+      return this.cloneAndEnhance({ postProcessor })
+    } else {
+      return this.cloneAndEnhance({
+        postProcessor: snapshot => postProcessor(currentPostprocessor(snapshot))
+      })
+    }
+  }
+})
 
 export function model<P extends ModelPropertiesDeclaration = {}>(
   name: string,

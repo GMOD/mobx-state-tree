@@ -603,3 +603,82 @@ describe("1045 - secondary union types with applySnapshot and ids", () => {
     )
   }
 })
+
+// `determineType`'s quick-match runs only when type checking is off, i.e. in
+// NODE_ENV=production, so these must be exercised by `pnpm test:prod` to mean
+// anything. It picks a member by required-key presence plus literal-property
+// equality; a bare `types.literal` is compared against its stored value
+// directly, while a wrapper that merely inherits the Literal flag through the
+// flags fold (here `types.optional`) has to keep the full `is()` check.
+describe("union quick-match on literal discriminators", () => {
+  const Circle = types.model("Circle", {
+    kind: types.literal("circle"),
+    size: types.number
+  })
+  const Rect = types.model("Rect", {
+    kind: types.literal("rect"),
+    size: types.number
+  })
+  const Holder = types.model("Holder", {
+    shape: types.union(Circle, Rect)
+  })
+
+  test("a bare literal discriminator selects the member, structure alone being ambiguous", () => {
+    expect(Circle.propertyNames).toEqual(Rect.propertyNames)
+
+    const holder = Holder.create({ shape: { kind: "rect", size: 1 } })
+    expect(getType(holder.shape)).toBe(Rect)
+
+    applySnapshot(holder, { shape: { kind: "circle", size: 2 } })
+    expect(getType(holder.shape)).toBe(Circle)
+    expect(getSnapshot(holder)).toEqual({
+      shape: { kind: "circle", size: 2 }
+    })
+
+    applySnapshot(holder, { shape: { kind: "rect", size: 3 } })
+    expect(getType(holder.shape)).toBe(Rect)
+  })
+
+  test("an optional-wrapped literal discriminator still selects the member", () => {
+    const Alpha = types.model("Alpha", {
+      kind: types.optional(types.literal("alpha"), "alpha"),
+      size: types.number
+    })
+    const Beta = types.model("Beta", {
+      kind: types.optional(types.literal("beta"), "beta"),
+      size: types.number
+    })
+    const Wrapped = types.model("Wrapped", {
+      shape: types.union(Alpha, Beta)
+    })
+
+    const wrapped = Wrapped.create({ shape: { kind: "beta", size: 1 } })
+    expect(getType(wrapped.shape)).toBe(Beta)
+
+    applySnapshot(wrapped, { shape: { kind: "alpha", size: 2 } })
+    expect(getType(wrapped.shape)).toBe(Alpha)
+
+    applySnapshot(wrapped, { shape: { kind: "beta", size: 3 } })
+    expect(getType(wrapped.shape)).toBe(Beta)
+  })
+
+  test("a literal union of primitives matches by value", () => {
+    const Toggle = types.model("Toggle", {
+      mode: types.union(types.literal("on"), types.literal("off"))
+    })
+
+    const toggle = Toggle.create({ mode: "off" })
+    expect(getSnapshot(toggle)).toEqual({ mode: "off" })
+
+    applySnapshot(toggle, { mode: "on" })
+    expect(getSnapshot(toggle)).toEqual({ mode: "on" })
+
+    expect(() => Toggle.create({ mode: "sideways" as "on" })).toThrow()
+  })
+
+  test("a snapshot matching no literal fails rather than picking a member", () => {
+    expect(() =>
+      Holder.create({ shape: { kind: "triangle" as "rect", size: 1 } })
+    ).toThrow()
+  })
+})
