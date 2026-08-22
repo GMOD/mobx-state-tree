@@ -94,7 +94,7 @@ class Late<IT extends IAnyType> extends BaseType<
     ) as any
   }
 
-  describe() {
+  override describe() {
     const t = this.getSubType(false)
     return t ? t.name : "<uknown late type>"
   }

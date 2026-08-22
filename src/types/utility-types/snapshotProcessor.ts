@@ -72,7 +72,7 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return this._subtype.name
   }
 
-  describe() {
+  override describe() {
     return `snapshotProcessor(${this._subtype.describe()})`
   }
 

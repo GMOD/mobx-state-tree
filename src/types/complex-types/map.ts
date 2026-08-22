@@ -3,7 +3,6 @@ import {
   type IKeyValueMap,
   type IMapDidChange,
   type IMapWillChange,
-  type IObservableMapInitialValues,
   type Lambda,
   ObservableMap,
   _interceptReads,
@@ -35,6 +34,7 @@ import {
   TypeFlags,
   appendHookInitializer,
   asArray,
+  assertIsType,
   cannotDetermineSubtype,
   createObjectNode,
   devMode,
@@ -152,17 +152,6 @@ export enum MapIdentifierMode {
 }
 
 class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
-  constructor(
-    initialData?: IObservableMapInitialValues<string, any> | undefined,
-    name?: string
-  ) {
-    // mobx's default (deep) enhancer. The old `observable.ref.enhancer` arg
-    // read undefined ever since mobx 6 renamed the field to `options_.enhancer`,
-    // so deep has been the effective behavior all along; mobx 7 dropped
-    // `observable.ref` entirely.
-    super(initialData, undefined, name)
-  }
-
   override get(key: string): IT["Type"] | undefined {
     // maybe this is over-enthousiastic? normalize numeric keys to strings
     return super.get(`${key}`)
@@ -317,7 +306,8 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   }
 
   createNewInstance(childNodes: IChildNodesMap): this["T"] {
-    return new MSTMap(childNodes, this.name) as any
+    // undefined is mobx's enhancer argument, left at its deep default
+    return new MSTMap(childNodes, undefined, this.name) as any
   }
 
   finalizeNewInstance(
@@ -333,10 +323,6 @@ export class MapType<IT extends IAnyType> extends ComplexType<
 
     intercept(instance, this.willChange)
     observe(instance, this.didChange)
-  }
-
-  describe() {
-    return this.name
   }
 
   getChildren(node: this["N"]): ReadonlyArray<AnyNode> {
@@ -558,6 +544,7 @@ MapType.prototype.applySnapshot = action(MapType.prototype.applySnapshot)
  * @returns
  */
 export function map<IT extends IAnyType>(subtype: IT): IMapType<IT> {
+  assertIsType(subtype, 1)
   return new MapType<IT>(subtype)
 }
 

@@ -20,7 +20,7 @@ import {
  * @hidden
  */
 export class Frozen<T> extends SimpleType<T, T, T> {
-  flags = TypeFlags.Frozen
+  readonly flags = TypeFlags.Frozen
 
   constructor(private subType?: IAnyType) {
     super(subType ? undefined : "frozen")
@@ -30,7 +30,7 @@ export class Frozen<T> extends SimpleType<T, T, T> {
     return `frozen(${this.subType!.name})`
   }
 
-  describe() {
+  override describe() {
     return "<any immutable value>"
   }
 

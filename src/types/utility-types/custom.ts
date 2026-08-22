@@ -88,10 +88,6 @@ export class CustomType<S, T> extends SimpleType<S | T, S, T> {
     super(options.name)
   }
 
-  describe() {
-    return this.name
-  }
-
   isValidSnapshot(
     value: this["C"],
     context: IValidationContext

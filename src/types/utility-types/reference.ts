@@ -164,10 +164,6 @@ export abstract class BaseReferenceType<
     return `reference(${this.targetType.name})`
   }
 
-  describe() {
-    return this.name
-  }
-
   override isAssignableFrom(type: IAnyType): boolean {
     return this.targetType.isAssignableFrom(type)
   }

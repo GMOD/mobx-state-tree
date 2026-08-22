@@ -23,8 +23,12 @@ export class Literal<T> extends SimpleType<T, T, T> {
   readonly flags = TypeFlags.Literal
 
   constructor(value: T) {
-    super(JSON.stringify(value))
+    super()
     this.value = value
+  }
+
+  protected override computeName(): string {
+    return JSON.stringify(this.value)
   }
 
   instantiate(
@@ -34,10 +38,6 @@ export class Literal<T> extends SimpleType<T, T, T> {
     initialValue: this["C"]
   ): this["N"] {
     return createScalarNode(this, parent, subpath, environment, initialValue)
-  }
-
-  describe() {
-    return JSON.stringify(this.value)
   }
 
   isValidSnapshot(

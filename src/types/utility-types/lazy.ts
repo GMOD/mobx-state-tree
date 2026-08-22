@@ -37,7 +37,7 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
   T,
   T
 > {
-  flags = TypeFlags.Lazy
+  readonly flags = TypeFlags.Lazy
 
   private loadedType: T | null = null
   private pendingNodeList: IObservableArray<AnyNode> = observable.array()
@@ -84,7 +84,7 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
     )
   }
 
-  describe() {
+  override describe() {
     return `<lazy ${this.name}>`
   }
 

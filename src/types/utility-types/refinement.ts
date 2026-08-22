@@ -34,10 +34,6 @@ class Refinement<IT extends IAnyType> extends BaseType<
     super(name)
   }
 
-  describe() {
-    return this.name
-  }
-
   instantiate(
     parent: AnyObjectNode | null,
     subpath: string,

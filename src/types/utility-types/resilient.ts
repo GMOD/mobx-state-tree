@@ -38,7 +38,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     return `resilient(${this._subtype.name})`
   }
 
-  describe() {
+  override describe() {
     return `resilient(${this._subtype.describe()})`
   }
 

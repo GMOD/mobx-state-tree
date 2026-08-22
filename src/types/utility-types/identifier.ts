@@ -4,7 +4,6 @@ import {
   type IValidationContext,
   type IValidationResult,
   ModelType,
-  type ScalarNode,
   SimpleType,
   TypeFlags,
   assertArg,
@@ -79,10 +78,6 @@ export class IdentifierType extends BaseIdentifierType<string> {
   constructor() {
     super(`identifier`, "string")
   }
-
-  describe() {
-    return `identifier`
-  }
 }
 
 /**
@@ -92,14 +87,6 @@ export class IdentifierType extends BaseIdentifierType<string> {
 export class IdentifierNumberType extends BaseIdentifierType<number> {
   constructor() {
     super("identifierNumber", "number")
-  }
-
-  override getSnapshot(node: ScalarNode<number, number, number>): number {
-    return node.storedValue
-  }
-
-  describe() {
-    return `identifierNumber`
   }
 }
 

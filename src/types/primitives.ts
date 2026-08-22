@@ -37,10 +37,6 @@ export class CoreType<C, S, T> extends SimpleType<C, S, T> {
     super(name)
   }
 
-  describe() {
-    return this.name
-  }
-
   instantiate(
     parent: AnyObjectNode | null,
     subpath: string,

@@ -166,10 +166,6 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     observe(instance as IObservableArray<AnyNode>, this.didChange)
   }
 
-  describe() {
-    return this.name
-  }
-
   getChildren(node: this["N"]): AnyNode[] {
     return node.storedValue.slice()
   }

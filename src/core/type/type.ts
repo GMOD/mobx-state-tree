@@ -225,15 +225,6 @@ export interface IComplexType<C, S, T> extends IType<C, S, T & object> {}
 export interface IAnyComplexType extends IType<any, any, object> {}
 
 /** @hidden */
-export type ExtractCSTWithoutSTN<
-  IT extends {
-    [$type]: undefined
-    CreationType: any
-    SnapshotType: any
-    TypeWithoutSTN: any
-  }
-> = IT["CreationType"] | IT["SnapshotType"] | IT["TypeWithoutSTN"]
-/** @hidden */
 export type ExtractCSTWithSTN<
   IT extends {
     [$type]: undefined
@@ -395,7 +386,10 @@ export abstract class BaseType<
   ): N
 
   declare abstract flags: TypeFlags
-  abstract describe(): string
+
+  describe(): string {
+    return this.name
+  }
 
   abstract isValidSnapshot(
     value: C,
@@ -458,12 +452,6 @@ BaseType.prototype.create = action(BaseType.prototype.create)
 // Defaults that every type shares, kept off the individual type objects. See
 // `isType` and `_name` in the class body.
 Object.assign(BaseType.prototype as object, { isType: true, _name: undefined })
-
-/**
- * @internal
- * @hidden
- */
-export type AnyBaseType = BaseType<any, any, any, any>
 
 /**
  * @internal
