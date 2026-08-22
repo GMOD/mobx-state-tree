@@ -1,3 +1,22 @@
+## [6.5.1](https://github.com/GMOD/mobx-state-tree/compare/v6.5.0...v6.5.1) (2026-08-22)
+
+### Chores
+
+- One workflow, and no run without a reason ([920ee52](https://github.com/GMOD/mobx-state-tree/commit/920ee5280f315b3c3d44d3e7506c0744dbe5638d))
+- Enforce prettier, and keep it away from generated files ([801c920](https://github.com/GMOD/mobx-state-tree/commit/801c9204bed084e3a7031bcfa54cf19acb36e0f7))
+- Pin the toolchain the way the sibling GMOD repos do ([28ec9b0](https://github.com/GMOD/mobx-state-tree/commit/28ec9b0c4a00da23dfedbafe6c8b747d82e933c2))
+- Check every pull request, whatever its base ([b0d8421](https://github.com/GMOD/mobx-state-tree/commit/b0d8421adbec70859f7fa3a74b9e00266cd5cecd))
+
+### Tests
+
+- Stop the timer test rounding its way to a failure ([b24bcf5](https://github.com/GMOD/mobx-state-tree/commit/b24bcf5ef25bd927624c7cecba7ef1aed43f4732))
+- Fix what typechecking the suite turns up ([982bf00](https://github.com/GMOD/mobx-state-tree/commit/982bf00d3cfbd5d4c08e9f07fcd498b09d7f54d6))
+- Typecheck the test suite in CI ([d785a10](https://github.com/GMOD/mobx-state-tree/commit/d785a10bceef5e424dfba1ba97b92c0f3037e63b))
+
+### Types
+
+- Allow a zero-arg create() when the type defaults its own snapshot ([800ce20](https://github.com/GMOD/mobx-state-tree/commit/800ce2098a91933a040cb557af4ceee4a79baf9a))
+
 ## [6.5.0](https://github.com/GMOD/mobx-state-tree/compare/v6.4.0...v6.5.0) (2026-08-22)
 
 ### Bug Fixes
