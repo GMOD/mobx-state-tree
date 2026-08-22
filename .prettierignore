@@ -1,0 +1,11 @@
+# Generated, and prettier actively damages some of it: it reads the `__x__` in a
+# commit subject quoted in CHANGELOG.md as markdown emphasis and rewrites it to
+# `**x**`, so every `pnpm format` would rewrite release notes git-cliff already
+# wrote.
+CHANGELOG.md
+pnpm-lock.yaml
+dist
+lib
+esm
+coverage
+test-results

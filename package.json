@@ -19,6 +19,7 @@
     "clean": "rimraf dist lib",
     "prebuild": "pnpm clean",
     "format": "pnpm prettier --write .",
+    "format:check": "pnpm prettier --check .",
     "build": "tsc && rollup -c",
     "test": "vitest",
     "test:types": "tsc -p __tests__/types/tsconfig.json",
@@ -27,7 +28,7 @@
     "test:prod": "cross-env NODE_ENV=production vitest",
     "prebench": "./scripts/build-both-branches.sh",
     "bench": "cross-env NODE_ENV=production vitest bench --run",
-    "preversion": "pnpm build && pnpm test-ci",
+    "preversion": "pnpm lint && pnpm format:check && pnpm build && pnpm test-ci",
     "version": "git-cliff --tag v$npm_package_version --unreleased --prepend CHANGELOG.md && git add CHANGELOG.md",
     "postversion": "git push --follow-tags"
   },

@@ -12,12 +12,15 @@ import { types, type IAnyModelType } from "../src/index.ts"
 
 function wideProps(prefix: string, withId = false) {
   const p: Record<string, any> = {
-    [`${prefix}_id`]: withId ? types.identifier : types.optional(types.string, ""),
+    [`${prefix}_id`]: withId
+      ? types.identifier
+      : types.optional(types.string, ""),
     [`${prefix}_type`]: types.literal(prefix),
     [`${prefix}_regions`]: types.array(types.model({ start: types.number })),
     [`${prefix}_tags`]: types.map(types.string)
   }
-  for (let i = 0; i < 36; i++) p[`${prefix}_f${i}`] = types.optional(types.string, "")
+  for (let i = 0; i < 36; i++)
+    p[`${prefix}_f${i}`] = types.optional(types.string, "")
   return p
 }
 
@@ -41,8 +44,11 @@ describe("model construction", () => {
   bench("40 no-new-prop chain steps on a 40-prop parent", () => {
     let M: IAnyModelType = A
     for (let i = 0; i < 40; i++) {
-      M = M.views(() => ({ get [`v${i}`]() { return i } }))
-        .actions(() => ({ [`a${i}`]() {} }))
+      M = M.views(() => ({
+        get [`v${i}`]() {
+          return i
+        }
+      })).actions(() => ({ [`a${i}`]() {} }))
     }
     return void M
   })

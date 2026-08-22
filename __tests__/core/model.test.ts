@@ -230,11 +230,9 @@ describe("Model instantiation", () => {
     })
 
     test("an action reusing a property name is rejected", () => {
-      const M = types
-        .model("M", { name: types.string })
-        .actions(() => ({
-          name() {}
-        }))
+      const M = types.model("M", { name: types.string }).actions(() => ({
+        name() {}
+      }))
 
       expect(() => M.create({ name: "a" })).toThrow(
         "[mobx-state-tree] name property is declared twice"
