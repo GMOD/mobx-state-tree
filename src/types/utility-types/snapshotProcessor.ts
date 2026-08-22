@@ -188,12 +188,12 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return this._subtype
   }
 
-  override is(thing: any): thing is any {
+  override is(thing: unknown): thing is any {
     const value = isType(thing)
       ? this._subtype
       : isStateTreeNode(thing)
         ? getSnapshot(thing, false)
-        : this.preProcessSnapshotSafe(thing)
+        : this.preProcessSnapshotSafe(thing as this["C"])
     if (value === $preProcessorFailed) {
       return false
     }

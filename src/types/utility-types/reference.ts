@@ -580,9 +580,7 @@ export function reference<IT extends IAnyComplexType>(
  * @param type
  * @returns
  */
-export function isReferenceType<IT extends IReferenceType<any>>(
-  type: IT
-): boolean {
+export function isReferenceType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Reference) > 0
 }
 

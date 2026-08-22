@@ -86,7 +86,8 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     toGeneratorFunction,
     toGenerator,
     setDevMode,
-    setTypeChecking
+    setTypeChecking,
+    cannotDetermineSubtype
 `)
 
 const DEPRECATED_METHODS_AND_INTERNAL_TYPES = stringToArray(`

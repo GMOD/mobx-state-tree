@@ -56,8 +56,8 @@ export enum TypeFlags {
 }
 
 /**
- * @internal
- * @hidden
+ * The value `getSubTypes()` returns when a type cannot report its subtype,
+ * which is distinct from reporting that it has none (`null`).
  */
 export const cannotDetermineSubtype = "cannotDetermine"
 
@@ -88,7 +88,7 @@ export interface IType<C, S, T> {
   /**
    * Name of the identifier attribute or null if none.
    */
-  readonly identifierAttribute?: string
+  readonly identifierAttribute?: string | undefined
 
   /**
    * Creates an instance for the type given an snapshot input.
@@ -110,7 +110,7 @@ export interface IType<C, S, T> {
    * @param thing Snapshot or instance to be checked.
    * @returns true if the value is of the current type, false otherwise.
    */
-  is(thing: any): thing is C | this["Type"]
+  is(thing: unknown): thing is C | this["Type"]
 
   /**
    * Run's the type's typechecker on the given value with the given validation context.
@@ -413,8 +413,8 @@ export abstract class BaseType<
     return this.isValidSnapshot(value as C, context)
   }
 
-  is(thing: any): thing is any {
-    return this.validate(thing, [{ path: "", type: this }]).length === 0
+  is(thing: unknown): thing is any {
+    return this.validate(thing as C, [{ path: "", type: this }]).length === 0
   }
 
   get Type(): any {
@@ -472,7 +472,7 @@ export abstract class ComplexType<C, S, T> extends BaseType<
   T,
   ObjectNode<C, S, T>
 > {
-  identifierAttribute?: string
+  identifierAttribute?: string | undefined
 
   override create(snapshot: C = this.getDefaultSnapshot(), environment?: any) {
     return super.create(snapshot, environment)
@@ -631,8 +631,10 @@ export abstract class SimpleType<C, S, T> extends BaseType<
  * @param value Value to check.
  * @returns `true` if the value is a type.
  */
-export function isType(value: any): value is IAnyType {
-  return typeof value === "object" && value?.isType === true
+export function isType(value: unknown): value is IAnyType {
+  return (
+    typeof value === "object" && (value as IAnyType | null)?.isType === true
+  )
 }
 
 /**

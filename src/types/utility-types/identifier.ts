@@ -1,5 +1,6 @@
 import {
   type AnyObjectNode,
+  type IAnyType,
   type ISimpleType,
   type IValidationContext,
   type IValidationResult,
@@ -136,9 +137,7 @@ export const identifierNumber: ISimpleType<number> = new IdentifierNumberType()
  * @param type
  * @returns
  */
-export function isIdentifierType<
-  IT extends typeof identifier | typeof identifierNumber
->(type: IT): boolean {
+export function isIdentifierType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Identifier) > 0
 }
 

@@ -95,7 +95,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   declare storedValue: T & IStateTreeNode<IType<C, S, T>>
 
   readonly nodeId = ++nextNodeId
-  readonly identifierAttribute?: string
+  readonly identifierAttribute?: string | undefined
   readonly identifier: string | null // Identifier is always normalized to string, even if the identifier property isn't
   readonly unnormalizedIdentifier: ReferenceIdentifier | null
 
@@ -104,9 +104,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   middlewares?: IMiddleware[]
   hasSnapshotPostProcessor = false
 
-  private _applyPatches?: (patches: IJsonPatch[]) => void
+  private _applyPatches?: (patches: ReadonlyArray<IJsonPatch>) => void
 
-  applyPatches(patches: IJsonPatch[]): void {
+  applyPatches(patches: ReadonlyArray<IJsonPatch>): void {
     this.createObservableInstanceIfNeeded()
     this._applyPatches!(patches)
   }
@@ -120,7 +120,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   private _autoUnbox = true // unboxing is disabled when reading child nodes
   _isRunningAction = false // only relevant for root
-  private _snapshotReactionDisposer?: IDisposer
+  private _snapshotReactionDisposer?: IDisposer | undefined
 
   private _observableInstanceState = ObservableInstanceLifecycle.UNINITIALIZED
   private _childNodes: IChildNodesMap
@@ -575,7 +575,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     this._applyPatches = createActionInvoker(
       this.storedValue,
       "@APPLY_PATCHES",
-      (patches: IJsonPatch[]) => {
+      (patches: ReadonlyArray<IJsonPatch>) => {
         patches.forEach(patch => {
           if (!patch.path) {
             self.type.applySnapshot(self, patch.value)
@@ -850,6 +850,6 @@ export type AnyObjectNode = ObjectNode<any, any, any>
  * @hidden
  */
 export interface AssertAliveContext {
-  subpath?: string
-  actionContext?: IMiddlewareEvent
+  subpath?: string | undefined
+  actionContext?: IMiddlewareEvent | undefined
 }

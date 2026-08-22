@@ -16,6 +16,7 @@ import {
 import type {
   AnyNode,
   AnyObjectNode,
+  IAnyType,
   ISimpleType,
   IType,
   IValidationContext,
@@ -239,13 +240,7 @@ export function getPrimitiveFactoryFromValue(value: any): ISimpleType<any> {
  * @param type
  * @returns
  */
-export function isPrimitiveType<
-  IT extends
-    | ISimpleType<string>
-    | ISimpleType<number>
-    | ISimpleType<boolean>
-    | typeof DatePrimitive
->(type: IT): boolean {
+export function isPrimitiveType(type: IAnyType): boolean {
   return (
     isType(type) &&
     (type.flags &

@@ -28,7 +28,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     private readonly _fallbackType: FT,
     private readonly _createFallbackSnapshot: (
       error: unknown,
-      snapshot: any
+      snapshot: unknown
     ) => FT["CreationType"]
   ) {
     super()
@@ -165,7 +165,7 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
     return typeCheckSuccess()
   }
 
-  override is(thing: any): thing is any {
+  override is(thing: unknown): thing is any {
     if (isType(thing)) {
       return (
         this._subtype.isAssignableFrom(thing) ||
@@ -228,7 +228,10 @@ export interface IResilientType<
 export function resilient<IT extends IAnyType, FT extends IAnyType>(
   type: IT,
   fallbackType: FT,
-  createFallbackSnapshot: (error: unknown, snapshot: any) => FT["CreationType"]
+  createFallbackSnapshot: (
+    error: unknown,
+    snapshot: unknown
+  ) => FT["CreationType"]
 ): IResilientType<IT, FT> {
   assertIsType(type, 1)
   assertIsType(fallbackType, 2)

@@ -12,7 +12,7 @@ const plainObjectString = Object.toString()
  * @internal
  * @hidden
  */
-export const EMPTY_ARRAY: ReadonlyArray<any> = Object.freeze([])
+export const EMPTY_ARRAY: readonly never[] = Object.freeze([])
 
 /**
  * @internal
@@ -75,7 +75,7 @@ export function isFinite(val: any) {
  * @internal
  * @hidden
  */
-export function isArray(val: any): val is any[] {
+export function isArray(val: unknown): val is any[] {
   return Array.isArray(val) || isObservableArray(val)
 }
 
@@ -85,9 +85,9 @@ export function isArray(val: any): val is any[] {
  */
 export function asArray<T>(
   val: undefined | null | T | T[] | ReadonlyArray<T>
-): T[] {
+): ReadonlyArray<T> {
   if (!val) {
-    return EMPTY_ARRAY as any as T[]
+    return EMPTY_ARRAY
   }
   if (isArray(val)) {
     return val
@@ -99,7 +99,7 @@ export function asArray<T>(
  * @internal
  * @hidden
  */
-export function isPlainObject(value: any): value is { [k: string]: any } {
+export function isPlainObject(value: unknown): value is { [k: string]: any } {
   if (value === null || typeof value !== "object") {
     return false
   }
@@ -118,7 +118,7 @@ export function isPlainObject(value: any): value is { [k: string]: any } {
  * @internal
  * @hidden
  */
-export function isMutable(value: any) {
+export function isMutable(value: unknown) {
   return (
     value !== null &&
     typeof value === "object" &&
@@ -132,7 +132,7 @@ export function isMutable(value: any) {
  * @hidden
  */
 export function isPrimitive(
-  value: any,
+  value: unknown,
   includeDate = true
 ): value is Primitives {
   return (
@@ -297,9 +297,11 @@ class EventHandler<F extends (...args: any[]) => any> {
  * @hidden
  */
 export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
-  private eventHandlers?: {
-    [k in keyof E]?: EventHandler<E[k]>
-  }
+  private eventHandlers?:
+    | {
+        [k in keyof E]?: EventHandler<E[k]>
+      }
+    | undefined
 
   hasSubscribers(event: keyof E): boolean {
     return this.eventHandlers?.[event]?.hasSubscribers ?? false

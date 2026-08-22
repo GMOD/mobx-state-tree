@@ -67,6 +67,16 @@ export interface IMapType<IT extends IAnyType> extends IType<
   getChildType(): IAnyType
 }
 
+/**
+ * The forms `merge` and `replace` accept, mirroring mobx's
+ * `IObservableMapInitialValues` with MST's snapshot-or-instance value type.
+ */
+type IMSTMapInitialValues<IT extends IAnyType> =
+  | IMSTMap<IType<any, any, IT["TypeWithoutSTN"]>>
+  | IKeyValueMap<ExtractCSTWithSTN<IT>>
+  | Map<string | number, ExtractCSTWithSTN<IT>>
+  | readonly (readonly [string | number, ExtractCSTWithSTN<IT>])[]
+
 /** @hidden */
 export interface IMSTMap<IT extends IAnyType> {
   // bases on ObservableMap, but fine tuned to the auto snapshot conversion of MST
@@ -87,18 +97,8 @@ export interface IMSTMap<IT extends IAnyType> {
   entries(): IterableIterator<[string, IT["Type"]]>
   [Symbol.iterator](): IterableIterator<[string, IT["Type"]]>
   /** Merge another object into this map, returns self. */
-  merge(
-    other:
-      | IMSTMap<IType<any, any, IT["TypeWithoutSTN"]>>
-      | IKeyValueMap<ExtractCSTWithSTN<IT>>
-      | any
-  ): this
-  replace(
-    values:
-      | IMSTMap<IType<any, any, IT["TypeWithoutSTN"]>>
-      | IKeyValueMap<ExtractCSTWithSTN<IT>>
-      | any
-  ): this
+  merge(other?: IMSTMapInitialValues<IT>): this
+  replace(values: IMSTMapInitialValues<IT>): this
 
   toJSON(): IKeyValueMap<IT["SnapshotType"]>
 

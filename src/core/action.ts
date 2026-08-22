@@ -41,9 +41,9 @@ export interface IMiddlewareEvent extends IActionContext {
 }
 
 export type FunctionWithFlag = ((...args: any[]) => any) & {
-  _isMSTAction?: boolean
-  _isFlowAction?: boolean
-  $mst_middleware?: IMiddleware[]
+  _isMSTAction?: boolean | undefined
+  _isFlowAction?: boolean | undefined
+  $mst_middleware?: IMiddleware[] | undefined
 }
 
 /**

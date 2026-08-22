@@ -152,7 +152,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   createNewInstance(childNodes: IChildNodesMap): this["T"] {
     const options = { ...mobxShallow, name: this.name }
     return observable.array(
-      convertChildNodesToArray(childNodes),
+      convertChildNodesToArray(childNodes) as AnyNode[],
       options
     ) as this["T"]
   }
@@ -332,7 +332,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   }
 
   getDefaultSnapshot(): this["C"] {
-    return EMPTY_ARRAY as this["C"]
+    return EMPTY_ARRAY
   }
 
   removeChild(node: this["N"], subpath: string) {

@@ -8,7 +8,7 @@ export interface IActionTrackingMiddleware2Call<
   TEnv
 > extends Readonly<IActionContext> {
   env: TEnv | undefined
-  readonly parentCall?: IActionTrackingMiddleware2Call<TEnv>
+  readonly parentCall?: IActionTrackingMiddleware2Call<TEnv> | undefined
 }
 
 export interface IActionTrackingMiddleware2Hooks<TEnv> {

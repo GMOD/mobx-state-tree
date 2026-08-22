@@ -26,7 +26,7 @@ type HookSubscribers = {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export abstract class BaseNode<C, S, T> {
-  private _escapedSubpath?: string
+  private _escapedSubpath?: string | undefined
 
   private _subpath!: string
   get subpath() {

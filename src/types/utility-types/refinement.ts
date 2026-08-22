@@ -140,6 +140,6 @@ export function refinement(...args: any[]): IAnyType {
  * @param type
  * @returns
  */
-export function isRefinementType<IT extends IAnyType>(type: IT): boolean {
+export function isRefinementType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Refinement) > 0
 }

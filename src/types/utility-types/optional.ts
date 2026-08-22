@@ -151,8 +151,8 @@ export type OptionalDefaultValueOrFunction<IT extends IAnyType> =
 
 /** @hidden */
 export interface IOptionalIType<
-  IT extends IAnyType,
-  OptionalVals extends ValidOptionalValues
+  IT extends IAnyType = IAnyType,
+  OptionalVals extends ValidOptionalValues = ValidOptionalValues
 > extends IType<
   IT["CreationType"] | OptionalVals[number],
   IT["SnapshotType"],
@@ -271,11 +271,10 @@ const undefinedAsOptionalValues: [undefined] = [undefined]
  * to compile. Guards with a distinct narrowing target (`isArrayType`,
  * `isMapType`, `isModelType`) keep their predicate.
  *
- * @template IT
  * @param type
  * @returns
  */
-export function isOptionalType<IT extends IAnyType>(type: IT): boolean {
+export function isOptionalType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Optional) > 0
 }
 

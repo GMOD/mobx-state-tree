@@ -1,5 +1,6 @@
 import {
   type AnyObjectNode,
+  type IAnyType,
   type ISimpleType,
   type IValidationContext,
   type IValidationResult,
@@ -56,6 +57,15 @@ export class Literal<T> extends SimpleType<T, T, T> {
 }
 
 /**
+ * A literal type, which additionally publishes the exact value it matches.
+ * `getUnionSubtypes` of an enumeration returns these, so the members can be
+ * mapped back to their values without a hand-declared interface.
+ */
+export interface ILiteralType<S extends Primitives> extends ISimpleType<S> {
+  readonly value: S
+}
+
+/**
  * `types.literal` - The literal type will return a type that will match only the exact given type.
  * The given value must be a primitive, in order to be serialized to a snapshot correctly.
  * You can use literal to match exact strings for example the exact male or female string.
@@ -71,7 +81,7 @@ export class Literal<T> extends SimpleType<T, T, T> {
  * @param value The value to use in the strict equal check
  * @returns
  */
-export function literal<S extends Primitives>(value: S): ISimpleType<S> {
+export function literal<S extends Primitives>(value: S): ILiteralType<S> {
   // check that the given value is a primitive
   assertArg(value, isPrimitive, "primitive", 1)
 
@@ -90,6 +100,6 @@ export function literal<S extends Primitives>(value: S): ISimpleType<S> {
  * @param type
  * @returns
  */
-export function isLiteralType<IT extends ISimpleType<any>>(type: IT): boolean {
+export function isLiteralType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Literal) > 0
 }

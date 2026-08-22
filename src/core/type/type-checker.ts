@@ -28,11 +28,11 @@ export interface IValidationError {
   /** Value that was being validated, either a snapshot or an instance */
   value: any
   /** Error message */
-  message?: string
+  message?: string | undefined
 }
 
 /** Type validation result, which is an array of type validation errors */
-export type IValidationResult = IValidationError[]
+export type IValidationResult = ReadonlyArray<IValidationError>
 
 const MAX_STRINGIFY_DEPTH = 3
 const MAX_STRINGIFY_ARRAY_ITEMS = 10
@@ -168,7 +168,7 @@ export function popContext(context: IValidationContext): void {
  * @hidden
  */
 export function typeCheckSuccess(): IValidationResult {
-  return EMPTY_ARRAY as any
+  return EMPTY_ARRAY
 }
 
 /**
@@ -229,7 +229,7 @@ const MAX_ERRORS_REPORTED = 10
  * candidate validation errors using the same formatting.
  */
 export function formatValidationErrorLines(
-  errors: IValidationError[]
+  errors: ReadonlyArray<IValidationError>
 ): string[] {
   const shown = errors.slice(0, MAX_ERRORS_REPORTED).map(toErrorString)
   const overflow = errors.length - shown.length
@@ -242,7 +242,7 @@ export function formatValidationErrorLines(
 function validationErrorsToString<IT extends IAnyType>(
   type: IT,
   value: ExtractCSTWithSTN<IT>,
-  errors: IValidationError[]
+  errors: ReadonlyArray<IValidationError>
 ): string | undefined {
   if (errors.length === 0) {
     return undefined

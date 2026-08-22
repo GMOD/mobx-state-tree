@@ -135,8 +135,6 @@ export function frozen(arg?: any): any {
  * @param type
  * @returns
  */
-export function isFrozenType<IT extends IType<T | any, T, T>, T = any>(
-  type: IT
-): boolean {
+export function isFrozenType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Frozen) > 0
 }

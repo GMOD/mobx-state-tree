@@ -206,7 +206,7 @@ export function recordPatches(
   }
 
   // we will generate the immutable copy of patches on demand for public consumption
-  const publicData: Partial<IPatches> = {}
+  const publicData: { [K in keyof IPatches]?: IPatches[K] | undefined } = {}
 
   let disposer: IDisposer | undefined
 
@@ -546,7 +546,10 @@ export function isRoot(target: IAnyStateTreeNode): boolean {
  * @param path escaped json path
  * @returns
  */
-export function resolvePath(target: IAnyStateTreeNode, path: string): any {
+export function resolvePath<T = any>(
+  target: IAnyStateTreeNode,
+  path: string
+): T | undefined {
   // check all arguments
   assertIsStateTreeNode(target, 1)
   assertIsString(path, 2)
@@ -659,7 +662,10 @@ export function isValidReference<N extends IAnyStateTreeNode>(
  * @param path
  * @returns
  */
-export function tryResolve(target: IAnyStateTreeNode, path: string): any {
+export function tryResolve<T = any>(
+  target: IAnyStateTreeNode,
+  path: string
+): T | undefined {
   // check all arguments
   assertIsStateTreeNode(target, 1)
   assertIsString(path, 2)

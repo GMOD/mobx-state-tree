@@ -67,9 +67,9 @@ export interface IAnyStateTreeNode extends STNValue<any, IAnyType> {}
  * @returns true if the value is a state tree node.
  */
 export function isStateTreeNode<IT extends IAnyComplexType = IAnyComplexType>(
-  value: any
+  value: unknown
 ): value is STNValue<Instance<IT>, IT> {
-  return !!value?.$treenode
+  return !!(value as IStateTreeNode | null | undefined)?.$treenode
 }
 
 /**
@@ -102,7 +102,7 @@ export function getStateTreeNode(value: IAnyStateTreeNode): AnyObjectNode {
 export function getStateTreeNodeSafe(
   value: IAnyStateTreeNode
 ): AnyObjectNode | null {
-  return value?.$treenode || null
+  return value?.["$treenode"] || null
 }
 
 /**
@@ -218,11 +218,11 @@ export function resolveNodeByPathParts(
  */
 export function convertChildNodesToArray(
   childNodes: IChildNodesMap | null
-): AnyNode[] {
+): ReadonlyArray<AnyNode> {
   if (!childNodes) {
-    return EMPTY_ARRAY as AnyNode[]
+    return EMPTY_ARRAY
   }
 
   const result = Object.values(childNodes)
-  return result.length ? result : (EMPTY_ARRAY as AnyNode[])
+  return result.length ? result : EMPTY_ARRAY
 }

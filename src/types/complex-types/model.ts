@@ -333,8 +333,8 @@ export interface ModelTypeConfig {
   name?: string
   properties?: ModelPropertiesDeclaration
   initializers?: ReadonlyArray<(instance: any) => any>
-  preProcessor?: (snapshot: any) => any
-  postProcessor?: (snapshot: any) => any
+  preProcessor?: ((snapshot: any) => any) | undefined
+  postProcessor?: ((snapshot: any) => any) | undefined
   /**
    * @internal Set by cloneAndEnhance when a chain step (`.actions()`,
    * `.views()`, `.volatile()`, …) adds no new properties: `properties` is then
@@ -347,7 +347,7 @@ export interface ModelTypeConfig {
   /** @internal Carried with `propertiesArePreProcessed`; see above. */
   propertyNames?: string[]
   /** @internal Carried with `propertiesArePreProcessed`; see above. */
-  identifierAttribute?: string
+  identifierAttribute?: string | undefined
   /**
    * @internal Set by cloneAndEnhance when new props are added: `properties` is
    * the parent's already-converted+frozen bag merged with the (freshly
@@ -475,8 +475,8 @@ export class ModelType<
   public readonly initializers: ReadonlyArray<(instance: any) => any>
   public readonly properties: PROPS
 
-  readonly preProcessor?: (snapshot: any) => any
-  readonly postProcessor?: (snapshot: any) => any
+  readonly preProcessor?: ((snapshot: any) => any) | undefined
+  readonly postProcessor?: ((snapshot: any) => any) | undefined
   readonly propertyNames: string[]
   // member/property name collisions are a property of the type, so we only need
   // to check the first instance we finalize (see finalizeNewInstance)

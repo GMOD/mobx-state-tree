@@ -11,6 +11,7 @@ import {
   isReferenceType,
   isRefinementType,
   isUnionType,
+  types,
   type IAnyType
 } from "../../src/index.ts"
 
@@ -62,3 +63,34 @@ if (isModelType(t)) {
 if (!isArrayType(t)) {
   console.log(t.name)
 }
+
+// every boolean guard takes IAnyType, so a concrete type is accepted rather
+// than rejected by a leftover generic constraint
+const Todo = types.model("Todo", {
+  id: types.identifier,
+  done: types.optional(types.boolean, false)
+})
+
+console.log(
+  isFrozenType(Todo),
+  isIdentifierType(Todo),
+  isLateType(Todo),
+  isLiteralType(Todo),
+  isOptionalType(Todo),
+  isPrimitiveType(Todo),
+  isReferenceType(Todo),
+  isRefinementType(Todo),
+  isUnionType(Todo)
+)
+
+console.log(
+  isIdentifierType(Todo.properties.id),
+  isOptionalType(Todo.properties.done),
+  isPrimitiveType(types.string),
+  isLiteralType(types.literal("a")),
+  isFrozenType(types.frozen<{ x: number }>()),
+  isReferenceType(types.reference(Todo)),
+  isLateType(types.late(() => Todo)),
+  isRefinementType(types.refinement(types.string, v => v.length > 0)),
+  isUnionType(types.union(types.string, types.number))
+)
