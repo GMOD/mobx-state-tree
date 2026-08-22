@@ -1,6 +1,19 @@
-name: Push
+name: CI
 
-on: push
+# Keep this file named publish.yml: npm's trusted publisher for this package is
+# registered against the workflow filename, so renaming it breaks OIDC
+# publishing until someone re-runs `npm trust github`.
+#
+# ci.yml used to carry the pull_request trigger while this workflow ran on
+# every push, so a push to main ran both and a tag push ran the test job twice
+# over. One workflow, and no run without a reason: branch pushes are covered by
+# their pull request, and the tag push is what gates publishing.
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
 
 jobs:
   test:
