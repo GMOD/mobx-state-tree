@@ -8,12 +8,16 @@ name: CI
 # every push, so a push to main ran both and a tag push ran the test job twice
 # over. One workflow, and no run without a reason: branch pushes are covered by
 # their pull request, and the tag push is what gates publishing.
+#
+# pull_request is deliberately unfiltered. Scoped to `branches: [main]` it skips
+# a PR whose base is another PR's branch, so a stacked PR gets no checks until
+# it is retargeted — and the base branch it is stacked on is exactly the code
+# least likely to have been reviewed yet.
 on:
   push:
     branches: [main, master]
     tags: ["v*"]
   pull_request:
-    branches: [main, master]
 
 jobs:
   test:
