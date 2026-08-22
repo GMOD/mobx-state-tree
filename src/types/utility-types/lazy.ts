@@ -3,6 +3,7 @@ import { type IObservableArray, action, observable, when } from "mobx"
 import {
   type AnyNode,
   type AnyObjectNode,
+  type IAnyType,
   type IType,
   type IValidationContext,
   type IValidationResult,
@@ -150,6 +151,18 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
     subpath: string
   ): this["N"] {
     if (this.loadedType) {
+      // a node created after load carries the loaded type: let it reconcile so
+      // the instance survives applySnapshot instead of dying on every write
+      const loaded: IAnyType = this.loadedType
+      const currentType: IAnyType = current.type
+      if (currentType === loaded) {
+        return this.loadedType.reconcile(
+          current,
+          value,
+          parent,
+          subpath
+        ) as this["N"]
+      }
       current.die()
       return this.loadedType.instantiate(
         parent,

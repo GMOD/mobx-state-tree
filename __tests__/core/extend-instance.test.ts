@@ -100,3 +100,47 @@ test("throws on non-model nodes", () => {
     /can only be used on model instances/
   )
 })
+
+test("overrides members already declared on the type, in views and actions alike", () => {
+  const Declared = types
+    .model("Declared", { count: types.optional(types.number, 5) })
+    .views(self => ({
+      get label() {
+        return `base:${self.count}`
+      },
+      describe() {
+        return "base-fn"
+      }
+    }))
+    .actions(self => ({
+      bump() {
+        self.count += 1
+      }
+    }))
+
+  const m = extendInstance(Declared.create(), self => {
+    const s = self as ReturnType<typeof Declared.create>
+    return {
+      views: {
+        get label() {
+          return `loaded:${s.count}`
+        },
+        describe() {
+          return "loaded-fn"
+        }
+      },
+      actions: {
+        bump() {
+          s.count += 10
+        }
+      }
+    }
+  })
+
+  expect(m.label).toBe("loaded:5")
+  expect(m.describe()).toBe("loaded-fn")
+  m.bump()
+  expect(m.count).toBe(15)
+  expect(m.label).toBe("loaded:15")
+  expect(isComputedProp(m, "label")).toBe(true)
+})

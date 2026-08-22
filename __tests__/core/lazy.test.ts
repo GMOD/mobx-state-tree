@@ -1,6 +1,6 @@
 import { test, expect } from "vitest"
 import { when } from "mobx"
-import { getRoot, types } from "../../src"
+import { applySnapshot, getRoot, types } from "../../src"
 
 interface IRootModel {
   shouldLoad: boolean
@@ -109,4 +109,55 @@ test("maintains the tree structure when loaded", async () => {
   })
 
   await expect(promise).resolves.toBe(30)
+})
+
+test("applySnapshot after load reconciles the instance instead of recreating it", async () => {
+  const LazyModel = types
+    .model("LazyModel", {
+      width: types.number,
+      height: types.number
+    })
+    .views(self => ({
+      get area() {
+        return self.height * self.width
+      }
+    }))
+
+  const Root = types
+    .model("Root", {
+      shouldLoad: types.optional(types.boolean, false),
+      lazyModel: types.lazy<typeof LazyModel, IRootModel>("lazy", {
+        loadType: () => Promise.resolve(LazyModel),
+        shouldLoadPredicate: parent => parent.shouldLoad == true
+      })
+    })
+    .actions(self => ({
+      load: () => {
+        self.shouldLoad = true
+      }
+    }))
+
+  const store = Root.create({
+    lazyModel: {
+      width: 3,
+      height: 2
+    }
+  })
+  store.load()
+  await new Promise<void>((resolve, reject) => {
+    when(
+      () => store.lazyModel && store.lazyModel.area !== undefined,
+      () => resolve()
+    )
+    setTimeout(reject, 2000)
+  })
+
+  const instance = store.lazyModel
+  applySnapshot(store, {
+    shouldLoad: true,
+    lazyModel: { width: 4, height: 2 }
+  })
+  expect(store.lazyModel).toBe(instance)
+  expect(store.lazyModel.width).toBe(4)
+  expect(store.lazyModel.area).toBe(8)
 })
