@@ -14,13 +14,19 @@ import { types, type IAnyModelType } from "../src/index.ts"
 
 function wideProps(prefix: string, withId = false) {
   const p: Record<string, any> = {
-    [`${prefix}_id`]: withId ? types.identifier : types.optional(types.string, ""),
+    [`${prefix}_id`]: withId
+      ? types.identifier
+      : types.optional(types.string, ""),
     [`${prefix}_type`]: types.literal(prefix),
     [`${prefix}_name`]: types.optional(types.string, ""),
     [`${prefix}_height`]: types.optional(types.number, 100),
     [`${prefix}_visible`]: types.optional(types.boolean, true),
     [`${prefix}_regions`]: types.array(
-      types.model({ refName: types.string, start: types.number, end: types.number })
+      types.model({
+        refName: types.string,
+        start: types.number,
+        end: types.number
+      })
     ),
     [`${prefix}_config`]: types.frozen(),
     [`${prefix}_tags`]: types.map(types.string),
@@ -36,8 +42,11 @@ function wideProps(prefix: string, withId = false) {
 function baseMixin(name: string, withId = false) {
   let M: IAnyModelType = types.model(name, wideProps(name, withId))
   for (let i = 0; i < 4; i++) {
-    M = M.views(() => ({ get [`${name}_v${i}`]() { return 1 } }))
-      .actions(() => ({ [`${name}_a${i}`]() {} }))
+    M = M.views(() => ({
+      get [`${name}_v${i}`]() {
+        return 1
+      }
+    })).actions(() => ({ [`${name}_a${i}`]() {} }))
   }
   return M
 }
@@ -53,7 +62,11 @@ function buildDisplayType(): IAnyModelType {
   )
   for (let i = 0; i < 16; i++) {
     M = M.volatile(() => ({ [`vol${i}`]: 0 }))
-      .views(() => ({ get [`view${i}`]() { return i } }))
+      .views(() => ({
+        get [`view${i}`]() {
+          return i
+        }
+      }))
       .actions(() => ({ [`act${i}`]() {} }))
     if (i === 8) {
       M = M.props({ extra: types.optional(types.number, 0) })

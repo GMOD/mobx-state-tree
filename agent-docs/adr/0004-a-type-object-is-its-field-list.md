@@ -67,17 +67,17 @@ was a megamorphic miss on the primitive defaults most config slots carry.
 `scripts/ab-config-schema.mjs`, per-round medians, 61 rounds, production mode,
 several invocations each on an otherwise-quiet machine:
 
-| stage                                       | ratio          |
-| ------------------------------------------- | -------------- |
-| `unshift` -> spread, identifier scan, `$treenode` guard | 1.04–1.11x |
-| \+ prototype defaults (`isType`, `_name`, `Union`, `StripDefaultValue`) | 1.17–1.28x |
-| \+ `union()`'s single rest array            | 1.08–1.21x     |
-| **cumulative**                              | **1.40–1.50x** |
+| stage                                                                   | ratio          |
+| ----------------------------------------------------------------------- | -------------- |
+| `unshift` -> spread, identifier scan, `$treenode` guard                 | 1.04–1.11x     |
+| \+ prototype defaults (`isType`, `_name`, `Union`, `StripDefaultValue`) | 1.17–1.28x     |
+| \+ `union()`'s single rest array                                        | 1.08–1.21x     |
+| **cumulative**                                                          | **1.40–1.50x** |
 
 That is on top of ADR 0003's 1.62–1.71x, so roughly **2.3–2.5x** against the
 type-construction path as it stood before either ADR. GC fell to ~5% of the
 profile. The value-churn path is unchanged, as it should be — this is all
-per-*type* work.
+per-_type_ work.
 
 `Union`'s own-enumerable key set goes from eight names to three, `OptionalValue`'s
 from six to four, and `ModelType` loses exactly one: `isType`.

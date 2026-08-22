@@ -28,8 +28,8 @@ is 10.3x faster and scales linearly where the baseline was quadratic.
 
 **The validation cache is deleted.** Instrumented `validate()` hit counts (N=200)
 showed it earns its keep in exactly one case — replacing or reordering an
-*already-populated union array*, the O(n²) scan (39,800 hits = 200×199). It gives
-**zero** hits for frozen arrays, plain identified replace-all, and union *initial*
+_already-populated union array_, the O(n²) scan (39,800 hits = 200×199). It gives
+**zero** hits for frozen arrays, plain identified replace-all, and union _initial_
 load (empty→fill does no scanning). So it did nothing for construction or for any
 common JBrowse path, and it carried a latent staleness bug: keyed by object
 identity and never invalidated, so mutating a snapshot object between validations

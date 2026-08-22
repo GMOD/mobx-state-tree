@@ -17,14 +17,14 @@ session have only ~13 distinct member-identity tuples. On the 262-schema
 workload, 21k of the 45k reachable type objects were redundant unions.
 
 ADR 0003 already named the property that makes deduplication safe as
-*desirable*: "two separately built but equivalent types compare equal" is the
+_desirable_: "two separately built but equivalent types compare equal" is the
 stated reason `computeName()` beat a constructor thunk.
 
 Scale caveat on the workload: 262 hydrated track schemas is an upper bound,
 not a typical session. jbrowse keeps configs as `types.frozen` snapshots in
 `jbrowse.tracks` and only builds a track's config-schema type when it becomes
 an active track, so real sessions build schemas for the handful of displayed
-tracks plus the registration-time types (per track/display/adapter *type*,
+tracks plus the registration-time types (per track/display/adapter _type_,
 including the `pluggableConfigSchemaType` unions). The percentages below hold
 at any scale; the absolute MB saved scales with how many schemas actually get
 built.
@@ -65,11 +65,11 @@ out for free.
 
 `scripts/mem-config-schema.mjs`, identical to the byte on repeated runs:
 
-|                                  | baseline | interned | delta       |
-| -------------------------------- | -------- | -------- | ----------- |
-| retained heap, 262 track schemas | 6.34 MB  | 4.17 MB  | **−34.2%**  |
-| reachable type objects           | 45,088   | 24,139   | **−46.5%**  |
-| own slots across them            | 140,788  | 98,890   | **−29.8%**  |
+|                                  | baseline | interned | delta      |
+| -------------------------------- | -------- | -------- | ---------- |
+| retained heap, 262 track schemas | 6.34 MB  | 4.17 MB  | **−34.2%** |
+| reachable type objects           | 45,088   | 24,139   | **−46.5%** |
+| own slots across them            | 140,788  | 98,890   | **−29.8%** |
 
 Timing (`scripts/ab-config-schema.mjs`, 41 rounds, load average 10–12.5, so
 the ADR 0004 load-inflation caveat applies): ten invocations read 1.000–1.073x
