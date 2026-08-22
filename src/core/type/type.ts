@@ -93,15 +93,23 @@ export interface IType<C, S, T> {
   /**
    * Creates an instance for the type given an snapshot input.
    *
-   * The snapshot argument is required when the creation type has at least one
-   * required member (`{} extends C` is false) and optional otherwise, so e.g.
-   * `types.model({ a: types.string }).create()` is a compile error rather than a
-   * runtime throw, while `types.model().create()` stays valid.
+   * The snapshot argument is required only when leaving it out would be a
+   * runtime error: the creation type has a required member (`{} extends C` is
+   * false) and does not admit `undefined`, which is what a type supplying its
+   * own default snapshot — an array, a map, anything `optional` — does. So
+   * `types.model({ a: types.string }).create()` is a compile error rather than
+   * a runtime throw, while `types.model().create()`,
+   * `types.array(types.string).create()` and
+   * `types.optional(types.string, "x").create()` stay valid.
    *
    * @returns An instance of that type.
    */
   create(
-    ...args: {} extends C ? [snapshot?: C, env?: any] : [snapshot: C, env?: any]
+    ...args: {} extends C
+      ? [snapshot?: C, env?: any]
+      : undefined extends C
+        ? [snapshot?: C, env?: any]
+        : [snapshot: C, env?: any]
   ): this["Type"]
 
   /**
