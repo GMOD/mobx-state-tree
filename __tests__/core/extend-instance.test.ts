@@ -64,7 +64,11 @@ test("attached view is a reactive computed driven by attached actions", () => {
 
 test("write protection stays intact after augmentation", () => {
   const m = extendInstance(Base.create({ count: 1 }), () => ({
-    views: { get double() {} }
+    views: {
+      get double() {
+        return 0
+      }
+    }
   })) as any
   expect(() => {
     m.count = 99

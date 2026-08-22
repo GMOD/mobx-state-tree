@@ -966,7 +966,7 @@ test("#993-1 - after attach should have a parent when accesing a reference direc
     })
     .actions(self => ({
       afterAttach() {
-        throw fail("should never be called")
+        throw new Error("afterAttach should never be called")
       }
     }))
 

@@ -1157,16 +1157,21 @@ test("maybe / optional type inference verification", () => {
   interface ITC extends SnapshotIn<typeof T> {}
   interface ITS extends SnapshotOut<typeof T> {}
 
-  assert(
-    _ as ITC,
-    _ as {
-      a: string
-      b?: string
-      c?: string | undefined
-      d?: string | null
-      e?: string
-    }
-  )
+  // Mutual assignability rather than spec.ts's `assert`: SnapshotIn resolves to
+  // `ModelCreationType<ExtractCFromProps<...>>`, and no object literal is
+  // *identical* to a mapped type, which is what assert() demands. It read as a
+  // passing assertion only because nothing typechecked this file.
+  type AssignableTo<X extends Y, Y> = true
+  type ExpectedITC = {
+    a: string
+    b?: string | undefined
+    c?: string | undefined
+    d?: string | null | undefined
+    e?: string | undefined
+  }
+  const _itcWidensTo: AssignableTo<ITC, ExpectedITC> = true
+  const _itcNarrowsFrom: AssignableTo<ExpectedITC, ITC> = true
+  expect([_itcWidensTo, _itcNarrowsFrom]).toEqual([true, true])
 
   assert(
     _ as ITS,

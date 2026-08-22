@@ -9,6 +9,11 @@ import {
   getType
 } from "../../src"
 
+// types.resilient exists to survive snapshots that do not validate, so most of the
+// creates below feed exactly that: a `type` no dispatcher branch knows. The union's
+// creation type does not admit them, hence the `@ts-expect-error`s. Worth noting that
+// this is the type saying "invalid" about the input resilient is built to accept —
+// see the PR discussion about widening IResilientType's creation type.
 const ErrorPlaceholder = types.model("ErrorPlaceholder", {
   type: types.optional(types.literal("ErrorPlaceholder"), "ErrorPlaceholder"),
   originalSnapshot: types.frozen(),
@@ -71,6 +76,7 @@ describe("types.resilient", () => {
     const store = Store.create({
       items: [
         { type: "A", value: "hello" },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "UNKNOWN", data: "stuff" },
         { type: "B", count: 42 }
       ]
@@ -93,6 +99,7 @@ describe("types.resilient", () => {
       type: "MISSING_PLUGIN",
       config: { a: 1, b: [2, 3] }
     }
+    // @ts-expect-error a snapshot no union member accepts, which is the whole point
     const store = Store.create({ items: [originalSnapshot] })
     const fallback = getSnapshot(store.items[0]) as any
     expect(fallback.originalSnapshot).toEqual(originalSnapshot)
@@ -107,6 +114,7 @@ describe("types.resilient", () => {
     applySnapshot(store, {
       items: [
         { type: "B", count: 10 },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "BROKEN", x: 1 }
       ]
     })
@@ -120,6 +128,7 @@ describe("types.resilient", () => {
   test("works as a standalone type (not in array)", () => {
     const Store = types.model({ item: ResilientUnion })
     const store = Store.create({
+      // @ts-expect-error a snapshot no union member accepts, which is the whole point
       item: { type: "NOPE" }
     })
     const fallback = getSnapshot(store.item) as any
@@ -144,6 +153,7 @@ describe("types.resilient", () => {
     const store = Store.create({
       items: {
         good: { type: "A", value: "yes" },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         bad: { type: "NOPE" }
       }
     })
@@ -171,6 +181,7 @@ describe("types.resilient", () => {
       }
     )
     const Store = types.model({ items: types.array(TrackedResilient) })
+    // @ts-expect-error a snapshot no union member accepts, which is the whole point
     Store.create({ items: [{ type: "BAD" }] })
     expect(calls.length).toBe(1)
     expect(calls[0].snapshot).toEqual({ type: "BAD" })
@@ -199,6 +210,7 @@ describe("types.resilient", () => {
     const store = Store.create({
       items: [
         { type: "A", value: "ok" },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "C", something: true }
       ]
     })
@@ -212,9 +224,12 @@ describe("types.resilient", () => {
     const Store = types.model({ items: types.array(ResilientUnion) })
     const store = Store.create({
       items: [
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "X" },
         { type: "A", value: "ok" },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "Y" },
+        // @ts-expect-error a snapshot no union member accepts, which is the whole point
         { type: "Z" }
       ]
     })
@@ -235,6 +250,7 @@ describe("types.resilient", () => {
       () => null as any
     )
     const Store = types.model({ item: BadResilient })
+    // @ts-expect-error a snapshot no union member accepts, which is the whole point
     expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
       /resilient.*fallback type.*BadFallback.*failed to instantiate/
     )
@@ -245,6 +261,7 @@ describe("types.resilient", () => {
       throw new Error("callback broke")
     })
     const Store = types.model({ item: BadResilient })
+    // @ts-expect-error a snapshot no union member accepts, which is the whole point
     expect(() => Store.create({ item: { type: "NOPE" } })).toThrow(
       /resilient.*createFallbackSnapshot threw/
     )
@@ -253,6 +270,7 @@ describe("types.resilient", () => {
   test("reconciling a fallback node with a valid snapshot recovers to normal type", () => {
     const Store = types.model({ items: types.array(ResilientUnion) })
     const store = Store.create({
+      // @ts-expect-error a snapshot no union member accepts, which is the whole point
       items: [{ type: "BROKEN" }]
     })
     expect((getSnapshot(store.items[0]) as any).type).toBe("ErrorPlaceholder")
@@ -270,6 +288,7 @@ describe("types.resilient", () => {
   // kills a replaced child itself, so only this path exposes the leak
   test("recovering from the fallback kills the fallback node", () => {
     const Store = types.model({ item: ResilientUnion })
+    // @ts-expect-error a snapshot no union member accepts, which is the whole point
     const store = Store.create({ item: { type: "BROKEN" } })
     const fallbackNode = store.item
     unprotect(store)
@@ -300,7 +319,12 @@ describe("types.resilient", () => {
         }
       }),
       Fallback,
-      (error, snapshot) => ({ id: snapshot.id, errorMessage: String(error) })
+      // the snapshot that failed validation is `unknown` by definition; this test
+      // is the one place that knows what it fed in
+      (error, snapshot) => ({
+        id: (snapshot as { id: string }).id,
+        errorMessage: String(error)
+      })
     )
     const Store = types.model({ item: Resilient })
 
@@ -320,6 +344,7 @@ describe("types.resilient", () => {
   test("reconciling a fallback node with another bad snapshot stays as fallback", () => {
     const Store = types.model({ items: types.array(ResilientUnion) })
     const store = Store.create({
+      // @ts-expect-error a snapshot no union member accepts, which is the whole point
       items: [{ type: "BROKEN1" }]
     })
     expect((getSnapshot(store.items[0]) as any).originalSnapshot).toEqual({
@@ -327,6 +352,7 @@ describe("types.resilient", () => {
     })
     unprotect(store)
     applySnapshot(store, {
+      // @ts-expect-error a snapshot no union member accepts, which is the whole point
       items: [{ type: "BROKEN2" }]
     })
     const fallback = getSnapshot(store.items[0]) as any
