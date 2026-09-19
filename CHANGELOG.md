@@ -1,3 +1,50 @@
+## [6.5.2](https://github.com/GMOD/mobx-state-tree/compare/v6.3.1...v6.5.2) (2026-09-19)
+
+### Bug Fixes
+
+- Reconcile through the loaded type instead of recreating the node ([3741894](https://github.com/GMOD/mobx-state-tree/commit/37418940fe11bc243b77d389f8e6e95cf77d2abe))
+
+### Chores
+
+- Delete the union overload generator, dead since the variadic signatures ([0591a1a](https://github.com/GMOD/mobx-state-tree/commit/0591a1a58e5cd200b0329c4c169973d434498057))
+- Create a GitHub release on publish, with git-cliff changelog notes ([3f1e16f](https://github.com/GMOD/mobx-state-tree/commit/3f1e16f455066ee8aabc975ea7bb72e328e3ad00))
+- One workflow, and no run without a reason ([920ee52](https://github.com/GMOD/mobx-state-tree/commit/920ee5280f315b3c3d44d3e7506c0744dbe5638d))
+- Enforce prettier, and keep it away from generated files ([801c920](https://github.com/GMOD/mobx-state-tree/commit/801c9204bed084e3a7031bcfa54cf19acb36e0f7))
+- Pin the toolchain the way the sibling GMOD repos do ([28ec9b0](https://github.com/GMOD/mobx-state-tree/commit/28ec9b0c4a00da23dfedbafe6c8b747d82e933c2))
+- Check every pull request, whatever its base ([b0d8421](https://github.com/GMOD/mobx-state-tree/commit/b0d8421adbec70859f7fa3a74b9e00266cd5cecd))
+
+### Documentation
+
+- Update stale mst-reflection note in CLAUDE.md ([b3daf01](https://github.com/GMOD/mobx-state-tree/commit/b3daf010bb4e6bad2fe688d55de16473774dec14))
+- Scale caveat on ADR 0005 — 262 hydrated schemas is an upper bound ([9c2fccc](https://github.com/GMOD/mobx-state-tree/commit/9c2fccc065a021eb4bafd6d6cc1e9386dea3522f))
+
+### Features
+
+- Late-bound membership via a members thunk, plus a name option ([af4084d](https://github.com/GMOD/mobx-state-tree/commit/af4084d35a40783c9af5fce6ee7c18b155e8b12f))
+- Extend types.compose to 11 model parts ([854d3f2](https://github.com/GMOD/mobx-state-tree/commit/854d3f2c6dd8bb13c0be28eb9ce0a8390bcf0992))
+
+### Performance Improvements
+
+- Hoist ModelType closure fields; stripDefault and union quick-match fast paths ([37a27ce](https://github.com/GMOD/mobx-state-tree/commit/37a27ce992a9e65d92b711129f1e92e6e2ec42bc))
+- Intern no-options unions on their member-identity tuple ([f0c516f](https://github.com/GMOD/mobx-state-tree/commit/f0c516f410cea8a42f68f50b497d627ee0cc5e6b))
+
+### Refactoring
+
+- Dead-code and consistency sweep ([7c14475](https://github.com/GMOD/mobx-state-tree/commit/7c1447565f470dc440622ee01a7e2a2395b0b11d))
+- Default BaseType.describe to the type name; drop nine equivalent overrides ([837350e](https://github.com/GMOD/mobx-state-tree/commit/837350e2ee9c38e80cf51ef288f5a09178eaad9a))
+
+### Tests
+
+- Stop the timer test rounding its way to a failure ([b24bcf5](https://github.com/GMOD/mobx-state-tree/commit/b24bcf5ef25bd927624c7cecba7ef1aed43f4732))
+- Fix what typechecking the suite turns up ([982bf00](https://github.com/GMOD/mobx-state-tree/commit/982bf00d3cfbd5d4c08e9f07fcd498b09d7f54d6))
+- Typecheck the test suite in CI ([d785a10](https://github.com/GMOD/mobx-state-tree/commit/d785a10bceef5e424dfba1ba97b92c0f3037e63b))
+
+### Types
+
+- Guard signatures, variadic union(), readonly validation results, stricter tsconfig ([43b086e](https://github.com/GMOD/mobx-state-tree/commit/43b086e1612a90e9264c99bfdc52710aab3fba38))
+- Restore generic-member inference with a leading 2-arity overload ([4759372](https://github.com/GMOD/mobx-state-tree/commit/475937291d73861f05492f369c425cf4c8d59dd1))
+- Allow a zero-arg create() when the type defaults its own snapshot ([800ce20](https://github.com/GMOD/mobx-state-tree/commit/800ce2098a91933a040cb557af4ceee4a79baf9a))
+
 ## [6.5.1](https://github.com/GMOD/mobx-state-tree/compare/v6.5.0...v6.5.1) (2026-08-22)
 
 ### Chores
