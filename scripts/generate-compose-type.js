@@ -3,7 +3,7 @@ const { getDeclaration } = require("./generate-shared")
 let str = `// generated with ${__filename}\n`
 
 const minArgs = 2
-const maxArgs = 10
+const maxArgs = 12
 const preParam = "name: string, "
 
 const returnTypeTransform = rt => {
