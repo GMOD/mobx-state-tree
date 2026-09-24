@@ -213,6 +213,23 @@ export type _OverrideProps<
 > = Omit<PA, keyof PB> & PB
 
 /** @hidden */
+export type _IsAny<T> = 0 extends 1 & T ? true : false
+
+/**
+ * Snapshot processors own only the keys they were written for and pass the
+ * rest through, so a processor earlier in a model's chain also carries props
+ * added after it. Added props therefore replace their keys in a customized
+ * creation or snapshot type; an uncustomized one stays uncustomized.
+ * @hidden
+ */
+export type _WithAddedKeys<Custom, Added> =
+  _IsAny<Custom> extends true
+    ? Custom
+    : [Custom] extends [_NotCustomized]
+      ? _NotCustomized
+      : Omit<Custom, keyof Added> & Added
+
+/** @hidden */
 export type ModelCreationType<PC> = MaybeEmpty<{
   [P in DefinablePropsNames<PC>]: PC[P]
 }> &
@@ -270,15 +287,21 @@ export interface IModelType<
 
   named(newName: string): IModelType<PROPS, OTHERS, CustomC, CustomS>
 
-  // warning: redefining props after a process snapshot is used ends up on the fixed (custom) C, S typings being overridden
-  // so it is recommended to use pre/post process snapshot after all props have been defined
   props<PROPS2 extends ModelPropertiesDeclaration>(
     props: PROPS2
   ): IModelType<
     _OverrideProps<PROPS, ModelPropertiesDeclarationToProperties<PROPS2>>,
     OTHERS,
-    CustomC,
-    CustomS
+    _WithAddedKeys<
+      CustomC,
+      ModelCreationType<
+        ExtractCFromProps<ModelPropertiesDeclarationToProperties<PROPS2>>
+      >
+    >,
+    _WithAddedKeys<
+      CustomS,
+      ModelSnapshotType<ModelPropertiesDeclarationToProperties<PROPS2>>
+    >
   >
 
   views<V extends object>(
@@ -1092,9 +1115,6 @@ export function model(...args: any[]): any {
 }
 
 /** @hidden */
-export type _CustomJoin<A, B> = A extends _NotCustomized ? B : A & B
-
-/** @hidden */
 export type _ComposableParts = readonly [
   IAnyModelType,
   IAnyModelType,
@@ -1120,36 +1140,55 @@ export type _ComposedOthers<Parts> = Parts extends readonly [
   ? O & _ComposedOthers<Tail>
   : unknown
 
-/** @hidden */
-export type _ComposedCustom<Customs> = Customs extends readonly [
-  infer Head,
+/**
+ * A composed part's snapshot processors are handed the whole snapshot but own
+ * only their part's keys, passing the other parts' through — the only way a
+ * part can process without knowing what it is composed with. So a part with a
+ * custom creation (`"C"`) or snapshot (`"S"`) type replaces its own props' keys
+ * in the merged type. `_NotCustomized` when no part customizes.
+ * @hidden
+ */
+export type _ComposedCustom<
+  Parts,
+  Which extends "C" | "S",
+  Acc,
+  Customized extends boolean = false
+> = Parts extends readonly [
+  IModelType<infer P, any, infer C, infer S>,
   ...infer Tail
 ]
-  ? Tail extends readonly []
-    ? Head
-    : _CustomJoin<Head, _ComposedCustom<Tail>>
-  : never
+  ? (Which extends "C" ? C : S) extends _NotCustomized
+    ? _ComposedCustom<Tail, Which, Acc, Customized>
+    : _ComposedCustom<
+        Tail,
+        Which,
+        Omit<Acc, keyof P> & (Which extends "C" ? C : S),
+        true
+      >
+  : Customized extends true
+    ? Acc
+    : _NotCustomized
 
 /** @hidden */
-export type _Composed<Parts extends _ComposableParts> = Parts extends readonly [
-  IModelType<infer P, any, any, any>,
-  ...infer Tail
-]
-  ? IModelType<
-      _ComposedProps<P, Tail>,
-      _ComposedOthers<Parts>,
-      _ComposedCustom<{
-        [K in keyof Parts]: Parts[K] extends IModelType<any, any, infer C, any>
-          ? C
-          : never
-      }>,
-      _ComposedCustom<{
-        [K in keyof Parts]: Parts[K] extends IModelType<any, any, any, infer S>
-          ? S
-          : never
-      }>
-    >
-  : never
+export type _ComposedModel<Props extends ModelProperties, Parts> = IModelType<
+  Props,
+  _ComposedOthers<Parts>,
+  _ComposedCustom<Parts, "C", ModelCreationType<ExtractCFromProps<Props>>>,
+  _ComposedCustom<Parts, "S", ModelSnapshotType<Props>>
+>
+
+/** @hidden */
+/**
+ * A part typed `any` makes the composition `any`-shaped: inferring from `any`
+ * would yield the parameters' constraints instead, an empty model.
+ * @hidden
+ */
+export type _Composed<Parts extends _ComposableParts> =
+  true extends _IsAny<Parts[number]>
+    ? IAnyModelType
+    : Parts extends readonly [IModelType<infer P, any, any, any>, ...infer Tail]
+      ? _ComposedModel<_ComposedProps<P, Tail>, Parts>
+      : never
 
 export function compose<Parts extends _ComposableParts>(
   name: string,

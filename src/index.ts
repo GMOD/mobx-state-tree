@@ -77,7 +77,6 @@ export type {
   ValidOptionalValue,
   ValidOptionalValues,
   _CustomCSProcessor,
-  _CustomJoin,
   _CustomOrOther,
   _NotCustomized
 } from "./internal.ts"
