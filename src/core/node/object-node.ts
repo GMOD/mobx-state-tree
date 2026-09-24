@@ -103,6 +103,10 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   isProtectionEnabled = true
   middlewares?: IMiddleware[]
   hasSnapshotPostProcessor = false
+  // `type` is the inner type when a snapshotProcessor wraps this node, so
+  // recreating it from its post-processed snapshot has to go through the
+  // processor. Only processor-wrapped nodes carry the slot.
+  declare snapshotProcessorType?: IAnyType
 
   private _applyPatches?: (patches: ReadonlyArray<IJsonPatch>) => void
 

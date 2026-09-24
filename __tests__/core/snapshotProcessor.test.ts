@@ -11,7 +11,8 @@ import {
   getNodeId,
   Instance,
   getType,
-  onSnapshot
+  onSnapshot,
+  destroy
 } from "../../src"
 
 describe("snapshotProcessor", () => {
@@ -846,6 +847,52 @@ describe("snapshotProcessor", () => {
     expect(store.prop).toBe("a")
     expect(() => store.setProp("b")).not.toThrow()
     expect(store.prop).toBe("b")
+  })
+
+  test("instantiating it leaves the wrapped type's create alone", () => {
+    const M = types.model({ x: types.number })
+    const Scaled = types.snapshotProcessor(M, {
+      preProcessor: (sn: { x: number }) => ({ x: sn.x * 10 })
+    })
+    const Upper = types.snapshotProcessor(types.string, {
+      preProcessor: (sn: string) => sn.toUpperCase()
+    })
+    Scaled.create({ x: 1 })
+    types.model({ s: Upper }).create({ s: "a" })
+
+    expect(M.create({ x: 1 }).x).toBe(1)
+    expect(types.string.create("a")).toBe("a")
+    expect(Object.hasOwn(M, "create")).toBe(false)
+    expect(Object.hasOwn(types.string, "create")).toBe(false)
+  })
+
+  // jbrowse's config schemas nest processors this way. Only the outermost
+  // processor decides whether the node is created for its post-processor,
+  // and here that keeps a never-read child from being created mid-destroy.
+  test("destroying a never-read child under nested processors", () => {
+    const M = types.model({ id: types.identifier, x: 1 })
+    const Inner = types.snapshotProcessor(M, { postProcessor: sn => sn })
+    const Outer = types.snapshotProcessor(Inner, { preProcessor: sn => sn })
+    const root = types
+      .model({ items: types.array(Outer) })
+      .create({ items: [{ id: "a" }] })
+    expect(() => destroy(root)).not.toThrow()
+  })
+
+  test("clone goes through the outermost processor", () => {
+    const M = types.model({ x: types.string })
+    const Inner = types.snapshotProcessor(M, {
+      preProcessor: (sn: { x: number }) => ({ x: String(sn.x) }),
+      postProcessor: (sn): { x: number } => ({ x: Number(sn.x) })
+    })
+    const Outer = types.snapshotProcessor(Inner, {
+      preProcessor: (sn: { y: number }) => ({ x: sn.y }),
+      postProcessor: (sn): { y: number } => ({ y: sn.x })
+    })
+    const instance = Outer.create({ y: 3 })
+    const copy = clone(instance)
+    expect(copy.x).toBe("3")
+    expect(getSnapshot(copy)).toEqual({ y: 3 })
   })
 
   test("it names itself after its subtype unless given a name", () => {

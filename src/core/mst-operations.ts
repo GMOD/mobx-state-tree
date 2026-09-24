@@ -707,7 +707,9 @@ export function getRelativePath(
 
 /**
  * Returns a deep copy of the given state tree node as new tree.
- * Shorthand for `snapshot(x) = getType(x).create(getSnapshot(x))`
+ * Like `getType(x).create(getSnapshot(x))`, except that a node wrapped in a
+ * `types.snapshotProcessor` is recreated through the processor, which
+ * `getType(x)` (the wrapped type) would skip.
  *
  * _Tip: clone will create a literal copy, including the same identifiers. To modify identifiers etc. during cloning, don't use clone but take a snapshot of the tree, modify it, and create new instance_
  *
@@ -723,14 +725,14 @@ export function clone<T extends IAnyStateTreeNode>(
   assertIsStateTreeNode(source, 1)
 
   const node = getStateTreeNode(source)
-  return node.type.create(
+  return (node.snapshotProcessorType ?? node.type).create(
     node.snapshot,
     keepEnvironment === true
       ? node.root.environment
       : keepEnvironment === false
         ? undefined
         : keepEnvironment
-  ) // it's an object or something else
+  )
 }
 
 /**

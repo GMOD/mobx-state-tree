@@ -108,12 +108,8 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
   }
 
   private _fixNode(node: this["N"]): void {
-    // the node's type is the *inner* type, so `getType(instance).create(...)`
-    // would bypass the processors — point it at ours instead
-    const nodeType = node.type as { create: (...args: any[]) => any }
-    nodeType.create = this.create.bind(this)
-
     if (node instanceof ObjectNode) {
+      node.snapshotProcessorType = this
       node.hasSnapshotPostProcessor = !!this._processors.postProcessor
     }
     const oldGetSnapshot = node.getSnapshot
