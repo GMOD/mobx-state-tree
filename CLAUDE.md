@@ -16,6 +16,14 @@ anything to a type's constructor — including a field — or touching
 touching `union()`'s construction path or adding any per-instance state to
 `Union`, since no-options unions are interned and shared.
 
+Two more ADRs cover type-level decisions:
+
+- [0006](agent-docs/adr/0006-type-guards-answer-holds-not-is.md): read it
+  before changing an `isXType` guard, or adding a wrapper type.
+- [0007](agent-docs/adr/0007-snapshot-processors-are-typed-pass-through.md):
+  read it before changing how `compose` or `.props()` type custom
+  snapshots.
+
 ## Verification norm
 
 `npx tsc --noEmit`, `pnpm lint src/`, `pnpm test:dev --run`, `pnpm test:prod
@@ -73,16 +81,29 @@ signatures, redundant-assertion removal): `packages/core+product-core+app-core`
 **3039/3039** on both sides, `plugins` **7996/7996**, `products` **1870/1870**,
 and `pnpm typecheck` **0 errors** on both sides — that last one is the only run
 that exercises a `.d.ts` change, since jest transforms with babel and never
-typechecks. Note jbrowse dropped its `never`-narrowing workaround in
-`packages/core/src/util/mst-reflection.ts` (`b16ba6adf3`); the casts that
-remain there are a different gap — guard signatures whose leftover generic
-constraints reject concrete types, and missing `ILiteralType`/
-`cannotDetermineSubtype` exports.
+typechecks.
+
+**`isArrayType`/`isMapType`/`isModelType` stopped narrowing in September 2026**
+([ADR 0006](agent-docs/adr/0006-type-guards-answer-holds-not-is.md)).
+Typechecking jbrowse against that build reports nine errors from eight sites,
+each of which moves to an `as*Type`:
+
+- `mst-reflection.ts`
+- `tracks.ts`
+- `configurationSchemaUnion.ts`
+- `pruneUnbuildableNodes.ts`
+- three tests
+
+Nothing else in that change adds an error.
 
 **What the consumers actually exercise**, so you know what a change can break.
-JBrowse's imports are all public API — `types` by a wide margin, then
-`getSnapshot`, `isAlive`, `addDisposer`, `getParent`, `isStateTreeNode`, `cast`;
-nothing reaches internals. Within `types`, the shape that matters is
+JBrowse's imports are all public API: `types` by a wide margin, then `isAlive`,
+`addDisposer`, `getSnapshot`, `getParent`, `isStateTreeNode` and `cast`. The
+app's runtime code reaches no internals. Its build scripts
+(`scripts/generateConfigManifest.ts`, `scripts/configJsonSchema.ts`) do: they
+walk wrapper types through the private fields `_subtype`, `_subType` and
+`subType`. Renaming any of those breaks jbrowse's build until those scripts
+move to `getWrappedType`. Within `types`, the shape that matters is
 **`stripDefault`**: every JBrowse config schema is
 `types.stripDefault(model, {type, id})`, slots are stripDefault too, and
 sub-schemas nest the same way. That makes
@@ -225,6 +246,12 @@ overlapping it.
 declaration surface between old and new builds. Note `ComplexType`, `BaseType`
 and `IdentifierCache` appear in the bundled `.d.ts` but are not `export`ed, so
 their signatures are not part of the plugin-facing contract.
+
+**Before comparing types across two builds in one tsc program, give each copy
+its own `package.json` name.** TypeScript dedupes packages that share a
+name@version. With two symlinks to `@jbrowse/mobx-state-tree@6.5.2`, the "new"
+side silently resolves to the old declarations, and every equivalence check
+passes. Also add a negative control: an assertion that has to fail.
 
 ## Benchmarking
 
