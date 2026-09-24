@@ -490,6 +490,12 @@ export abstract class ComplexType<C, S, T> extends BaseType<
   }
 
   getValue(node: this["N"]): T {
+    // A node that died before its instance was ever created can no longer
+    // create one (that must happen while initializing), so hand back the
+    // snapshot it died with, as getSnapshot does for dead nodes.
+    if (!node.isAlive && !node.hasObservableInstance) {
+      return node.getSnapshot() as unknown as T
+    }
     node.createObservableInstanceIfNeeded()
     return node.storedValue
   }
