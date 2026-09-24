@@ -1,6 +1,7 @@
 import {
   type AnyNode,
   type AnyObjectNode,
+  BaseNode,
   type ComplexType,
   ObjectNode,
   ScalarNode,
@@ -61,6 +62,6 @@ export function createScalarNode<C, S, T>(
  * @internal
  * @hidden
  */
-export function isNode(value: any): value is AnyNode {
-  return value instanceof ScalarNode || value instanceof ObjectNode
+export function isNode(value: unknown): value is AnyNode {
+  return value instanceof BaseNode
 }

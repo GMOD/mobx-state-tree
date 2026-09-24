@@ -1,5 +1,3 @@
-import { action } from "mobx"
-
 import {
   type AnyObjectNode,
   BaseNode,
@@ -17,10 +15,11 @@ import {
  */
 export class ScalarNode<C, S, T> extends BaseNode<C, S, T> {
   // note about hooks:
-  // - afterCreate is not emmited in scalar nodes, since it would be emitted in the
-  //   constructor, before it can be subscribed by anybody
+  // - afterCreate is not emitted in scalar nodes, since it would be emitted in
+  //   the constructor, before anybody could subscribe to it
   // - afterCreationFinalization could be emitted, but there's no need for it right now
-  // - beforeDetach is never emitted for scalar nodes, since they cannot be detached
+  // - beforeDetach reaches a scalar node only through notifyDetachOf, when an
+  //   ancestor is detached; a scalar node cannot be detached itself
 
   declare readonly type: SimpleType<C, S, T>
 
@@ -41,10 +40,6 @@ export class ScalarNode<C, S, T> extends BaseNode<C, S, T> {
     }
 
     this.state = NodeLifeCycle.CREATED
-    // for scalar nodes there's no point in firing this event since it would fire on the constructor, before
-    // anybody can actually register for/listen to it
-    // this.fireHook(Hook.AfterCreate)
-
     this.finalizeCreation()
   }
 
@@ -96,14 +91,6 @@ export class ScalarNode<C, S, T> extends BaseNode<C, S, T> {
     return `${this.type.name}@${path}${this.isAlive ? "" : " [dead]"}`
   }
 
-  die(): void {
-    if (!this.isAlive || this.state === NodeLifeCycle.DETACHING) {
-      return
-    }
-    this.aboutToDie()
-    this.finalizeDeath()
-  }
-
   finalizeCreation(): void {
     this.baseFinalizeCreation()
   }
@@ -120,4 +107,3 @@ export class ScalarNode<C, S, T> extends BaseNode<C, S, T> {
     this.fireInternalHook(name)
   }
 }
-ScalarNode.prototype.die = action(ScalarNode.prototype.die)

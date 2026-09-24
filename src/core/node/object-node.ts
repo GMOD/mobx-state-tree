@@ -31,7 +31,6 @@ import {
   toJSON,
   warnError,
   type AnyNode,
-  type ArgumentTypes,
   type IAnyType,
   type IDisposer,
   type IJsonPatch,
@@ -591,20 +590,18 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   private preboot(): void {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this
     this._applyPatches = createActionInvoker(
       this.storedValue,
       "@APPLY_PATCHES",
       (patches: ReadonlyArray<IJsonPatch>) => {
         patches.forEach(patch => {
           if (!patch.path) {
-            self.type.applySnapshot(self, patch.value)
+            this.type.applySnapshot(this, patch.value)
             return
           }
           const parts = splitJsonPath(patch.path)
           const node = resolveNodeByPathParts(
-            self,
+            this,
             parts.slice(0, -1)
           ) as AnyObjectNode
           node.applyPatchLocally(parts[parts.length - 1]!, patch)
@@ -615,25 +612,16 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.storedValue,
       "@APPLY_SNAPSHOT",
       (snapshot: C) => {
-        // if the snapshot is the same as the current one, avoid performing a reconcile
-        if (snapshot === (self.snapshot as any)) {
+        // the current snapshot needs no reconcile
+        if (snapshot === (this.snapshot as any)) {
           return
         }
-        // else, apply it by calling the type logic
-        return self.type.applySnapshot(self, snapshot)
+        this.type.applySnapshot(this, snapshot)
       }
     )
 
     addHiddenFinalProp(this.storedValue, "$treenode", this)
     addHiddenFinalProp(this.storedValue, "toJSON", toJSON)
-  }
-
-  die(): void {
-    if (!this.isAlive || this.state === NodeLifeCycle.DETACHING) {
-      return
-    }
-    this.aboutToDie()
-    this.finalizeDeath()
   }
 
   aboutToDie(): void {
@@ -652,8 +640,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // a disposer added with addDisposer at this stage (beforeDestroy) is actually never released
     this.baseAboutToDie()
 
-    this._internalEventsEmit(InternalEvents.Dispose)
-    this._internalEventsClear(InternalEvents.Dispose)
+    this._internalEvents?.emit(InternalEvents.Dispose)
+    this._internalEvents?.clear(InternalEvents.Dispose)
   }
 
   finalizeDeath(): void {
@@ -667,14 +655,14 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     const snapshot = this.snapshot
     this._snapshotUponDeath = snapshot
 
-    this._internalEventsClearAll()
+    this._internalEvents?.clearAll()
 
     this.baseFinalizeDeath()
   }
 
   onSnapshot(onChange: (snapshot: S) => void): IDisposer {
     this._addSnapshotReaction()
-    const unregister = this._internalEventsRegister(
+    const unregister = this.internalEvents().register(
       InternalEvents.Snapshot,
       onChange
     )
@@ -684,30 +672,30 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       // it running once the last listener is gone would keep charging the node
       // for a snapshot nobody receives. Referential stability of getSnapshot()
       // does not depend on it — that comes from keepAlive on _snapshotComputed.
-      if (!this._internalEventsHasSubscribers(InternalEvents.Snapshot)) {
+      if (!this._internalEvents?.hasSubscribers(InternalEvents.Snapshot)) {
         this._removeSnapshotReaction()
       }
     }
   }
 
   protected emitSnapshot(snapshot: S): void {
-    this._internalEventsEmit(InternalEvents.Snapshot, snapshot)
+    this._internalEvents?.emit(InternalEvents.Snapshot, snapshot)
   }
 
   onPatch(
     handler: (patch: IJsonPatch, reversePatch: IJsonPatch) => void
   ): IDisposer {
-    return this._internalEventsRegister(InternalEvents.Patch, handler)
+    return this.internalEvents().register(InternalEvents.Patch, handler)
   }
 
   emitPatch(basePatch: IReversibleJsonPatch, source: AnyNode): void {
-    if (this._internalEventsHasSubscribers(InternalEvents.Patch)) {
+    if (this._internalEvents?.hasSubscribers(InternalEvents.Patch)) {
       const localizedPatch: IReversibleJsonPatch = {
         ...basePatch,
         path: `${source.path.slice(this.path.length)}/${basePatch.path}` // calculate the relative path of the patch
       }
       const [patch, reversePatch] = splitPatch(localizedPatch)
-      this._internalEventsEmit(InternalEvents.Patch, patch, reversePatch)
+      this._internalEvents?.emit(InternalEvents.Patch, patch, reversePatch)
     }
     if (this.parent) {
       this.parent.emitPatch(basePatch, source)
@@ -715,12 +703,12 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   hasDisposer(disposer: () => void): boolean {
-    return this._internalEventsHas(InternalEvents.Dispose, disposer)
+    return !!this._internalEvents?.has(InternalEvents.Dispose, disposer)
   }
 
   addDisposer(disposer: () => void): void {
     if (!this.hasDisposer(disposer)) {
-      this._internalEventsRegister(InternalEvents.Dispose, disposer, true)
+      this.internalEvents().register(InternalEvents.Dispose, disposer, true)
       return
     }
     throw fail(
@@ -729,12 +717,12 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   removeDisposer(disposer: () => void): void {
-    if (!this._internalEventsHas(InternalEvents.Dispose, disposer)) {
+    if (!this._internalEvents?.has(InternalEvents.Dispose, disposer)) {
       throw fail(
         "cannot remove a disposer which was never registered for execution"
       )
     }
-    this._internalEventsUnregister(InternalEvents.Dispose, disposer)
+    this._internalEvents?.unregister(InternalEvents.Dispose, disposer)
   }
 
   private removeMiddleware(middleware: IMiddleware): void {
@@ -788,77 +776,21 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // not removeDisposer(), which throws when the registration is already gone —
     // the last listener can be disposed from within a disposer, i.e. after
     // aboutToDie has cleared them
-    this._internalEventsUnregister(InternalEvents.Dispose, disposer)
+    this._internalEvents?.unregister(InternalEvents.Dispose, disposer)
     disposer()
   }
 
-  // #region internal event handling
-
+  // created on first registration: most nodes never get a listener
   private _internalEvents?: EventHandlers<InternalEventHandlers<S>>
 
-  // we proxy the methods to avoid creating an EventHandlers instance when it is not needed
-
-  private _internalEventsHasSubscribers(event: InternalEvents): boolean {
-    return !!this._internalEvents && this._internalEvents.hasSubscribers(event)
+  private internalEvents(): EventHandlers<InternalEventHandlers<S>> {
+    return (this._internalEvents ??= new EventHandlers())
   }
-
-  private _internalEventsRegister<IE extends InternalEvents>(
-    event: IE,
-    eventHandler: InternalEventHandlers<S>[IE],
-    atTheBeginning = false
-  ): IDisposer {
-    if (!this._internalEvents) {
-      this._internalEvents = new EventHandlers()
-    }
-    return this._internalEvents.register(event, eventHandler, atTheBeginning)
-  }
-
-  private _internalEventsHas<IE extends InternalEvents>(
-    event: IE,
-    eventHandler: InternalEventHandlers<S>[IE]
-  ): boolean {
-    return (
-      !!this._internalEvents && this._internalEvents.has(event, eventHandler)
-    )
-  }
-
-  private _internalEventsUnregister<IE extends InternalEvents>(
-    event: IE,
-    eventHandler: InternalEventHandlers<S>[IE]
-  ): void {
-    if (this._internalEvents) {
-      this._internalEvents.unregister(event, eventHandler)
-    }
-  }
-
-  private _internalEventsEmit<IE extends InternalEvents>(
-    event: IE,
-    ...args: ArgumentTypes<InternalEventHandlers<S>[IE]>
-  ): void {
-    if (this._internalEvents) {
-      this._internalEvents.emit(event, ...args)
-    }
-  }
-
-  private _internalEventsClear(event: InternalEvents): void {
-    if (this._internalEvents) {
-      this._internalEvents.clear(event)
-    }
-  }
-
-  private _internalEventsClearAll(): void {
-    if (this._internalEvents) {
-      this._internalEvents.clearAll()
-    }
-  }
-
-  // #endregion
 }
 ObjectNode.prototype.createObservableInstance = action(
   ObjectNode.prototype.createObservableInstance
 )
 ObjectNode.prototype.detach = action(ObjectNode.prototype.detach)
-ObjectNode.prototype.die = action(ObjectNode.prototype.die)
 
 /**
  * @internal

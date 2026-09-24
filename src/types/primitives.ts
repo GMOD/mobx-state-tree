@@ -4,9 +4,6 @@ import {
   createScalarNode,
   fail,
   identity,
-  isFinite,
-  isFloat,
-  isInteger,
   isPrimitive,
   isType,
   typeCheckFailure,
@@ -112,7 +109,7 @@ export const integer: ISimpleType<number> = new CoreType<
   number,
   number,
   number
->("integer", TypeFlags.Integer, v => isInteger(v))
+>("integer", TypeFlags.Integer, Number.isInteger)
 
 /**
  * `types.float` - Creates a type that can only contain an float value.
@@ -128,7 +125,7 @@ export const integer: ISimpleType<number> = new CoreType<
 export const float: ISimpleType<number> = new CoreType<number, number, number>(
   "float",
   TypeFlags.Float,
-  v => isFloat(v)
+  v => Number(v) === v && v % 1 !== 0
 )
 
 /**
@@ -145,7 +142,7 @@ export const float: ISimpleType<number> = new CoreType<number, number, number>(
 export const finite: ISimpleType<number> = new CoreType<number, number, number>(
   "finite",
   TypeFlags.Finite,
-  v => isFinite(v)
+  Number.isFinite
 )
 
 /**

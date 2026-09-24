@@ -576,7 +576,6 @@ export abstract class ComplexType<C, S, T> extends BaseType<
     return null
   }
 }
-ComplexType.prototype.create = action(ComplexType.prototype.create)
 
 /**
  * @internal
@@ -600,11 +599,6 @@ export abstract class SimpleType<C, S, T> extends BaseType<
   }
 
   getValue(node: this["N"]): T {
-    // if we ever find a case where scalar nodes can be accessed without iterating through its parent
-    // uncomment this to make sure the parent chain is created when this is accessed
-    // if (node.parent) {
-    //     node.parent.createObservableInstanceIfNeeded()
-    // }
     return node.storedValue
   }
 

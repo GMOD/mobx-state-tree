@@ -25,7 +25,8 @@ export function lazy<T extends IType<any, any, any>, U>(
   name: string,
   options: LazyOptions<T, U>
 ): T {
-  // TODO: fix this unknown casting to be stricter
+  // a lazy type stands in for the type it loads, down to that type's own
+  // methods (a model's `.props`, say), which the placeholder does not have
   return new Lazy(name, options) as unknown as T
 }
 
@@ -34,9 +35,9 @@ export function lazy<T extends IType<any, any, any>, U>(
  * @hidden
  */
 export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
-  T,
-  T,
-  T
+  T["CreationType"],
+  T["SnapshotType"],
+  T["TypeWithoutSTN"]
 > {
   readonly flags = TypeFlags.Lazy
 
@@ -146,7 +147,7 @@ export class Lazy<T extends IType<any, any, any>, U> extends SimpleType<
 
   override reconcile(
     current: this["N"],
-    value: T,
+    value: this["C"],
     parent: AnyObjectNode,
     subpath: string
   ): this["N"] {

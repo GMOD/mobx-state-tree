@@ -53,28 +53,6 @@ export function identity(_: any): any {
  * @internal
  * @hidden
  */
-export const isInteger = Number.isInteger
-
-/**
- * @internal
- * @hidden
- */
-export function isFloat(val: any) {
-  return Number(val) === val && val % 1 !== 0
-}
-
-/**
- * @internal
- * @hidden
- */
-export function isFinite(val: any) {
-  return Number.isFinite(val)
-}
-
-/**
- * @internal
- * @hidden
- */
 export function isArray(val: unknown): val is any[] {
   return Array.isArray(val) || isObservableArray(val)
 }
@@ -236,16 +214,6 @@ export function addHiddenWritableProp(
  * @internal
  * @hidden
  */
-export type ArgumentTypes<F extends (...args: any[]) => any> = F extends (
-  ...args: infer A
-) => any
-  ? A
-  : never
-
-/**
- * @internal
- * @hidden
- */
 class EventHandler<F extends (...args: any[]) => any> {
   private handlers: F[] = []
 
@@ -275,7 +243,7 @@ class EventHandler<F extends (...args: any[]) => any> {
     }
   }
 
-  emit(...args: ArgumentTypes<F>) {
+  emit(...args: Parameters<F>) {
     const handlers = this.handlers
     // 0 and 1 handlers are by far the common cases (a patch/snapshot listener, a
     // disposer) and need no copy: with a single handler, calling the value we
@@ -343,7 +311,7 @@ export class EventHandlers<E extends { [k: string]: (...args: any[]) => any }> {
     this.eventHandlers = undefined
   }
 
-  emit<N extends keyof E>(event: N, ...args: ArgumentTypes<E[N]>) {
+  emit<N extends keyof E>(event: N, ...args: Parameters<E[N]>) {
     const handler = this.eventHandlers?.[event]
     if (handler) {
       handler.emit(...args)

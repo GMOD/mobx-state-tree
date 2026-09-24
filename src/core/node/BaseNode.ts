@@ -1,4 +1,4 @@
-import { type IAtom, createAtom } from "mobx"
+import { type IAtom, action, createAtom } from "mobx"
 
 import {
   type AnyObjectNode,
@@ -176,7 +176,13 @@ export abstract class BaseNode<C, S, T> {
     return this.isAlive
   }
 
-  abstract die(): void
+  die(): void {
+    if (!this.isAlive || this.isDetaching) {
+      return
+    }
+    this.aboutToDie()
+    this.finalizeDeath()
+  }
 
   abstract finalizeCreation(): void
 
@@ -227,6 +233,7 @@ export abstract class BaseNode<C, S, T> {
     this.fireHook(Hook.beforeDestroy)
   }
 }
+BaseNode.prototype.die = action(BaseNode.prototype.die)
 
 /**
  * @internal

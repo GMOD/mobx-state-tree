@@ -119,12 +119,17 @@ export class Union extends BaseType<any, any, any> {
     if (cached !== undefined) {
       return cached
     }
+    const result = this.foldFlags()
+    if (!(result & TypeFlags.Late)) {
+      this._flags = result
+    }
+    return result
+  }
+
+  protected foldFlags(): TypeFlags {
     let result: TypeFlags = TypeFlags.Union
     for (const type of this.members()) {
       result |= type.flags
-    }
-    if (!(result & TypeFlags.Late)) {
-      this._flags = result
     }
     return result
   }
@@ -553,11 +558,7 @@ class DynamicUnion extends Union {
   }
 
   override get flags(): TypeFlags {
-    let result: TypeFlags = TypeFlags.Union
-    for (const type of this.members()) {
-      result |= type.flags
-    }
-    return result
+    return this.foldFlags()
   }
 
   override get name(): string {
@@ -691,7 +692,7 @@ export function union<Types extends readonly IAnyType[]>(
   _UnionMembersTypeWithoutSTN<Types>
 >
 
-// manually written
+// members only known as IAnyType[], e.g. a spread array: nothing to infer
 export function union(...types: IAnyType[]): IAnyType
 export function union(
   dispatchOrType: UnionOptions | IAnyType,

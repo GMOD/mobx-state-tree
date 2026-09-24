@@ -29,16 +29,13 @@ class Late<IT extends IAnyType> extends BaseType<
   getSubType(mustSucceed: false): IT | undefined
   getSubType(mustSucceed: boolean): IT | undefined {
     if (!this._subType) {
-      let t = undefined
+      let t: IT | undefined
       try {
         t = this._definition()
       } catch (e) {
-        if (
-          e instanceof ReferenceError
-        ) // can happen in strict ES5 code when a definition is self refering
-        {
-          t = undefined
-        } else {
+        // a self-referencing definition can read its binding before it is
+        // initialized; that is "not defined yet", like returning undefined
+        if (!(e instanceof ReferenceError)) {
           throw e
         }
       }
@@ -60,10 +57,16 @@ class Late<IT extends IAnyType> extends BaseType<
   }
 
   constructor(
-    name: string,
-    private readonly _definition: () => IT
+    private readonly _definition: () => IT,
+    name?: string
   ) {
     super(name)
+  }
+
+  // the unnamed form is named after the definition's source text, which is
+  // only worth building if something reads it
+  protected override computeName(): string {
+    return `late(${this._definition.toString()})`
   }
 
   instantiate(
@@ -96,7 +99,7 @@ class Late<IT extends IAnyType> extends BaseType<
 
   override describe() {
     const t = this.getSubType(false)
-    return t ? t.name : "<uknown late type>"
+    return t ? t.name : "<unknown late type>"
   }
 
   isValidSnapshot(
@@ -117,8 +120,7 @@ class Late<IT extends IAnyType> extends BaseType<
   }
 
   getSubTypes() {
-    const subtype = this.getSubType(false)
-    return subtype ? subtype : cannotDetermineSubtype
+    return this.getSubType(false) ?? cannotDetermineSubtype
   }
 }
 
@@ -140,13 +142,12 @@ export function late<T extends IAnyType>(name: string, type: () => T): T
  * @param type A function that returns the type that will be defined.
  * @returns
  */
-export function late(nameOrType: any, maybeType?: () => IAnyType): IAnyType {
-  const name =
-    typeof nameOrType === "string"
-      ? nameOrType
-      : `late(${nameOrType.toString()})`
-  const type = typeof nameOrType === "string" ? maybeType : nameOrType
-  // checks that the type is actually a late type
+export function late(
+  nameOrType: string | (() => IAnyType),
+  maybeType?: () => IAnyType
+): IAnyType {
+  const name = typeof nameOrType === "string" ? nameOrType : undefined
+  const type = typeof nameOrType === "string" ? maybeType! : nameOrType
   if (devMode()) {
     if (!(typeof type === "function" && type.length === 0)) {
       throw fail(
@@ -156,7 +157,7 @@ export function late(nameOrType: any, maybeType?: () => IAnyType): IAnyType {
       )
     }
   }
-  return new Late(name, type)
+  return new Late(type, name)
 }
 
 /**

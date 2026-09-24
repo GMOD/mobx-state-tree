@@ -1,5 +1,4 @@
 import { test, expect } from "vitest"
-import { isFinite, isFloat, isInteger } from "../../src/utils"
 import { types, applySnapshot, getSnapshot } from "../../src"
 
 test("Date instance can be reused", () => {
@@ -49,10 +48,10 @@ test("Date can be rehydrated using unix timestamp", () => {
   expect(getSnapshot(store).date).toBe(newTime)
 })
 
-test("check isInteger", () => {
-  expect(isInteger(5)).toBe(true)
-  expect(isInteger(-5)).toBe(true)
-  expect(isInteger(5.2)).toBe(false)
+test("types.integer accepts exactly the integers", () => {
+  expect(types.integer.is(5)).toBe(true)
+  expect(types.integer.is(-5)).toBe(true)
+  expect(types.integer.is(5.2)).toBe(false)
 })
 
 test("Default inference for integers is 'number'", () => {
@@ -66,28 +65,28 @@ test("Default inference for integers is 'number'", () => {
   ).toBe(true)
 })
 
-test("check isFloat", () => {
-  expect(isFloat(3.14)).toBe(true)
-  expect(isFloat(-2.5)).toBe(true)
-  expect(isFloat(Infinity)).toBe(true)
-  expect(isFloat(10)).toBe(false)
-  expect(isFloat(0)).toBe(false)
-  expect(isFloat("3.14")).toBe(false)
-  expect(isFloat(null)).toBe(false)
-  expect(isFloat(undefined)).toBe(false)
-  expect(isFloat(NaN)).toBe(false)
+test("types.float accepts non-integral numbers, infinities included", () => {
+  expect(types.float.is(3.14)).toBe(true)
+  expect(types.float.is(-2.5)).toBe(true)
+  expect(types.float.is(Infinity)).toBe(true)
+  expect(types.float.is(10)).toBe(false)
+  expect(types.float.is(0)).toBe(false)
+  expect(types.float.is("3.14")).toBe(false)
+  expect(types.float.is(null)).toBe(false)
+  expect(types.float.is(undefined)).toBe(false)
+  expect(types.float.is(NaN)).toBe(false)
 })
 
-test("check isFinite", () => {
-  expect(isFinite(3.14)).toBe(true)
-  expect(isFinite(-2.5)).toBe(true)
-  expect(isFinite(10)).toBe(true)
-  expect(isFinite(0)).toBe(true)
-  expect(isFinite("3.14")).toBe(false)
-  expect(isFinite(null)).toBe(false)
-  expect(isFinite(undefined)).toBe(false)
-  expect(isFinite(NaN)).toBe(false)
-  expect(isFinite(Infinity)).toBe(false)
+test("types.finite accepts exactly the finite numbers", () => {
+  expect(types.finite.is(3.14)).toBe(true)
+  expect(types.finite.is(-2.5)).toBe(true)
+  expect(types.finite.is(10)).toBe(true)
+  expect(types.finite.is(0)).toBe(true)
+  expect(types.finite.is("3.14")).toBe(false)
+  expect(types.finite.is(null)).toBe(false)
+  expect(types.finite.is(undefined)).toBe(false)
+  expect(types.finite.is(NaN)).toBe(false)
+  expect(types.finite.is(Infinity)).toBe(false)
 })
 
 if (process.env.NODE_ENV !== "production") {
