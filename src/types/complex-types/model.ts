@@ -349,6 +349,18 @@ function objectTypeToString(this: any) {
   return getStateTreeNode(this).toString()
 }
 
+type SnapshotProcessorFn = (snapshot: any) => any
+
+/** `second` applied to `first`'s result, allocating only when both exist */
+function chainProcessors(
+  first: SnapshotProcessorFn | undefined,
+  second: SnapshotProcessorFn | undefined
+): SnapshotProcessorFn | undefined {
+  return first && second
+    ? snapshot => second(first(snapshot))
+    : (first ?? second)
+}
+
 /**
  * @internal
  * @hidden
@@ -357,8 +369,8 @@ export interface ModelTypeConfig {
   name?: string
   properties?: ModelPropertiesDeclaration
   initializers?: ReadonlyArray<(instance: any) => any>
-  preProcessor?: ((snapshot: any) => any) | undefined
-  postProcessor?: ((snapshot: any) => any) | undefined
+  preProcessor?: SnapshotProcessorFn | undefined
+  postProcessor?: SnapshotProcessorFn | undefined
   /**
    * @internal Set by cloneAndEnhance when a chain step (`.actions()`,
    * `.views()`, `.volatile()`, …) adds no new properties: `properties` is then
@@ -499,8 +511,8 @@ export class ModelType<
   public readonly initializers: ReadonlyArray<(instance: any) => any>
   public readonly properties: PROPS
 
-  readonly preProcessor?: ((snapshot: any) => any) | undefined
-  readonly postProcessor?: ((snapshot: any) => any) | undefined
+  readonly preProcessor?: SnapshotProcessorFn | undefined
+  readonly postProcessor?: SnapshotProcessorFn | undefined
   readonly propertyNames: string[]
   // member/property name collisions are a property of the type, so we only need
   // to check the first instance we finalize (see finalizeNewInstance)
@@ -788,8 +800,6 @@ export class ModelType<
       ? initialValue
       : this.applySnapshotPreProcessor(initialValue)
     return createObjectNode(this, parent, subpath, environment, value)
-    // Optimization: record all prop- view- and action names after first construction, and generate an optimal base class
-    // that pre-reserves all these fields for fast object-member lookups
   }
 
   initializeChildNodes(
@@ -989,16 +999,13 @@ export class ModelType<
   }
 
   applySnapshotPreProcessor(snapshot: any) {
-    const processor = this.preProcessor
-    return processor ? processor.call(null, snapshot) : snapshot
+    const preProcessor = this.preProcessor
+    return preProcessor ? preProcessor(snapshot) : snapshot
   }
 
   applySnapshotPostProcessor(snapshot: any) {
     const postProcessor = this.postProcessor
-    if (postProcessor) {
-      return postProcessor.call(null, snapshot)
-    }
-    return snapshot
+    return postProcessor ? postProcessor(snapshot) : snapshot
   }
 
   getChildType(propertyName: string): IAnyType {
@@ -1030,7 +1037,6 @@ export class ModelType<
   }
 
   override describe() {
-    // optimization: cache
     return `{ ${this.propertyNames
       .map(key => `${key}: ${this.properties[key]!.describe()}`)
       .join("; ")} }`
@@ -1063,31 +1069,17 @@ Object.assign(ModelType.prototype as object, {
   props(this: ModelTypeSelf, properties: ModelPropertiesDeclaration) {
     return this.cloneAndEnhance({ properties })
   },
-  preProcessSnapshot(
-    this: ModelTypeSelf,
-    preProcessor: (snapshot: unknown) => unknown
-  ) {
-    const currentPreprocessor = this.preProcessor
-    if (!currentPreprocessor) {
-      return this.cloneAndEnhance({ preProcessor })
-    } else {
-      return this.cloneAndEnhance({
-        preProcessor: snapshot => currentPreprocessor(preProcessor(snapshot))
-      })
-    }
+  // a newly added pre-processor sees the raw snapshot first; a newly added
+  // post-processor sees what the existing one produced
+  preProcessSnapshot(this: ModelTypeSelf, preProcessor: SnapshotProcessorFn) {
+    return this.cloneAndEnhance({
+      preProcessor: chainProcessors(preProcessor, this.preProcessor)
+    })
   },
-  postProcessSnapshot(
-    this: ModelTypeSelf,
-    postProcessor: (snapshot: unknown) => unknown
-  ) {
-    const currentPostprocessor = this.postProcessor
-    if (!currentPostprocessor) {
-      return this.cloneAndEnhance({ postProcessor })
-    } else {
-      return this.cloneAndEnhance({
-        postProcessor: snapshot => postProcessor(currentPostprocessor(snapshot))
-      })
-    }
+  postProcessSnapshot(this: ModelTypeSelf, postProcessor: SnapshotProcessorFn) {
+    return this.cloneAndEnhance({
+      postProcessor: chainProcessors(this.postProcessor, postProcessor)
+    })
   }
 })
 
@@ -1207,7 +1199,6 @@ export function compose<Parts extends _ComposableParts>(
  * the types are composed into a new Type with the given name
  */
 export function compose(...args: any[]): any {
-  // TODO: just join the base type names if no name is provided
   const hasTypename = typeof args[0] === "string"
   const typeName: string = hasTypename ? args[0] : ANONYMOUS_MODEL_NAME
   if (hasTypename) {
@@ -1230,19 +1221,12 @@ export function compose(...args: any[]): any {
   return args
     .reduce((prev, cur) =>
       prev.cloneAndEnhance({
-        name: `${prev.name}_${cur.name}`,
         properties: cur.properties,
         // cur.properties is another ModelType's already-converted+frozen bag
         propertiesAreConverted: true,
         initializers: cur.initializers,
-        preProcessor: (snapshot: any) =>
-          cur.applySnapshotPreProcessor(
-            prev.applySnapshotPreProcessor(snapshot)
-          ),
-        postProcessor: (snapshot: any) =>
-          cur.applySnapshotPostProcessor(
-            prev.applySnapshotPostProcessor(snapshot)
-          )
+        preProcessor: chainProcessors(prev.preProcessor, cur.preProcessor),
+        postProcessor: chainProcessors(prev.postProcessor, cur.postProcessor)
       })
     )
     .named(typeName)

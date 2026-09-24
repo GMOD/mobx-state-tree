@@ -19,6 +19,48 @@ test("it should call preProcessSnapshot with the correct argument", () => {
   applySnapshot(model, { val: 1 })
   expect(onSnapshot).lastCalledWith({ val: 1 })
 })
+describe("snapshot processor chaining", () => {
+  // each processor appends its tag, so the result spells out the order
+  const append = (tag: string) => (snapshot: any) => ({
+    ...snapshot,
+    s: snapshot.s + tag
+  })
+
+  test("a later pre-processor runs first, a later post-processor last", () => {
+    const M = types
+      .model({ s: "" })
+      .preProcessSnapshot(append("1"))
+      .preProcessSnapshot(append("2"))
+      .postProcessSnapshot(append("a"))
+      .postProcessSnapshot(append("b"))
+    const instance = M.create({ s: "" })
+    expect(instance.s).toBe("21")
+    expect(getSnapshot(instance).s).toBe("21ab")
+  })
+
+  test("compose runs each part's processors first part first", () => {
+    const A = types
+      .model({ s: "" })
+      .preProcessSnapshot(append("A"))
+      .postProcessSnapshot(append("a"))
+    const B = types
+      .model({ s: "" })
+      .preProcessSnapshot(append("B"))
+      .postProcessSnapshot(append("b"))
+    const instance = types
+      .compose(A, types.model({ c: 1 }), B)
+      .create({ s: "" })
+    expect(instance.s).toBe("AB")
+    expect(getSnapshot(instance).s).toBe("ABab")
+  })
+
+  test("compose adds no processor when no part has one", () => {
+    const Composed = types.compose(types.model({ a: 1 }), types.model({ b: 1 }))
+    expect((Composed as any).preProcessor).toBeUndefined()
+    expect((Composed as any).postProcessor).toBeUndefined()
+  })
+})
+
 describe("Model instantiation", () => {
   describe("Model name", () => {
     test("Providing a string as the first argument should set it as the model's name.", () => {
