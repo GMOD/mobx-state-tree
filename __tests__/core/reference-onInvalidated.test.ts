@@ -5,12 +5,17 @@ import {
   Instance,
   ReferenceIdentifier,
   IAnyStateTreeNode,
+  IAnyModelType,
   unprotect,
   OnReferenceInvalidatedEvent,
   getSnapshot,
   applySnapshot,
+  cast,
   clone,
-  destroy
+  destroy,
+  detach,
+  getLivelinessChecking,
+  setLivelinessChecking
 } from "../../src"
 
 const Todo = types.model({ id: types.identifier })
@@ -496,4 +501,129 @@ test("#1275 - removing an object from a map should result in the snapshot of ref
 
   destroy(thing.items.get("bb")!)
   expect(getSnapshot(thing.refs)).toEqual(["a", "c"])
+})
+
+describe("detaching a subtree", () => {
+  const Leaf = types.model("Leaf", {
+    id: types.identifier,
+    branch: types.safeReference(types.late((): IAnyModelType => Branch))
+  })
+  const Branch = types.model("Branch", {
+    id: types.identifier,
+    leaves: types.array(Leaf),
+    inner: types.safeReference(Leaf)
+  })
+  const Root = types.model({
+    branches: types.array(Branch),
+    outer: types.safeReference(Leaf),
+    outerBranch: types.safeReference(Branch)
+  })
+  const create = () => {
+    const root = Root.create({
+      branches: [{ id: "b", leaves: [{ id: "l", branch: "b" }], inner: "l" }],
+      outer: "l",
+      outerBranch: "b"
+    })
+    unprotect(root)
+    return root
+  }
+
+  test("invalidates a reference whose target leaves with an ancestor", () => {
+    const root = create()
+    expect(root.outer?.id).toBe("l")
+    detach(root.branches[0]!)
+    expect(root.outer).toBeUndefined()
+    expect(getSnapshot(root).outer).toBeUndefined()
+  })
+
+  test("reports the cause as detach", () => {
+    const causes: string[] = []
+    const Store = types.model({
+      branches: types.array(Branch),
+      ref: types.maybe(
+        types.reference(Leaf, {
+          onInvalidated(ev) {
+            causes.push(ev.cause)
+            ev.removeRef()
+          }
+        })
+      )
+    })
+    const store = Store.create({
+      branches: [{ id: "b", leaves: [{ id: "l" }] }],
+      ref: "l"
+    })
+    unprotect(store)
+    expect(store.ref?.id).toBe("l")
+    detach(store.branches[0]!)
+    expect(causes).toEqual(["detach"])
+    expect(store.ref).toBeUndefined()
+  })
+
+  test("reaches a target moved under a parent that was never read", () => {
+    const Item = types.model("Item", { id: types.identifier })
+    const Inner = types.model({ item: types.maybe(Item) })
+    const Outer = types.model({ inner: types.maybe(Inner) })
+    const Store = types.model({
+      outer: types.maybe(Outer),
+      ref: types.safeReference(Item)
+    })
+    const store = Store.create({})
+    unprotect(store)
+    const item = Item.create({ id: "1" })
+    store.outer = cast({ inner: { item } })
+    store.ref = item
+    detach(store.outer!)
+    expect(store.ref).toBeUndefined()
+  })
+
+  test("stops at nodes an invalidation handler destroyed mid-walk", () => {
+    const Leaf = types.model({ n: 0 })
+    const Item = types.model("Item", {
+      id: types.identifier,
+      leaves: types.array(Leaf)
+    })
+    const Store = types.model({
+      group: types.maybe(types.model({ items: types.array(Item) })),
+      refs: types.array(
+        types.reference(Item, {
+          onInvalidated(ev) {
+            if (ev.cause === "detach") {
+              destroy(ev.invalidTarget!)
+            } else {
+              ev.removeRef()
+            }
+          }
+        })
+      )
+    })
+    const store = Store.create({
+      group: { items: [{ id: "a", leaves: [{}, {}] }, { id: "b" }] },
+      refs: ["a", "b"]
+    })
+    unprotect(store)
+    store.refs.forEach(item => item.leaves.forEach(leaf => leaf.n))
+    const previous = getLivelinessChecking()
+    setLivelinessChecking("error")
+    try {
+      expect(() => detach(store.group!)).not.toThrow()
+    } finally {
+      setLivelinessChecking(previous)
+    }
+    expect(getSnapshot(store).refs).toEqual([])
+  })
+
+  test("keeps a reference that leaves together with its target", () => {
+    const root = create()
+    const branch = root.branches[0]!
+    const leaf = branch.leaves[0]!
+    expect(branch.inner?.id).toBe("l")
+    expect(leaf.branch?.id).toBe("b")
+    expect(root.outerBranch?.id).toBe("b")
+    detach(branch)
+    expect(branch.inner?.id).toBe("l")
+    expect(getSnapshot(branch).inner).toBe("l")
+    expect(leaf.branch?.id).toBe("b")
+    expect(root.outerBranch).toBeUndefined()
+  })
 })

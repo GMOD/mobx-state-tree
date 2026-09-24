@@ -12,13 +12,10 @@ import {
   fail
 } from "../../internal.ts"
 
-type HookSubscribers = {
-  [Hook.afterAttach]: (node: AnyNode, hook: Hook) => void
-  [Hook.afterCreate]: (node: AnyNode, hook: Hook) => void
-  [Hook.afterCreationFinalization]: (node: AnyNode, hook: Hook) => void
-  [Hook.beforeDestroy]: (node: AnyNode, hook: Hook) => void
-  [Hook.beforeDetach]: (node: AnyNode, hook: Hook) => void
-}
+// `subject` is the node the hook is about: the subscribed node itself, except
+// for a beforeDetach delivered to a node inside the subtree being detached
+type HookSubscriber = (subject: AnyNode, hook: Hook) => void
+type HookSubscribers = Record<Hook, HookSubscriber>
 
 /**
  * @internal
@@ -67,20 +64,34 @@ export abstract class BaseNode<C, S, T> {
 
   protected abstract fireHook(name: Hook): void
 
-  protected fireInternalHook(name: Hook) {
-    if (this._hookSubscribers) {
-      this._hookSubscribers.emit(name, this, name)
-    }
+  protected fireInternalHook(name: Hook, subject: AnyNode = this) {
+    this._hookSubscribers?.emit(name, subject, name)
   }
 
-  registerHook<H extends Hook>(
-    hook: H,
-    hookHandler: HookSubscribers[H]
-  ): IDisposer {
-    if (!this._hookSubscribers) {
-      this._hookSubscribers = new EventHandlers()
+  /**
+   * Detaching a node takes its whole subtree out of the tree, but only the
+   * detached node's parent changes, so only it fires `beforeDetach` for real.
+   * Internal subscribers below it (reference watchers on a target) still need
+   * to know their node is leaving.
+   */
+  notifyDetachOf(subject: AnyObjectNode): void {
+    this.fireInternalHook(Hook.beforeDetach, subject)
+  }
+
+  isWithin(ancestor: AnyNode): boolean {
+    for (let node = this.parent; node; node = node.parent) {
+      if (node === ancestor) {
+        return true
+      }
     }
-    return this._hookSubscribers.register(hook, hookHandler)
+    return false
+  }
+
+  registerHook(hook: Hook, hookHandler: HookSubscriber): IDisposer {
+    return (this._hookSubscribers ??= new EventHandlers()).register(
+      hook,
+      hookHandler
+    )
   }
 
   private _parent!: AnyObjectNode | null

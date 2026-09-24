@@ -234,9 +234,10 @@ export abstract class BaseReferenceType<
     }
     const refTargetNode = getStateTreeNode(refTargetValue)
 
-    const hookHandler = (_: AnyNode, refTargetNodeHook: Hook) => {
+    const hookHandler = (subject: AnyNode, refTargetNodeHook: Hook) => {
       const cause = getInvalidationCause(refTargetNodeHook)
-      if (!cause) {
+      // a reference detached along with its target still resolves it
+      if (!cause || (cause === "detach" && storedRefNode.isWithin(subject))) {
         return
       }
       this.fireInvalidated(cause, storedRefNode, referenceId, refTargetNode)

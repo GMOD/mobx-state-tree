@@ -304,8 +304,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       return
     }
 
-    // detach if attached
     this.fireHook(Hook.beforeDetach)
+    this.notifyChildrenOfDetach(this)
     const previousState = this.state
     this.state = NodeLifeCycle.DETACHING
 
@@ -320,6 +320,23 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.identifierCache = newIdCache
     } finally {
       this.state = previousState
+    }
+  }
+
+  override notifyDetachOf(subject: AnyObjectNode): void {
+    super.notifyDetachOf(subject)
+    this.notifyChildrenOfDetach(subject)
+  }
+
+  private notifyChildrenOfDetach(subject: AnyObjectNode): void {
+    // a handler notified earlier in the walk may have destroyed this node.
+    // A node never read still has to be walked: an instance created elsewhere
+    // can have been moved under it, subscribers and all.
+    if (!this.isAlive) {
+      return
+    }
+    for (const child of this.getChildren()) {
+      child.notifyDetachOf(subject)
     }
   }
 
