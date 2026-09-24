@@ -48,6 +48,7 @@ import {
   isPlainObject,
   isStateTreeNode,
   isType,
+  unwrapType,
   isValidIdentifier,
   normalizeIdentifier,
   popContext,
@@ -549,13 +550,18 @@ export function map<IT extends IAnyType>(subtype: IT): IMapType<IT> {
 }
 
 /**
- * Returns if a given value represents a map type.
- *
- * @param type
- * @returns `true` if it is a map type.
+ * Returns if a type is a map type, or wraps or unions one. For the map type
+ * itself, use {@link asMapType}.
  */
-export function isMapType<Items extends IAnyType = IAnyType>(
-  type: IAnyType
-): type is IMapType<Items> {
+export function isMapType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Map) > 0
+}
+
+/**
+ * The map type `type` builds its values with, seeing through the wrappers
+ * {@link unwrapType} does, or `undefined` if that is not a map type.
+ */
+export function asMapType(type: IAnyType): IMapType<IAnyType> | undefined {
+  const unwrapped = unwrapType(type)
+  return unwrapped instanceof MapType ? unwrapped : undefined
 }

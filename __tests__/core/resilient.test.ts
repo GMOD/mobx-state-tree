@@ -6,7 +6,8 @@ import {
   isAlive,
   resolveIdentifier,
   unprotect,
-  getType
+  getType,
+  setTypeChecking
 } from "../../src"
 
 // types.resilient exists to survive snapshots that do not validate, so most of the
@@ -358,5 +359,42 @@ describe("types.resilient", () => {
     const fallback = getSnapshot(store.items[0]) as any
     expect(fallback.type).toBe("ErrorPlaceholder")
     expect(fallback.originalSnapshot).toEqual({ type: "BROKEN2" })
+  })
+})
+
+// With type checking off, as in production, a union matches snapshots to
+// members by the props of the model each member is meant for; for a resilient
+// member that is the model it tries first.
+describe("a resilient member of a union, matched without type checking", () => {
+  const A = types.model("A", { type: types.literal("a"), x: types.number })
+  const B = types.model("B", { type: types.literal("b"), x: types.number })
+  const Loose = types.model("Loose", { x: types.optional(types.number, 0) })
+  const Fallback = types.model("Fallback", { raw: types.frozen() })
+  const toFallback = (_: unknown, raw: unknown) => ({ raw })
+
+  const withoutTypeChecking = (fn: () => void) => {
+    setTypeChecking(false)
+    try {
+      fn()
+    } finally {
+      setTypeChecking(undefined)
+    }
+  }
+
+  test("is preferred over a looser member that also fits", () => {
+    withoutTypeChecking(() => {
+      const U = types.union(types.resilient(A, Fallback, toFallback), Loose)
+      expect(getType(U.create({ type: "a", x: 1 }))).toBe(A)
+    })
+  })
+
+  test("is told apart from another resilient member by its discriminator", () => {
+    withoutTypeChecking(() => {
+      const U = types.union(
+        types.resilient(A, Fallback, toFallback),
+        types.resilient(B, Fallback, toFallback)
+      )
+      expect(getType(U.create({ type: "b", x: 1 }))).toBe(B)
+    })
   })
 })

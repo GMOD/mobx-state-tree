@@ -45,6 +45,7 @@ import {
   isStateTreeNode,
   isType,
   ModelType,
+  unwrapType,
   mobxShallow,
   normalizeIdentifier,
   popContext,
@@ -593,13 +594,18 @@ function areSame(oldNode: AnyNode, newValue: any): boolean {
 }
 
 /**
- * Returns if a given value represents an array type.
- *
- * @param type
- * @returns `true` if the type is an array type.
+ * Returns if a type is an array type, or wraps or unions one. For the array
+ * type itself, use {@link asArrayType}.
  */
-export function isArrayType<Items extends IAnyType = IAnyType>(
-  type: IAnyType
-): type is IArrayType<Items> {
+export function isArrayType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Array) > 0
+}
+
+/**
+ * The array type `type` builds its values with, seeing through the wrappers
+ * {@link unwrapType} does, or `undefined` if that is not an array type.
+ */
+export function asArrayType(type: IAnyType): IArrayType<IAnyType> | undefined {
+  const unwrapped = unwrapType(type)
+  return unwrapped instanceof ArrayType ? unwrapped : undefined
 }

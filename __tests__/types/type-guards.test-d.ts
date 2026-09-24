@@ -1,4 +1,9 @@
 import {
+  asArrayType,
+  asMapType,
+  asModelType,
+  getWrappedType,
+  unwrapType,
   isArrayType,
   isFrozenType,
   isIdentifierType,
@@ -49,20 +54,27 @@ if (!isUnionType(t)) {
   console.log(t.name)
 }
 
-// these three narrow to a *different* type than their parameter, so their
-// predicates are meaningful and are kept
+// these three are true for a type that wraps or unions an array / map / model
+// too — every array prop of a model is an optional around the array — so they
+// cannot narrow to the array type's interface: that has getChildType(), and
+// the optional does not. The as* functions return the type itself.
 if (isArrayType(t)) {
+  // @ts-expect-error not narrowed
   console.log(t.getChildType().name)
 }
 if (isMapType(t)) {
+  // @ts-expect-error not narrowed
   console.log(t.getChildType().name)
 }
 if (isModelType(t)) {
+  // @ts-expect-error not narrowed
   console.log(t.properties)
 }
-if (!isArrayType(t)) {
-  console.log(t.name)
-}
+console.log(asArrayType(t)?.getChildType().name)
+console.log(asMapType(t)?.getChildType().name)
+console.log(asModelType(t)?.properties)
+const wrapped: IAnyType = getWrappedType(t) ?? unwrapType(t)
+console.log(wrapped.name)
 
 // every boolean guard takes IAnyType, so a concrete type is accepted rather
 // than rejected by a leftover generic constraint

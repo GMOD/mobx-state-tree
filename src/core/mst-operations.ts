@@ -4,6 +4,7 @@ import {
   EMPTY_OBJECT,
   InvalidReferenceError,
   asArray,
+  asModelType,
   assertArg,
   assertIsFunction,
   assertIsNumber,
@@ -876,19 +877,16 @@ export interface IModelReflectionPropertiesData {
 export function getPropertyMembers(
   typeOrNode: IAnyModelType | IAnyStateTreeNode
 ): IModelReflectionPropertiesData {
-  let type: IAnyModelType
+  const type: IAnyType = isStateTreeNode(typeOrNode)
+    ? getType(typeOrNode)
+    : typeOrNode
+  assertArg(type, isModelType, "model type or model instance", 1)
 
-  if (isStateTreeNode(typeOrNode)) {
-    type = getType(typeOrNode) as IAnyModelType
-  } else {
-    type = typeOrNode as IAnyModelType
-  }
-
-  assertArg(type, t => isModelType(t), "model type or model instance", 1)
-
+  // a wrapped model reports the model's properties; a union of models has no
+  // single set and reports none
   return {
     name: type.name,
-    properties: { ...type.properties }
+    properties: { ...asModelType(type)?.properties }
   }
 }
 

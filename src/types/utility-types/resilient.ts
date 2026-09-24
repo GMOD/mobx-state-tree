@@ -13,7 +13,14 @@ import {
   typeCheckSuccess
 } from "../../internal.ts"
 
-class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
+/**
+ * @internal
+ * @hidden
+ */
+export class Resilient<
+  IT extends IAnyType,
+  FT extends IAnyType
+> extends BaseType<
   IT["CreationType"] | FT["CreationType"],
   IT["SnapshotType"] | FT["SnapshotType"],
   IT["TypeWithoutSTN"] | FT["TypeWithoutSTN"],
@@ -21,6 +28,11 @@ class Resilient<IT extends IAnyType, FT extends IAnyType> extends BaseType<
 > {
   get flags() {
     return this._subtype.flags
+  }
+
+  /** the type tried first; the fallback takes over only when it fails */
+  get primaryType(): IT {
+    return this._subtype
   }
 
   constructor(

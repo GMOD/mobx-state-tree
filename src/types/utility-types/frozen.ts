@@ -126,11 +126,9 @@ export function frozen(arg?: any): any {
 /**
  * Returns if a given value represents a frozen type.
  *
- * Returns a plain `boolean`, not a `type is IT` predicate: with the parameter
- * typed as `IT`, narrowing to `IT` was a no-op in the positive branch while
- * collapsing the negative one to `never`, so `if (!isX(t)) { t.name }` failed
- * to compile. Guards with a distinct narrowing target (`isArrayType`,
- * `isMapType`, `isModelType`) keep their predicate.
+ * Like every `isXType` guard it reads the type's flags, which wrappers and
+ * unions inherit from what they hold, so it is also true for a type that wraps
+ * or unions one. Use {@link unwrapType} to get at the type itself.
  *
  * @param type
  * @returns

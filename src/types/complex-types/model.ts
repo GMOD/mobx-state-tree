@@ -55,6 +55,7 @@ import {
   isPrimitive,
   isStateTreeNode,
   isType,
+  unwrapType,
   mobxShallow,
   optional,
   shouldStripChildFromSnapshot,
@@ -1213,12 +1214,13 @@ export function compose(...args: any[]): any {
     args.shift()
   }
 
-  // check all parameters
+  // exactly a model type: each part's own properties and initializers are
+  // read below, and a wrapper around a model has neither
   if (devMode()) {
     args.forEach((type, i) => {
       assertArg(
         type,
-        isModelType,
+        t => t instanceof ModelType,
         "mobx-state-tree model type",
         hasTypename ? i + 2 : i + 1
       )
@@ -1247,15 +1249,20 @@ export function compose(...args: any[]): any {
 }
 
 /**
- * Returns if a given value represents a model type.
- *
- * @param type
- * @returns
+ * Returns if a type is a model type, or wraps or unions one. For the model
+ * type itself, use {@link asModelType}.
  */
-export function isModelType<IT extends IAnyModelType = IAnyModelType>(
-  type: IAnyType
-): type is IT {
+export function isModelType(type: IAnyType): boolean {
   return isType(type) && (type.flags & TypeFlags.Object) > 0
+}
+
+/**
+ * The model type `type` builds its values with, seeing through the wrappers
+ * {@link unwrapType} does, or `undefined` if that is not a model type.
+ */
+export function asModelType(type: IAnyType): IAnyModelType | undefined {
+  const unwrapped = unwrapType(type)
+  return unwrapped instanceof ModelType ? unwrapped : undefined
 }
 
 /**
@@ -1285,8 +1292,8 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   if (!isStateTreeNode(instance)) {
     throw fail("extendInstance expects a mobx-state-tree node")
   }
-  const type = getStateTreeNode(instance).type
-  if (!isModelType(type)) {
+  const type: IAnyType = getStateTreeNode(instance).type
+  if (!(type instanceof ModelType)) {
     throw fail("extendInstance can only be used on model instances")
   }
   // Views/actions/volatile are installed via defineProperty + makeObservable — the
@@ -1294,15 +1301,8 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   // write-protection interceptor is attached (see finalizeNewInstance). On a live
   // instance that interceptor is already active, so run the attach inside an action
   // context: isRunningAction() then short-circuits assertWritable.
-  const modelType = type as unknown as ModelType<
-    any,
-    any,
-    any,
-    any,
-    IAnyModelType
-  >
   const attach = createActionInvoker(instance, "@@extendInstance", (() => {
-    modelType.applyExtensionToInstance(instance, fn(instance))
+    type.applyExtensionToInstance(instance, fn(instance))
   }) as FunctionWithFlag)
   attach()
   return instance

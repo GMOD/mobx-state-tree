@@ -6,8 +6,8 @@ import {
   type IType,
   type IValidationContext,
   type IValidationResult,
-  ModelType,
   TypeFlags,
+  asModelType,
   assertIsType,
   devMode,
   fail,
@@ -265,11 +265,9 @@ const undefinedAsOptionalValues: [undefined] = [undefined]
 /**
  * Returns if a value represents an optional type.
  *
- * Returns a plain `boolean`, not a `type is IT` predicate: with the parameter
- * typed as `IT`, narrowing to `IT` was a no-op in the positive branch while
- * collapsing the negative one to `never`, so `if (!isX(t)) { t.name }` failed
- * to compile. Guards with a distinct narrowing target (`isArrayType`,
- * `isMapType`, `isModelType`) keep their predicate.
+ * Like every `isXType` guard it reads the type's flags, which wrappers and
+ * unions inherit from what they hold, so it is also true for a type that wraps
+ * or unions one. Use {@link unwrapType} to get at the type itself.
  *
  * @param type
  * @returns
@@ -280,30 +278,6 @@ export function isOptionalType(type: IAnyType): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
-}
-
-/**
- * The identifier attribute of the model a stripDefault ultimately wraps, or
- * `null` when there is none. Drills through the single-subtype wrappers the way
- * `resolveModelType` in union.ts does — that one is module-private there, and
- * this file may not reach into it.
- *
- * `null` is also the answer for an unresolved `types.late`, which only costs the
- * short-circuit, never correctness: the full structural walk still runs.
- */
-function resolveIdentifierAttribute(type: IAnyType): string | null {
-  let current: IAnyType | undefined = type
-  for (let depth = 0; current && depth < 20; depth++) {
-    if (current instanceof ModelType) {
-      return current.identifierAttribute ? current.identifierAttribute : null
-    }
-    const wrapper = current as {
-      _subtype?: IAnyType
-      getSubType?: (mustSucceed: boolean) => IAnyType | undefined
-    }
-    current = wrapper._subtype ?? wrapper.getSubType?.(false)
-  }
-  return null
 }
 
 /**
@@ -402,7 +376,10 @@ export class StripDefaultValue<
   private equalsDefault(snapshot: unknown, defaultSnapshot: unknown): boolean {
     let identifierAttribute = this._identifierAttribute
     if (identifierAttribute === undefined) {
-      identifierAttribute = resolveIdentifierAttribute(this.getSubTypes())
+      // null when not wrapping an identified model; an unresolved late member
+      // also lands here, which only costs the short-circuit below
+      identifierAttribute =
+        asModelType(this.getSubTypes())?.identifierAttribute ?? null
       this._identifierAttribute = identifierAttribute
     }
     // an identified model's snapshot normally has the same shape as the default

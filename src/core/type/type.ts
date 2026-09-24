@@ -649,6 +649,32 @@ export function isType(value: unknown): value is IAnyType {
 }
 
 /**
+ * The one type a wrapper hands everything to: what an `optional`,
+ * `stripDefault`, `refinement`, `snapshotProcessor` or (resolved) `late`
+ * wraps. `undefined` for any other type, including a union or a `resilient`,
+ * which pick a type per value.
+ *
+ * Resolves a `late` type's definition if it has not been read yet.
+ */
+export function getWrappedType(type: IAnyType): IAnyType | undefined {
+  const subtype = type.getSubTypes()
+  return isType(subtype) ? subtype : undefined
+}
+
+/**
+ * Strips every wrapper {@link getWrappedType} sees through, down to the type
+ * that actually builds the value: for a complex type `T`,
+ * `getType(T.create(snapshot)) === unwrapType(T)`.
+ *
+ * `types.model({ xs: types.array(X) }).properties.xs`, for instance, is an
+ * `optional` whose unwrapped type is the array type.
+ */
+export function unwrapType(type: IAnyType): IAnyType {
+  const wrapped = getWrappedType(type)
+  return wrapped ? unwrapType(wrapped) : type
+}
+
+/**
  * @internal
  * @hidden
  */

@@ -8,6 +8,7 @@ import {
   type IValidationResult,
   Literal,
   ModelType,
+  Resilient,
   TypeFlags,
   type _NotCustomized,
   assertArg,
@@ -18,6 +19,7 @@ import {
   isStateTreeNode,
   isType,
   isTypeCheckingEnabled,
+  unwrapType,
   typeCheckFailure,
   typeCheckSuccess
 } from "../../internal.ts"
@@ -38,46 +40,37 @@ export interface UnionOptions {
   name?: string
 }
 
-// Drill through single-subtype wrappers — optional(), refinement(),
-// snapshotProcessor(), late() — to the underlying ModelType. Discriminated-
-// union scoping keys on a member's literal `type` property, but real-world
-// members are rarely bare models (jbrowse config schemas, for instance, are
-// always optional(model) or optional(snapshotProcessor(model))). Without this
-// the scoping never engages and every failure prints every member's full
-// structure. Wrappers expose their child as `_subtype` (optional/refinement/
-// snapshotProcessor) or via `getSubType()` (late); bounded to avoid cycles.
-// Only *successful* resolutions are cached. A wrapper chain's shape is fixed at
-// construction, so once a member resolves to a ModelType it always will; but a
-// `late` member reports no subtype until its definition evaluates, and that
-// miss must stay retryable.
-const resolvedModelTypes = new WeakMap<
-  IAnyType,
-  ModelType<any, any, any, any, any>
->()
+type AnyModelType = ModelType<any, any, any, any, any>
 
-function resolveModelType(
-  type: IAnyType | undefined
-): ModelType<any, any, any, any, any> | undefined {
-  if (!type) {
-    return undefined
+// The model a member is meant for: the one under its wrappers, and for a
+// `resilient` member the one it tries first. Matching a snapshot to a member
+// (quick-match dispatch, discriminator scoping) keys on that model's props,
+// and real-world members are rarely bare models (jbrowse config schemas are
+// always optional(model) or optional(snapshotProcessor(model))).
+// Misses are cached too, unless the member holds a `late` type: that has no
+// subtype until its definition evaluates, so its miss must stay retryable.
+const intendedModelTypes = new WeakMap<IAnyType, AnyModelType | null>()
+
+function resolveModelType(type: IAnyType): AnyModelType | undefined {
+  const cached = intendedModelTypes.get(type)
+  if (cached !== undefined) {
+    return cached ?? undefined
   }
-  const cached = resolvedModelTypes.get(type)
-  if (cached) {
-    return cached
+  const model = findIntendedModelType(type)
+  if (model || !(type.flags & TypeFlags.Late)) {
+    intendedModelTypes.set(type, model ?? null)
   }
-  let current: IAnyType | undefined = type
-  for (let depth = 0; current && depth < 20; depth++) {
-    if (current instanceof ModelType) {
-      resolvedModelTypes.set(type, current)
-      return current
-    }
-    const wrapper = current as {
-      _subtype?: IAnyType
-      getSubType?: (mustSucceed: boolean) => IAnyType | undefined
-    }
-    current = wrapper._subtype ?? wrapper.getSubType?.(false)
+  return model
+}
+
+function findIntendedModelType(type: IAnyType): AnyModelType | undefined {
+  const unwrapped = unwrapType(type)
+  if (unwrapped instanceof ModelType) {
+    return unwrapped
   }
-  return undefined
+  return unwrapped instanceof Resilient
+    ? findIntendedModelType(unwrapped.primaryType)
+    : undefined
 }
 
 // The quick-match paths below already know a type carries TypeFlags.Literal,
@@ -759,11 +752,9 @@ export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
 /**
  * Returns if a given value represents a union type.
  *
- * Returns a plain `boolean`, not a `type is IT` predicate: with the parameter
- * typed as `IT`, narrowing to `IT` was a no-op in the positive branch while
- * collapsing the negative one to `never`, so `if (!isX(t)) { t.name }` failed
- * to compile. Guards with a distinct narrowing target (`isArrayType`,
- * `isMapType`, `isModelType`) keep their predicate.
+ * Like every `isXType` guard it reads the type's flags, which wrappers and
+ * unions inherit from what they hold, so it is also true for a type that wraps
+ * or unions one. Use {@link unwrapType} to get at the type itself.
  *
  * @param type
  * @returns
@@ -773,13 +764,9 @@ export function isUnionType(type: IAnyType): boolean {
 }
 
 /**
- * Returns the member types of a union.
- *
- * Wrapper types (`optional`, `refinement`, `late`) inherit the union flag from
- * the type they wrap, so `isUnionType` is true for e.g. an optional-of-union,
- * but their `getSubTypes()` reports the single wrapped type rather than the
- * union's members. This drills through those wrappers until the union's member
- * array surfaces.
+ * Returns the member types of a union, seeing through the wrappers
+ * {@link unwrapType} does: `isUnionType` is also true for e.g. an
+ * optional-of-union.
  *
  * @param type a type for which `isUnionType` is true
  * @returns the array of member types of the underlying union
@@ -788,16 +775,9 @@ export function getUnionSubtypes(type: IAnyType): IAnyType[] {
   if (!isUnionType(type)) {
     throw fail("expected a union type")
   }
-  let subtypes = type.getSubTypes()
-  while (
-    typeof subtypes === "object" &&
-    subtypes !== null &&
-    !Array.isArray(subtypes)
-  ) {
-    subtypes = subtypes.getSubTypes()
-  }
-  if (!Array.isArray(subtypes)) {
+  const union = unwrapType(type)
+  if (!(union instanceof Union)) {
     throw fail("could not extract subtypes from union type")
   }
-  return subtypes
+  return union.getSubTypes()
 }
