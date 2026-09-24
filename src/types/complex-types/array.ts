@@ -91,7 +91,7 @@ export interface IArrayType<IT extends IAnyType> extends IType<
   IT["SnapshotType"][],
   IMSTArray<IT>
 > {
-  hooks(hooks: IHooksGetter<IMSTArray<IAnyType>>): IArrayType<IT>
+  hooks(hooks: IHooksGetter<IMSTArray<IT>>): IArrayType<IT>
   /** the element type of the array */
   getChildType(): IAnyType
 }

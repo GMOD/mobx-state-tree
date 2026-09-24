@@ -1,30 +1,29 @@
 import {
   type ISimpleType,
+  Union,
   assertIsString,
   devMode,
-  literal,
-  union
+  literal
 } from "../../internal.ts"
 
 /** @hidden */
 export type UnionStringArray<T extends readonly string[]> = T[number]
 
-// strongly typed enumeration forms for plain and readonly string arrays (when passed directly to the function).
-// with these overloads, we get correct typing for native TS string enums when we use Object.values(Enum) as Enum[] as options.
-// these overloads also allow both mutable and immutable arrays, making types.enumeration<Enum>(Object.values(Enum)) possible.
-// the only case where this doesn't work is when passing to the function an array variable with a mutable type constraint;
-// for these cases, it will just fallback and assume the type is a generic string.
-export function enumeration<T extends readonly string[]>(
-  options: T
-): ISimpleType<UnionStringArray<T>>
+export function enumeration<T extends string>(
+  options: readonly T[]
+): ISimpleType<T>
 export function enumeration<T extends string>(
   name: string,
-  options: T[]
-): ISimpleType<UnionStringArray<T[]>>
+  options: readonly T[]
+): ISimpleType<T>
 
 /**
  * `types.enumeration` - Can be used to create an string based enumeration.
  * (note: this methods is just sugar for a union of string literals)
+ *
+ * The member type is inferred from the options, so a literal array, an
+ * `as const` array and `Object.values(SomeStringEnum)` all produce the exact
+ * union; only an array already typed `string[]` falls back to `string`.
  *
  * Example:
  * ```ts
@@ -38,19 +37,22 @@ export function enumeration<T extends string>(
  * @returns
  */
 export function enumeration(
-  name: string | string[],
-  options?: any
+  nameOrOptions: string | readonly string[],
+  maybeOptions?: readonly string[]
 ): ISimpleType<string> {
-  const realOptions: string[] = typeof name === "string" ? options! : name
-  // check all options
+  const name = typeof nameOrOptions === "string" ? nameOrOptions : undefined
+  const options =
+    typeof nameOrOptions === "string" ? maybeOptions! : nameOrOptions
   if (devMode()) {
-    realOptions.forEach((option, i) => {
+    options.forEach((option, i) => {
       assertIsString(option, i + 1)
     })
   }
-  const type = union(...realOptions.map(option => literal(`${option}`)))
-  if (typeof name === "string") {
-    type.name = name
-  }
-  return type
+  // built directly rather than through union(): its members are fresh
+  // literals, so interning could never share it, and the name belongs to this
+  // union alone
+  return new Union(
+    options.map(option => literal(`${option}`)),
+    name === undefined ? undefined : { name }
+  )
 }

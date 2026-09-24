@@ -81,9 +81,12 @@ export interface IType<C, S, T> {
   readonly [$type]: undefined
 
   /**
-   * Friendly type name.
+   * Friendly type name. Read-only: types are shared (unions built from the
+   * same members are the same object), so renaming one renames it everywhere.
+   * Name a type where it is built instead — `types.model(name, ...)`,
+   * `.named()`, or the `name` option of `union`/`snapshotProcessor`.
    */
-  name: string
+  readonly name: string
 
   /**
    * Name of the identifier attribute or null if none.
