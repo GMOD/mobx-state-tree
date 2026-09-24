@@ -1,3 +1,26 @@
+## [6.6.0](https://github.com/GMOD/mobx-state-tree/compare/v6.5.2...v6.6.0) (2026-09-24)
+
+### Bug Fixes
+
+- Stop overwriting the wrapped type's create ([f8a73dc](https://github.com/GMOD/mobx-state-tree/commit/f8a73dc2f1963828ac51d8bf7ef3ee18d2bb416a))
+- Invalidate references whose target leaves with an ancestor ([fb1a8ee](https://github.com/GMOD/mobx-state-tree/commit/fb1a8ee3d2b73e4793737b8061ad2fa1ddf088aa))
+
+### Documentation
+
+- ADRs for the guard and processor-typing decisions; refresh CLAUDE.md ([a6a1776](https://github.com/GMOD/mobx-state-tree/commit/a6a17769cf715b8a2a8807e110ceedcda34680af))
+
+### Refactoring
+
+- Chain snapshot processors only where there are two ([133a750](https://github.com/GMOD/mobx-state-tree/commit/133a75096a5a266ac31cfd75730e9cd35fdae135))
+- Dedupe the node lifecycle and drop dead weight ([0f3f682](https://github.com/GMOD/mobx-state-tree/commit/0f3f68216b84d2080793f8b141ea4033d2c6f528))
+
+### Types
+
+- Infer enumeration members, export what public signatures name ([ba784a6](https://github.com/GMOD/mobx-state-tree/commit/ba784a6bbc750bc3e361273330d0be054264202e))
+- Variadic signatures in place of the generated overloads ([c8d062d](https://github.com/GMOD/mobx-state-tree/commit/c8d062d14fadc99c93dfd2c05fb2dd444f813227))
+- Snapshot processors pass through keys they do not own ([bc6c747](https://github.com/GMOD/mobx-state-tree/commit/bc6c7479f5b362c94db5d81de00afaad88c87d56))
+- IsArrayType/isMapType/isModelType stop narrowing unsoundly ([540e9f7](https://github.com/GMOD/mobx-state-tree/commit/540e9f74a5878d8c817dbc3521c42ef6a984ab0b))
+
 ## [6.5.2](https://github.com/GMOD/mobx-state-tree/compare/v6.3.1...v6.5.2) (2026-09-19)
 
 ### Bug Fixes
