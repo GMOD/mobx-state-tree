@@ -1,0 +1,4511 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`array of identified models > clear 1`] = `
+{
+  "after": [],
+  "alive": [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+  "paths": [],
+  "reusedFrom": [],
+}
+`;
+
+exports[`array of identified models > overlap by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "id": "b",
+      "name": "b",
+    },
+    {
+      "id": "x",
+      "name": "x",
+    },
+    {
+      "id": "d",
+      "name": "d",
+    },
+    {
+      "id": "a",
+      "name": "a",
+    },
+    {
+      "id": "y",
+      "name": "y",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    false,
+    true,
+    false,
+  ],
+  "log": [
+    "destroy c",
+    "destroy e",
+    "create x",
+    "attach x",
+    "create y",
+    "attach y",
+    "destroy y",
+    "destroy a",
+    "destroy d",
+    "destroy x",
+    "destroy b",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "id": "b",
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "id": "x",
+        "name": "x",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "id": "d",
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "id": "a",
+        "name": "a",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "id": "y",
+        "name": "y",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    1,
+    -1,
+    3,
+    0,
+    -1,
+  ],
+}
+`;
+
+exports[`array of identified models > reverse by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "id": "e",
+      "name": "e",
+    },
+    {
+      "id": "d",
+      "name": "d",
+    },
+    {
+      "id": "c",
+      "name": "c",
+    },
+    {
+      "id": "b",
+      "name": "b",
+    },
+    {
+      "id": "a",
+      "name": "a",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "id": "e",
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "id": "d",
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "id": "c",
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "id": "b",
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "id": "a",
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    4,
+    3,
+    2,
+    1,
+    0,
+  ],
+}
+`;
+
+exports[`array of identified models > reverse by instance 1`] = `
+{
+  "after": [
+    {
+      "id": "e",
+      "name": "e",
+    },
+    {
+      "id": "d",
+      "name": "d",
+    },
+    {
+      "id": "c",
+      "name": "c",
+    },
+    {
+      "id": "b",
+      "name": "b",
+    },
+    {
+      "id": "a",
+      "name": "a",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "id": "e",
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "id": "d",
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "id": "c",
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "id": "b",
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "id": "a",
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    4,
+    3,
+    2,
+    1,
+    0,
+  ],
+}
+`;
+
+exports[`array of identified models > reverse by snapshot 1`] = `
+{
+  "after": [
+    {
+      "id": "e",
+      "name": "e",
+    },
+    {
+      "id": "d",
+      "name": "d",
+    },
+    {
+      "id": "c",
+      "name": "c",
+    },
+    {
+      "id": "b",
+      "name": "b",
+    },
+    {
+      "id": "a",
+      "name": "a",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "id": "e",
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "id": "d",
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "id": "c",
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "id": "b",
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "id": "a",
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    4,
+    3,
+    2,
+    1,
+    0,
+  ],
+}
+`;
+
+exports[`array of identified models > unchanged by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "id": "a",
+      "name": "a",
+    },
+    {
+      "id": "b",
+      "name": "b",
+    },
+    {
+      "id": "c",
+      "name": "c",
+    },
+    {
+      "id": "d",
+      "name": "d",
+    },
+    {
+      "id": "e",
+      "name": "e",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [],
+  "patches": [],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    0,
+    1,
+    2,
+    3,
+    4,
+  ],
+}
+`;
+
+exports[`array of unidentified models > clear 1`] = `
+{
+  "after": [],
+  "alive": [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+  "paths": [],
+  "reusedFrom": [],
+}
+`;
+
+exports[`array of unidentified models > overlap by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "name": "b",
+    },
+    {
+      "name": "x",
+    },
+    {
+      "name": "d",
+    },
+    {
+      "name": "a",
+    },
+    {
+      "name": "y",
+    },
+  ],
+  "alive": [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+    "create b",
+    "attach b",
+    "create x",
+    "attach x",
+    "create d",
+    "attach d",
+    "create a",
+    "attach a",
+    "create y",
+    "attach y",
+    "destroy y",
+    "destroy a",
+    "destroy d",
+    "destroy x",
+    "destroy b",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "name": "x",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "name": "a",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "name": "y",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+  ],
+}
+`;
+
+exports[`array of unidentified models > reverse by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "name": "e",
+    },
+    {
+      "name": "d",
+    },
+    {
+      "name": "c",
+    },
+    {
+      "name": "b",
+    },
+    {
+      "name": "a",
+    },
+  ],
+  "alive": [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+    "create e",
+    "attach e",
+    "create d",
+    "attach d",
+    "create c",
+    "attach c",
+    "create b",
+    "attach b",
+    "create a",
+    "attach a",
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+  ],
+}
+`;
+
+exports[`array of unidentified models > reverse by instance 1`] = `
+{
+  "after": [
+    {
+      "name": "e",
+    },
+    {
+      "name": "d",
+    },
+    {
+      "name": "c",
+    },
+    {
+      "name": "b",
+    },
+    {
+      "name": "a",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    4,
+    3,
+    2,
+    1,
+    0,
+  ],
+}
+`;
+
+exports[`array of unidentified models > reverse by snapshot 1`] = `
+{
+  "after": [
+    {
+      "name": "e",
+    },
+    {
+      "name": "d",
+    },
+    {
+      "name": "c",
+    },
+    {
+      "name": "b",
+    },
+    {
+      "name": "a",
+    },
+  ],
+  "alive": [
+    true,
+    true,
+    true,
+    true,
+    true,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "name": "e",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "name": "a",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    4,
+    3,
+    2,
+    1,
+    0,
+  ],
+}
+`;
+
+exports[`array of unidentified models > unchanged by fresh snapshot 1`] = `
+{
+  "after": [
+    {
+      "name": "a",
+    },
+    {
+      "name": "b",
+    },
+    {
+      "name": "c",
+    },
+    {
+      "name": "d",
+    },
+    {
+      "name": "e",
+    },
+  ],
+  "alive": [
+    false,
+    false,
+    false,
+    false,
+    false,
+  ],
+  "log": [
+    "destroy a",
+    "destroy b",
+    "destroy c",
+    "destroy d",
+    "destroy e",
+    "create a",
+    "attach a",
+    "create b",
+    "attach b",
+    "create c",
+    "attach c",
+    "create d",
+    "attach d",
+    "create e",
+    "attach e",
+    "destroy e",
+    "destroy d",
+    "destroy c",
+    "destroy b",
+    "destroy a",
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": {
+        "name": "a",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": {
+        "name": "b",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": {
+        "name": "c",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": {
+        "name": "d",
+      },
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": {
+        "name": "e",
+      },
+    },
+  ],
+  "paths": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+  ],
+  "reusedFrom": [
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(enumeration) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;
+
+exports[`array(maybe) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(maybe) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;
+
+exports[`array(optional) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(optional) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;
+
+exports[`array(refinement) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(refinement) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;
+
+exports[`array(string) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(string) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > assign 1`] = `
+{
+  "after": [
+    "x",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > clear 1`] = `
+{
+  "after": [],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > duplicates 1`] = `
+{
+  "after": [
+    "c",
+    "c",
+    "a",
+    "e",
+    "e",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/5",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/5",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > overlap 1`] = `
+{
+  "after": [
+    "b",
+    "x",
+    "d",
+    "a",
+    "y",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "a",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > reverse 1`] = `
+{
+  "after": [
+    "e",
+    "d",
+    "c",
+    "b",
+    "a",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "a",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/0",
+    },
+    {
+      "op": "add",
+      "path": "/a/0",
+      "value": "e",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "a",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > splice overlap 1`] = `
+{
+  "after": [
+    "a",
+    "x",
+    "d",
+    "b",
+    "y",
+    "e",
+  ],
+  "inversePatches": [
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "c",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "b",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/4",
+    },
+  ],
+  "patches": [
+    {
+      "op": "remove",
+      "path": "/a/3",
+    },
+    {
+      "op": "remove",
+      "path": "/a/2",
+    },
+    {
+      "op": "remove",
+      "path": "/a/1",
+    },
+    {
+      "op": "add",
+      "path": "/a/1",
+      "value": "x",
+    },
+    {
+      "op": "add",
+      "path": "/a/2",
+      "value": "d",
+    },
+    {
+      "op": "add",
+      "path": "/a/3",
+      "value": "b",
+    },
+    {
+      "op": "add",
+      "path": "/a/4",
+      "value": "y",
+    },
+  ],
+}
+`;
+
+exports[`array(union of scalars) reconciliation > unchanged 1`] = `
+{
+  "after": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+  ],
+  "inversePatches": [],
+  "patches": [],
+}
+`;

@@ -56,22 +56,25 @@ Union, `snapshotProcessor` and `late` element types stay on the scan deliberatel
 
 ## Consequences
 
-Two paths remain O(n²), both known and both judged lower priority than the risk
-of changing them:
+One path remains O(n²), known and judged lower priority than the risk of
+changing it. The other one this ADR originally listed is gone:
 
-- **Genuine large reorderings of keyed items.** The id map does not fix this: the
-  reorder branch still needs `oldNodes.indexOf(candidate, i)` for the splice
-  index, and `oldNodes.splice(j, 1)` itself shifts elements. Splice-in-place is
-  inherently quadratic for reorders. A true O(n) reconcile means abandoning it for
-  a standard keyed-list diff — build a fresh result array, look each new value up
-  by id, then kill unused old nodes. Any such rewrite must preserve the
-  `is()`-before-id ordering above, the "double parent" throw, and undead-node
-  handling (`createObservableInstanceIfNeeded()` before `die()`). **Profile a real
-  JBrowse workload before attempting it**: JBrowse's "load new data" is
-  replace-all, which is already O(n), and genuine large reorders may be rare
-  enough not to matter.
-- **Union and `snapshotProcessor` arrays on replacement**, now the only O(n²) path
-  without the cache masking it. Removing the cache regressed wholesale replacement
+- **Reorders are O(n) since September 2026.** Splice-in-place made every reorder
+  quadratic whatever the lookup: `oldNodes.splice(j, 1)` shifts elements, and
+  even a 50,000-string reverse took 243 s. `reconcileArrayChildren` now builds a
+  fresh result array, marks reused old nodes in a `claimed` bitmap, and kills the
+  unclaimed ones at the end. `ReuseFinder` resolves a miss by lookup wherever
+  `areSame` reduces to an equality — by id for an identified plain model, by
+  node for a live instance, by snapshot identity otherwise — and still runs the
+  full `areSame` on the one candidate. It falls back to the scan only where a
+  plain-object value meets an old node that carries an identifier under a
+  non-model element type, i.e. the union case below. Snapshot tests written
+  against the splice implementation (`__tests__/core/array-reconcile.test.ts`)
+  pin patches, lifecycle hooks and node reuse, and pass unchanged. Measured: a
+  2,000-string reverse 35x faster, unidentified-model replacement 2.3x, and
+  push, assign, splice-remove and identified replace-all neutral.
+- **Union and `snapshotProcessor` arrays on replacement**, the only O(n²) path
+  left, with no cache masking it. Removing the cache regressed wholesale replacement
   of a populated union array by ~2.6x, which is the accepted cost. JBrowse does not
   hit it hard: web migrated its `tracks` arrays to `types.frozen` (frozen elements
   are scalar nodes, so `areSame` returns at the `instanceof ObjectNode` check and
