@@ -12,11 +12,13 @@ import {
   unprotect,
   types,
   setLivelinessChecking,
+  getLivelinessChecking,
   getParent,
   SnapshotOut,
   IJsonPatch,
   ISerializedActionCall,
   isAlive,
+  isStateTreeNode,
   cast,
   resolveIdentifier
 } from "../../src"
@@ -501,6 +503,42 @@ test("it should warn if a replaced object is read or written to", () => {
   expect(() => {
     todo.title = "5"
   }).toThrow(error)
+})
+
+test("a replaced object's never-read children still read as their last snapshot", () => {
+  // Children are created lazily, on first read. React 19's dev-mode prop
+  // diffing reads every property of a component's previous props, so a model
+  // that was replaced before one of its children was ever read has that child
+  // created only after the parent has died.
+  const Display = types.model("Display", {
+    height: 100,
+    filtered: types.array(types.string),
+    collapsed: types.map(types.boolean),
+    editor: types.optional(types.model("Editor", { filterText: "" }), {})
+  })
+  const Track = types.model("Track", { display: Display })
+  const track = Track.create({
+    display: { filtered: ["a"], collapsed: { x: true }, editor: {} }
+  })
+  unprotect(track)
+  const display = track.display
+  track.display = Display.create()
+  expect(isAlive(display)).toBe(false)
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    expect(display.height).toBe(100)
+    expect(display.filtered).toEqual(["a"])
+    expect(display.collapsed).toEqual({ x: true })
+    expect(display.editor).toEqual({ filterText: "" })
+    expect(isAlive(display)).toBe(false)
+    // and not brought to life as nodes under a dead parent
+    expect(isStateTreeNode(display.filtered)).toBe(false)
+    expect(isStateTreeNode(display.editor)).toBe(false)
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
 })
 
 // === COMPOSE FACTORY ===

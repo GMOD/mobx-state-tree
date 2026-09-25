@@ -198,6 +198,13 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     }
   }
 
+  get hasObservableInstance(): boolean {
+    return (
+      this._observableInstanceState !==
+      ObservableInstanceLifecycle.UNINITIALIZED
+    )
+  }
+
   createObservableInstanceIfNeeded(fireHooks = true): void {
     if (
       this._observableInstanceState ===
