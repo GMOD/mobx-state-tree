@@ -1,3 +1,13 @@
+## [6.6.1](https://github.com/GMOD/mobx-state-tree/compare/v6.6.0...v6.6.1) (2026-09-25)
+
+### Performance Improvements
+
+- Reconcile children in linear time ([530e27f](https://github.com/GMOD/mobx-state-tree/commit/530e27f20046ba449d45c2724106fcb5b4133e06))
+
+### Tests
+
+- Typecheck the reconcile tests; add pnpm typecheck to the verification norm ([a23e4f3](https://github.com/GMOD/mobx-state-tree/commit/a23e4f34f718dfd398b696ca5e36be88bbe52454))
+
 ## [6.6.0](https://github.com/GMOD/mobx-state-tree/compare/v6.5.2...v6.6.0) (2026-09-24)
 
 ### Bug Fixes
