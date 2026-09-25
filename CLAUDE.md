@@ -26,8 +26,12 @@ Two more ADRs cover type-level decisions:
 
 ## Verification norm
 
-`npx tsc --noEmit`, `pnpm lint src/`, `pnpm test:dev --run`, `pnpm test:prod
---run`, `pnpm test:types`.
+`npx tsc --noEmit`, `pnpm typecheck`, `pnpm lint src/`, `pnpm test:dev --run`,
+`pnpm test:prod --run`, `pnpm test:types`.
+
+**`npx tsc --noEmit` checks `src/` only.** `pnpm typecheck` adds `__tests__/`
+under looser flags, and `pnpm version` runs it in `preversion`, so a type error
+in a new test that vitest happily runs blocks the release.
 
 **Run prod mode, not just dev.** `typecheckInternal`/validation is a **no-op**
 under `NODE_ENV=production`, and some tests are dev-only

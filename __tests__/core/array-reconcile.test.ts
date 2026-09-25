@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
   type IAnyType,
   type IMSTArray,
+  type IStateTreeNode,
   applySnapshot,
   destroy,
   getSnapshot,
@@ -13,7 +14,9 @@ import {
 
 const initial = ["a", "b", "c", "d", "e"]
 
-const edits: Record<string, (a: IMSTArray<IAnyType>) => void> = {
+type AnyArray = IMSTArray<IAnyType> & IStateTreeNode
+
+const edits: Record<string, (a: AnyArray) => void> = {
   assign: a => applySnapshot(a, ["x", "y"]),
   clear: a => a.clear(),
   reverse: a => a.replace(initial.slice().reverse()),
@@ -32,7 +35,7 @@ const scalarElementTypes: Record<string, IAnyType> = {
   "union of scalars": types.union(types.string, types.number)
 }
 
-function record(elementType: IAnyType, edit: (a: IMSTArray<any>) => void) {
+function record(elementType: IAnyType, edit: (a: AnyArray) => void) {
   const Store = types.model({ a: types.array(elementType) })
   const store = Store.create({ a: initial })
   unprotect(store)
@@ -91,33 +94,32 @@ describe.each([
   ["identified", true],
   ["unidentified", false]
 ])("array of %s models", (_, identified) => {
-  const modelEdits: Record<string, (a: IMSTArray<any>, before: any[]) => void> =
-    {
-      clear: a => a.clear(),
-      "reverse by snapshot": (a, before) =>
-        a.replace(before.map(n => getSnapshot(n)).reverse()),
-      "reverse by instance": (a, before) => a.replace(before.slice().reverse()),
-      "reverse by fresh snapshot": a =>
-        applySnapshot(
-          a,
-          initial
-            .slice()
-            .reverse()
-            .map(name => (identified ? { id: name, name } : { name }))
-        ),
-      "overlap by fresh snapshot": a =>
-        applySnapshot(
-          a,
-          ["b", "x", "d", "a", "y"].map(name =>
-            identified ? { id: name, name } : { name }
-          )
-        ),
-      "unchanged by fresh snapshot": a =>
-        applySnapshot(
-          a,
-          initial.map(name => (identified ? { id: name, name } : { name }))
+  const modelEdits: Record<string, (a: AnyArray, before: any[]) => void> = {
+    clear: a => a.clear(),
+    "reverse by snapshot": (a, before) =>
+      a.replace(before.map(n => getSnapshot(n)).reverse()),
+    "reverse by instance": (a, before) => a.replace(before.slice().reverse()),
+    "reverse by fresh snapshot": a =>
+      applySnapshot(
+        a,
+        initial
+          .slice()
+          .reverse()
+          .map(name => (identified ? { id: name, name } : { name }))
+      ),
+    "overlap by fresh snapshot": a =>
+      applySnapshot(
+        a,
+        ["b", "x", "d", "a", "y"].map(name =>
+          identified ? { id: name, name } : { name }
         )
-    }
+      ),
+    "unchanged by fresh snapshot": a =>
+      applySnapshot(
+        a,
+        initial.map(name => (identified ? { id: name, name } : { name }))
+      )
+  }
 
   test.each(Object.keys(modelEdits))("%s", name => {
     const { log, Store, item } = lifecycleLog(identified)
@@ -184,7 +186,7 @@ test("array(reference) keeps its invalidation handlers across a reorder", () => 
     refs: initial
   })
   unprotect(store)
-  store.refs.replace(["e", "d", "x", "a", "b"])
+  applySnapshot(store.refs, ["e", "d", "x", "a", "b"])
   destroy(store.targets[1]!)
   destroy(store.targets[0]!)
   expect(log).toEqual(["destroy b", "destroy a"])
