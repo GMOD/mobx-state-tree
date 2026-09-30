@@ -493,3 +493,28 @@ test("map calls all hooks", () => {
     "beforeDestroy"
   ])
 })
+
+test("an instance moved under never-read nodes is destroyed with them", () => {
+  const events: string[] = []
+  const Leaf = types.model("Leaf", {}).actions(self => ({
+    afterCreate() {
+      addDisposer(self, () => events.push("disposer"))
+    },
+    beforeDestroy() {
+      events.push(`beforeDestroy in ${getParent<any>(self).name}`)
+    }
+  }))
+  const Branch = types.model("Branch", { name: "branch", leaf: Leaf })
+  const Trunk = types.model("Trunk", { branch: Branch })
+  const Root = types.model("Root", { trunk: Trunk })
+  const expected = ["beforeDestroy in branch", "disposer"]
+
+  const replaced = Root.create({ trunk: { branch: { leaf: Leaf.create() } } })
+  unprotect(replaced)
+  replaced.trunk = Trunk.create({ branch: { leaf: {} } })
+  expect(events).toEqual(expected)
+
+  events.length = 0
+  destroy(Root.create({ trunk: { branch: { leaf: Leaf.create() } } }))
+  expect(events).toEqual(expected)
+})

@@ -633,16 +633,31 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   aboutToDie(): void {
+    const children = this.getChildren()
+    if (
+      this._observableInstanceState ===
+        ObservableInstanceLifecycle.UNINITIALIZED &&
+      (this.hasSnapshotPostProcessor ||
+        children.some(
+          child =>
+            child instanceof ObjectNode &&
+            child._observableInstanceState !==
+              ObservableInstanceLifecycle.UNINITIALIZED
+        ))
+    ) {
+      this.createObservableInstanceIfNeeded()
+    }
+
+    children.forEach(node => {
+      node.aboutToDie()
+    })
+
     if (
       this._observableInstanceState ===
       ObservableInstanceLifecycle.UNINITIALIZED
     ) {
       return
     }
-
-    this.getChildren().forEach(node => {
-      node.aboutToDie()
-    })
 
     // beforeDestroy should run before the disposers since else we could end up in a situation where
     // a disposer added with addDisposer at this stage (beforeDestroy) is actually never released

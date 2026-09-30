@@ -49,3 +49,22 @@ It looks simpler and it fixes the dev crash, but in production it:
   death already gives.
 - Model initializers (`.views`, `.actions`, `.volatile`, `.extend`) run on the
   dead node, as they did in production before; `getParent(self)` in one throws.
+
+## Death builds a never-read node that needs it, hooks and all
+
+The same rule covers death itself. `aboutToDie` builds a never-read node's
+instance before its children die, running `afterCreate` and `afterAttach`
+and then `beforeDestroy` and its disposers, when either of these holds:
+
+- It has a snapshot `postProcessor`. The post-processor receives the instance,
+  so the death snapshot needs one. Building it without hooks was tried and
+  rejected: a post-processor that reads state set in `afterCreate` then threw
+  from `destroy()` and left the tree alive, where production worked before.
+- A child is already built. That happens when an instance is placed in a
+  snapshot (`Root.create({ branch: { leaf: Leaf.create() } })`). Without its
+  parent built, the child's `beforeDestroy` sees `getParent(self)` as
+  `undefined`.
+
+Either way the node dies exactly as if it had been read before its parent
+died. Production already fired `afterCreate` and `afterAttach` for a
+post-processed node at death; the change adds the cleanup.

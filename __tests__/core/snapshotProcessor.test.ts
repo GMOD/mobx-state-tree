@@ -1,6 +1,7 @@
 import { vi, test, expect, describe } from "vitest"
 import { observable } from "mobx"
 import {
+  addDisposer,
   types,
   getSnapshot,
   unprotect,
@@ -916,4 +917,37 @@ describe("snapshotProcessor", () => {
       )
     })
   }
+})
+
+test("destroying a never-read post-processed child runs its hooks as if it had been read", () => {
+  const events: string[] = []
+  const Inner = types
+    .model("Inner", { x: 1 })
+    .volatile(() => ({ label: "" }))
+    .actions(self => ({
+      afterCreate() {
+        events.push("afterCreate")
+        self.label = "created"
+        addDisposer(self, () => events.push("disposer"))
+      },
+      afterAttach() {
+        events.push("afterAttach")
+      },
+      beforeDestroy() {
+        events.push("beforeDestroy")
+      }
+    }))
+  const Processed = types.snapshotProcessor(Inner, {
+    postProcessor: (sn, instance) => ({ ...sn, label: instance.label })
+  })
+  const Outer = types.model("Outer", { p: types.optional(Processed, {}) })
+  const outer = Outer.create()
+  destroy(outer)
+  expect(events).toEqual([
+    "afterCreate",
+    "afterAttach",
+    "beforeDestroy",
+    "disposer"
+  ])
+  expect(getSnapshot(outer)).toEqual({ p: { x: 1, label: "created" } })
 })
