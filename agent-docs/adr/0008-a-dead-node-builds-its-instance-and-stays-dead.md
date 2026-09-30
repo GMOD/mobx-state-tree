@@ -66,5 +66,7 @@ and then `beforeDestroy` and its disposers, when either of these holds:
   `undefined`.
 
 Either way the node dies exactly as if it had been read before its parent
-died. Production already fired `afterCreate` and `afterAttach` for a
+died. Hooks that run during that build can add or replace children, so
+`aboutToDie` also walks any child it did not see before the build, and skips
+one that died meanwhile. Production already fired `afterCreate` and `afterAttach` for a
 post-processed node at death; the change adds the cleanup.

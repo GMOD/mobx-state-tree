@@ -649,10 +649,12 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   aboutToDie(): void {
+    const wasUninitialized =
+      this._observableInstanceState ===
+      ObservableInstanceLifecycle.UNINITIALIZED
     const children = this.getChildren()
     if (
-      this._observableInstanceState ===
-        ObservableInstanceLifecycle.UNINITIALIZED &&
+      wasUninitialized &&
       (this.hasSnapshotPostProcessor ||
         children.some(
           child =>
@@ -664,15 +666,26 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.createObservableInstanceIfNeeded()
     }
 
-    children.forEach(node => {
-      node.aboutToDie()
-    })
+    for (const node of children) {
+      if (node.isAlive) {
+        node.aboutToDie()
+      }
+    }
 
     if (
       this._observableInstanceState ===
       ObservableInstanceLifecycle.UNINITIALIZED
     ) {
       return
+    }
+
+    if (wasUninitialized) {
+      const walked = new Set(children)
+      for (const node of this.getChildren()) {
+        if (node.isAlive && !walked.has(node)) {
+          node.aboutToDie()
+        }
+      }
     }
 
     // beforeDestroy should run before the disposers since else we could end up in a situation where

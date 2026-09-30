@@ -12,7 +12,9 @@ import {
   hasParent,
   cast,
   resolvePath,
-  getParent
+  getParent,
+  getLivelinessChecking,
+  setLivelinessChecking
 } from "../../src"
 
 function createTestStore(listener: (s: string) => void) {
@@ -517,4 +519,58 @@ test("an instance moved under never-read nodes is destroyed with them", () => {
   events.length = 0
   destroy(Root.create({ trunk: { branch: { leaf: Leaf.create() } } }))
   expect(events).toEqual(expected)
+})
+
+test("children added by hooks that run at death are destroyed too", () => {
+  const events: string[] = []
+  const Leaf = types.model("Leaf", { n: 0 }).actions(self => ({
+    afterCreate() {
+      addDisposer(self, () => events.push(`disposer ${self.n}`))
+    },
+    beforeDestroy() {
+      events.push(`beforeDestroy ${self.n}`)
+    }
+  }))
+  const Processed = types.snapshotProcessor(
+    types.model("Holder", { leaf: types.optional(Leaf, {}) }).actions(self => ({
+      afterCreate() {
+        self.leaf = Leaf.create({ n: 1 })
+      }
+    })),
+    { postProcessor: sn => sn }
+  )
+  const Trunk = types
+    .model("Trunk", {
+      branch: types.model("Branch", { leaf: Leaf }),
+      extra: types.maybe(Leaf)
+    })
+    .actions(self => ({
+      afterCreate() {
+        self.extra = Leaf.create({ n: 3 })
+      }
+    }))
+  const Root = types.model("Root", {
+    processed: types.optional(Processed, {}),
+    trunk: types.maybe(Trunk)
+  })
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("error")
+  try {
+    const root = Root.create({
+      trunk: { branch: { leaf: Leaf.create({ n: 2 }) } }
+    })
+    destroy(root)
+    expect(isAlive(root)).toBe(false)
+    expect(events.sort()).toEqual([
+      "beforeDestroy 1",
+      "beforeDestroy 2",
+      "beforeDestroy 3",
+      "disposer 1",
+      "disposer 2",
+      "disposer 3"
+    ])
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
 })
