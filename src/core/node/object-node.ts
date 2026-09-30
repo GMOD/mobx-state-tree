@@ -208,7 +208,10 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   createObservableInstance(fireHooks = true): void {
-    const diedUncreated = this.state === NodeLifeCycle.DEAD
+    const diedUncreated =
+      this.state === NodeLifeCycle.DEAD &&
+      this._observableInstanceState ===
+        ObservableInstanceLifecycle.UNINITIALIZED
     if (devMode()) {
       if (!diedUncreated && this.state !== NodeLifeCycle.INITIALIZING) {
         // istanbul ignore next

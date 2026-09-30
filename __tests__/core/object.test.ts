@@ -538,13 +538,11 @@ test("a replaced object's never-read children read as dead instances", () => {
         self.tags.push(tag)
       }
     }))
-  const Track = types
-    .model("Track", { display: Display })
-    .actions(self => ({
-      replaceDisplay() {
-        self.display = Display.create()
-      }
-    }))
+  const Track = types.model("Track", { display: Display }).actions(self => ({
+    replaceDisplay() {
+      self.display = Display.create()
+    }
+  }))
   const track = Track.create({
     display: { tags: ["a"], collapsed: { x: true } }
   })
@@ -565,6 +563,69 @@ test("a replaced object's never-read children read as dead instances", () => {
     expect(autorunRuns).toBe(0)
     expect(() => display.addTag("b")).toThrow(/Cannot modify/)
     expect(before.display.tags).toEqual(["a"])
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
+})
+
+test("a replaced collection's never-read elements read as dead instances", () => {
+  let afterCreates = 0
+  const Item = types
+    .model("Item", { id: types.identifier, v: 0 })
+    .actions(() => ({
+      afterCreate() {
+        afterCreates++
+      }
+    }))
+  const Store = types.model("Store", {
+    items: types.array(Item),
+    byId: types.map(Item)
+  })
+  const Root = types.model("Root", { store: Store }).actions(self => ({
+    replaceStore() {
+      self.store = Store.create()
+    }
+  }))
+  const root = Root.create({
+    store: { items: [{ id: "a" }, { id: "b" }], byId: { c: { id: "c" } } }
+  })
+  const { items, byId } = root.store
+  expect(items[0]!.id).toBe("a")
+  root.replaceStore()
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    expect(items[1]!.id).toBe("b")
+    expect(isAlive(items[1]!)).toBe(false)
+    expect(byId.get("c")!.id).toBe("c")
+    expect(isAlive(byId.get("c")!)).toBe(false)
+    expect(afterCreates).toBe(1)
+    expect(resolveIdentifier(Item, root, "b")).toBeUndefined()
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
+})
+
+test("a replaced object's never-read child reads from the replacement's own listeners", () => {
+  const Display = types.model("Display", { tags: types.array(types.string) })
+  const Track = types.model("Track", { display: Display }).actions(self => ({
+    replaceDisplay() {
+      self.display = Display.create({ tags: ["b"] })
+    }
+  }))
+  const track = Track.create({ display: { tags: ["a"] } })
+  const display = track.display
+  const seen: string[][] = []
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    onPatch(track, () => seen.push(display.tags.slice()))
+    onSnapshot(track, () => seen.push(display.tags.slice()))
+    track.replaceDisplay()
+    expect(seen).toEqual([["a"], ["a"]])
+    expect(isAlive(display.tags)).toBe(false)
+    expect(getSnapshot(track)).toEqual({ display: { tags: ["b"] } })
   } finally {
     setLivelinessChecking(liveliness)
   }

@@ -502,6 +502,23 @@ describe("ObjectNode", () => {
           expect(node.isAlive).toBe(false)
           expect((node.storedValue as any).title).toBe("hello")
         })
+        it.runIf(process.env.NODE_ENV !== "production")(
+          "does not work if it died after its instance was created",
+          () => {
+            const node = new ObjectNode(
+              TestModel as any,
+              null,
+              "",
+              {},
+              { title: "hello" }
+            )
+            node.createObservableInstance()
+            node.die()
+            expect(() => node.createObservableInstance()).toThrow(
+              "[mobx-state-tree] assertion failed: the creation of the observable instance must be done on the initializing phase"
+            )
+          }
+        )
       })
     })
     describe("createObservableInstanceIfNeeded", () => {

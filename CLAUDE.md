@@ -16,13 +16,16 @@ anything to a type's constructor — including a field — or touching
 touching `union()`'s construction path or adding any per-instance state to
 `Union`, since no-options unions are interned and shared.
 
-Two more ADRs cover type-level decisions:
+More ADRs:
 
 - [0006](agent-docs/adr/0006-type-guards-answer-holds-not-is.md): read it
   before changing an `isXType` guard, or adding a wrapper type.
 - [0007](agent-docs/adr/0007-snapshot-processors-are-typed-pass-through.md):
   read it before changing how `compose` or `.props()` type custom
   snapshots.
+- [0008](agent-docs/adr/0008-a-dead-node-builds-its-instance-and-stays-dead.md):
+  read it before touching `createObservableInstance`'s lifecycle checks or
+  what reading a dead node returns.
 
 ## Verification norm
 
