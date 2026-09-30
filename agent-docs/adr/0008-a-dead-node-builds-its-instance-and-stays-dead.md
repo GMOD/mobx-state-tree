@@ -10,7 +10,7 @@ but a child nothing had read still has no instance. Reading it later reaches
 `createObservableInstance` on a dead node:
 
 - Dev threw `assertion failed: the creation of the observable instance must be
-  done on the initializing phase`. React 19's dev-mode prop diffing reads every
+done on the initializing phase`. React 19's dev-mode prop diffing reads every
   prop of a replaced model, so Apollo hit this when switching display types.
 - Production built the instance and set the node back to `CREATED`: an orphan
   that counted as alive, fired `afterCreate`, and never ran its disposers.
