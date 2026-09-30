@@ -208,8 +208,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   }
 
   createObservableInstance(fireHooks = true): void {
+    const diedUncreated = this.state === NodeLifeCycle.DEAD
     if (devMode()) {
-      if (this.state !== NodeLifeCycle.INITIALIZING) {
+      if (!diedUncreated && this.state !== NodeLifeCycle.INITIALIZING) {
         // istanbul ignore next
         throw fail(
           "assertion failed: the creation of the observable instance must be done on the initializing phase"
@@ -275,6 +276,10 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // on _snapshotComputed preserves snapshot referential stability without it.
 
     this._childNodes = EMPTY_OBJECT
+
+    if (diedUncreated) {
+      return
+    }
 
     this.state = NodeLifeCycle.CREATED
 

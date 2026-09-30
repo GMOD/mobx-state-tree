@@ -488,23 +488,21 @@ describe("ObjectNode", () => {
           })
         })
       }
-      if (process.env.NODE_ENV !== "production") {
-        describe("if the node is dead", () => {
-          it("does not work", () => {
-            const node = new ObjectNode(
-              TestModel as any,
-              null,
-              "",
-              {},
-              { title: "hello" }
-            )
-            node.die()
-            expect(() => node.createObservableInstance()).toThrow(
-              "[mobx-state-tree] assertion failed: the creation of the observable instance must be done on the initializing phase"
-            )
-          })
+      describe("if the node is dead", () => {
+        it("creates an instance but leaves the node dead", () => {
+          const node = new ObjectNode(
+            TestModel as any,
+            null,
+            "",
+            {},
+            { title: "hello" }
+          )
+          node.die()
+          node.createObservableInstance()
+          expect(node.isAlive).toBe(false)
+          expect((node.storedValue as any).title).toBe("hello")
         })
-      }
+      })
     })
     describe("createObservableInstanceIfNeeded", () => {
       describe("when the node is still initializing", () => {
@@ -538,23 +536,21 @@ describe("ObjectNode", () => {
           expect(node.state).toBe(2)
         })
       })
-      if (process.env.NODE_ENV !== "production") {
-        describe("if the node is dead", () => {
-          it("does not work", () => {
-            const node = new ObjectNode(
-              TestModel as any,
-              null,
-              "",
-              {},
-              { title: "hello" }
-            )
-            node.die()
-            expect(() => node.createObservableInstance()).toThrow(
-              "[mobx-state-tree] assertion failed: the creation of the observable instance must be done on the initializing phase"
-            )
-          })
+      describe("if the node is dead", () => {
+        it("creates an instance but leaves the node dead", () => {
+          const node = new ObjectNode(
+            TestModel as any,
+            null,
+            "",
+            {},
+            { title: "hello" }
+          )
+          node.die()
+          node.createObservableInstance()
+          expect(node.isAlive).toBe(false)
+          expect((node.storedValue as any).title).toBe("hello")
         })
-      }
+      })
     })
     describe("detach", () => {
       describe("when the node is not alive", () => {

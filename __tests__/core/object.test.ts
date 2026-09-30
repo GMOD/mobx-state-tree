@@ -1,5 +1,6 @@
 import { test, expect } from "vitest"
 import {
+  addDisposer,
   destroy,
   detach,
   onSnapshot,
@@ -12,6 +13,7 @@ import {
   unprotect,
   types,
   setLivelinessChecking,
+  getLivelinessChecking,
   getParent,
   SnapshotOut,
   IJsonPatch,
@@ -501,6 +503,71 @@ test("it should warn if a replaced object is read or written to", () => {
   expect(() => {
     todo.title = "5"
   }).toThrow(error)
+})
+
+test("a replaced object's never-read children read as dead instances", () => {
+  let afterCreates = 0
+  let autorunRuns = 0
+  const Editor = types
+    .model("Editor", { filterText: "" })
+    .views(self => ({
+      get isEmpty() {
+        return self.filterText === ""
+      }
+    }))
+    .actions(self => ({
+      afterCreate() {
+        afterCreates++
+        addDisposer(
+          self,
+          autorun(() => {
+            autorunRuns++
+            return self.filterText
+          })
+        )
+      }
+    }))
+  const Display = types
+    .model("Display", {
+      tags: types.array(types.string),
+      collapsed: types.map(types.boolean),
+      editor: types.optional(Editor, {})
+    })
+    .actions(self => ({
+      addTag(tag: string) {
+        self.tags.push(tag)
+      }
+    }))
+  const Track = types
+    .model("Track", { display: Display })
+    .actions(self => ({
+      replaceDisplay() {
+        self.display = Display.create()
+      }
+    }))
+  const track = Track.create({
+    display: { tags: ["a"], collapsed: { x: true } }
+  })
+  const before = getSnapshot(track)
+  const display = track.display
+  track.replaceDisplay()
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    expect(display.tags.slice()).toEqual(["a"])
+    expect(display.tags).toBe(display.tags)
+    expect(display.collapsed.get("x")).toBe(true)
+    expect(display.editor.isEmpty).toBe(true)
+    expect(isAlive(display.tags)).toBe(false)
+    expect(isAlive(display.editor)).toBe(false)
+    expect(afterCreates).toBe(0)
+    expect(autorunRuns).toBe(0)
+    expect(() => display.addTag("b")).toThrow(/Cannot modify/)
+    expect(before.display.tags).toEqual(["a"])
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
 })
 
 // === COMPOSE FACTORY ===
