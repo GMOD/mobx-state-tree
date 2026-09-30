@@ -1,3 +1,17 @@
+## [6.7.0](https://github.com/GMOD/mobx-state-tree/compare/v6.6.1...v6.7.0) (2026-09-30)
+
+### Bug Fixes
+
+- A dead node's never-read child reads as a dead instance ([a6c430e](https://github.com/GMOD/mobx-state-tree/commit/a6c430e926ec31fe226a10cafff6e2ea0add4012))
+- Exempt only never-created dead nodes; ADR 0008 ([d15fb5b](https://github.com/GMOD/mobx-state-tree/commit/d15fb5b99399d7844af910db689cbb5c403ddbc3))
+- A never-read node dies as if it had been read ([3ffffae](https://github.com/GMOD/mobx-state-tree/commit/3ffffae9f5f44e7c5ea1573364da2ce6224ff288))
+- Fail clearly, before damaging the tree, on impossible attaches ([25e0dff](https://github.com/GMOD/mobx-state-tree/commit/25e0dffd31b02c57ec31195685e3551de7167bb0))
+- Destroy children that hooks add while a node is built at death ([743f887](https://github.com/GMOD/mobx-state-tree/commit/743f887f0a749f5dff727c86429c5ffb7ce4b726))
+
+### Styling
+
+- Format ADR 0008 ([4290662](https://github.com/GMOD/mobx-state-tree/commit/42906620c1c6fc58526251310468d0012f446159))
+
 ## [6.6.1](https://github.com/GMOD/mobx-state-tree/compare/v6.6.0...v6.6.1) (2026-09-25)
 
 ### Performance Improvements
