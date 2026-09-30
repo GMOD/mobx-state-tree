@@ -193,8 +193,8 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // addNodeToCache no-ops without an identifier attribute, and reaching the
     // root to ask it is a walk up the whole parent chain
     if (this.identifierAttribute) {
-      const cache = parent ? parent.root.identifierCache : this.identifierCache
-      cache!.addNodeToCache(this)
+      const cache = parent ? parent.assertAttachable() : this.identifierCache!
+      cache.addNodeToCache(this)
     }
   }
 
@@ -347,6 +347,22 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     }
   }
 
+  /**
+   * @internal
+   * @hidden
+   * A node that died inside a tree is its own root and has no identifier
+   * cache, so attaching it, or attaching anything to it, cannot work.
+   */
+  assertAttachable(): IdentifierCache {
+    const cache = this.root.identifierCache
+    if (!cache) {
+      throw fail(
+        `'${this}' is no longer part of a state tree, so it cannot be attached to one or have nodes attached to it.`
+      )
+    }
+    return cache
+  }
+
   setParent(newParent: AnyObjectNode, subpath: string): void {
     const parentChanged = newParent !== this.parent
     const subpathChanged = subpath !== this.subpath
@@ -387,9 +403,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     }
 
     if (parentChanged) {
-      // attach to new parent
+      this.assertAttachable()
       this.environment = undefined // will use root's
-      newParent.root.identifierCache!.mergeCache(this)
+      newParent.assertAttachable().mergeCache(this)
       this.baseSetParent(newParent, subpath)
       this.fireHook(Hook.afterAttach)
     } else if (subpathChanged) {

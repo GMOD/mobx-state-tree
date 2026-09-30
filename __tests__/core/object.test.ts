@@ -631,6 +631,61 @@ test("a replaced object's never-read child reads from the replacement's own list
   }
 })
 
+test("attaching to or from a node that died in a tree fails without harming the live tree", () => {
+  const Item = types.model("Item", { id: types.identifier })
+  const Display = types
+    .model("Display", { item: types.maybe(Item) })
+    .actions(self => ({
+      setItem(item: any) {
+        self.item = item
+      }
+    }))
+  const Track = types.model("Track", { display: Display }).actions(self => ({
+    replaceDisplay() {
+      self.display = Display.create()
+    },
+    setDisplay(display: any) {
+      self.display = display
+    }
+  }))
+  const track = Track.create({ display: { item: { id: "a" } } })
+  const display = track.display
+  track.replaceDisplay()
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    const noLongerInTree = /is no longer part of a state tree/
+    expect(() => display.setItem(Item.create({ id: "b" }))).toThrow(
+      noLongerInTree
+    )
+    expect(() => display.setItem({ id: "b" })).toThrow(noLongerInTree)
+    expect(resolveIdentifier(Item, display, "a")).toBeUndefined()
+
+    const live = track.display
+    expect(() => track.setDisplay(display)).toThrow(noLongerInTree)
+    expect(track.display).toBe(live)
+    expect(isAlive(live)).toBe(true)
+
+    const Tree = types
+      .model("Tree", { branch: types.maybe(types.late((): any => Tree)) })
+      .actions(self => ({
+        setBranch(branch: any) {
+          self.branch = branch
+        }
+      }))
+    const tree = Tree.create({ branch: { branch: {} } })
+    const branch = tree.branch
+    expect(() => tree.setBranch(branch.branch)).toThrow(
+      /which it would replace/
+    )
+    expect(tree.branch).toBe(branch)
+    expect(isAlive(branch.branch)).toBe(true)
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
+})
+
 // === COMPOSE FACTORY ===
 test("it should compose factories", () => {
   const { BoxFactory, ColorFactory } = createTestFactories()

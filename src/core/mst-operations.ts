@@ -578,7 +578,7 @@ export function resolveIdentifier<IT extends IAnyModelType>(
   assertIsStateTreeNode(target, 2)
   assertIsValidIdentifier(identifier, 3)
 
-  const node = getStateTreeNode(target).root.identifierCache!.resolve(
+  const node = getStateTreeNode(target).root.identifierCache?.resolve(
     type,
     normalizeIdentifier(identifier)
   )

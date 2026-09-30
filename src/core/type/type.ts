@@ -559,12 +559,18 @@ export abstract class ComplexType<C, S, T> extends BaseType<
       return current
     }
 
+    const newNode = getStateTreeNodeSafe(newValue)
+    if (newNode) {
+      newNode.assertAttachable()
+      if (!current.isDetaching && newNode.isWithin(current)) {
+        throw fail(
+          `Cannot assign ${newNode} to '${parent.path}/${subpath}': it is part of ${current}, which it would replace.`
+        )
+      }
+    }
     // current node cannot be recycled in any way
     current.die() // noop if detaching
-    // attempt to reuse the new one
-    if (isStateTreeNode(newValue) && this.isAssignableFrom(getType(newValue))) {
-      // newValue is a Node as well, move it here..
-      const newNode = getStateTreeNode(newValue)
+    if (newNode && this.isAssignableFrom(newNode.type)) {
       newNode.setParent(parent, subpath)
       return newNode
     }
