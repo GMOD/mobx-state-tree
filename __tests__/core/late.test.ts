@@ -141,7 +141,7 @@ test("#916 - 3", () => {
 // The flags of a union/optional wrapping a late type are memoized only once the
 // fold is stable, and a late member is exactly what makes it unstable: it
 // reports nothing for its subtype until the definition resolves. Caching the
-// pre-resolution answer would freeze it forever. See agent-docs/adr/0003.
+// pre-resolution answer would freeze it forever. See agent-docs/architecture-decision-records/0003.
 test("flags folded over a late member are not cached before it resolves", () => {
   let Inner: IAnyModelType | undefined
   const Late = types.late((): IAnyModelType => Inner!)

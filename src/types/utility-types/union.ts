@@ -94,7 +94,7 @@ export class Union extends BaseType<any, any, any> {
   // one. An eager, dispatcher-less union that is never instantiated and never
   // fails a typecheck carries none of them — which is every union jbrowse
   // builds per config slot, tens of thousands per session load. Same reasoning
-  // as `BaseType.isType`; see agent-docs/adr/0003.
+  // as `BaseType.isType`; see agent-docs/architecture-decision-records/0003.
   declare private readonly _dispatcher?: ITypeDispatcher
   declare private readonly _eager: boolean
 
@@ -113,7 +113,7 @@ export class Union extends BaseType<any, any, any> {
   // cost, not the creation. `ModelType._getIdentifierAttribute` folds every
   // property's flags on each `types.model()`, and jbrowse's config slots are
   // unions under a stripDefault, so building one schema re-folded every slot's
-  // union. See agent-docs/adr/0003.
+  // union. See agent-docs/architecture-decision-records/0003.
   get flags(): TypeFlags {
     const cached = this._flags
     if (cached !== undefined) {

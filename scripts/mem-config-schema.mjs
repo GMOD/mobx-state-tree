@@ -12,7 +12,7 @@
 // Measurable is not the same as worth it: hoisting `flags` moved 1,582 slots
 // and 0.6% of heap and was still reverted, because the payoff of this trick
 // scales with how many *objects* carry the field, not how many classes declare
-// it. See the follow-up section of agent-docs/adr/0004.
+// it. See the follow-up section of agent-docs/architecture-decision-records/0004.
 //
 // Reports, for the reachable type graph:
 //   heap        retained bytes, measured between two forced GCs

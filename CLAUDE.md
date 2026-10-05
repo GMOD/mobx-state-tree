@@ -1,29 +1,29 @@
 # @jbrowse/mobx-state-tree
 
 Our fork of mobx-state-tree, published to npm and consumed by JBrowse and by
-third parties. `agent-docs/adr/` holds the decisions where the obvious change is
+third parties. `agent-docs/architecture-decision-records/` holds the decisions where the obvious change is
 wrong for a measured reason — read
-[0001](agent-docs/adr/0001-keyed-array-reconcile-and-no-validation-cache.md)
+[0001](agent-docs/architecture-decision-records/0001-keyed-array-reconcile-and-no-validation-cache.md)
 before touching array reconciliation or union dispatch,
-[0002](agent-docs/adr/0002-mobx-proxy-traps-and-per-property-lookups.md) before
+[0002](agent-docs/architecture-decision-records/0002-mobx-proxy-traps-and-per-property-lookups.md) before
 touching how `ModelType` reaches a property's mobx observable — or when
 upgrading mobx, since it depends on the internal `values_` field — and
-[0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) and
-[0004](agent-docs/adr/0004-a-type-object-is-its-field-list.md) before adding
+[0003](agent-docs/architecture-decision-records/0003-type-construction-is-per-type-work.md) and
+[0004](agent-docs/architecture-decision-records/0004-a-type-object-is-its-field-list.md) before adding
 anything to a type's constructor — including a field — or touching
 `BaseType.name` / the `flags` getters, and
-[0005](agent-docs/adr/0005-a-union-is-a-pure-function-of-its-members.md) before
+[0005](agent-docs/architecture-decision-records/0005-a-union-is-a-pure-function-of-its-members.md) before
 touching `union()`'s construction path or adding any per-instance state to
 `Union`, since no-options unions are interned and shared.
 
 More ADRs:
 
-- [0006](agent-docs/adr/0006-type-guards-answer-holds-not-is.md): read it
+- [0006](agent-docs/architecture-decision-records/0006-type-guards-answer-holds-not-is.md): read it
   before changing an `isXType` guard, or adding a wrapper type.
-- [0007](agent-docs/adr/0007-snapshot-processors-are-typed-pass-through.md):
+- [0007](agent-docs/architecture-decision-records/0007-snapshot-processors-are-typed-pass-through.md):
   read it before changing how `compose` or `.props()` type custom
   snapshots.
-- [0008](agent-docs/adr/0008-a-dead-node-builds-its-instance-and-stays-dead.md):
+- [0008](agent-docs/architecture-decision-records/0008-a-dead-node-builds-its-instance-and-stays-dead.md):
   read it before touching `createObservableInstance`'s lifecycle checks or
   what reading a dead node returns.
 
@@ -91,7 +91,7 @@ that exercises a `.d.ts` change, since jest transforms with babel and never
 typechecks.
 
 **`isArrayType`/`isMapType`/`isModelType` stopped narrowing in September 2026**
-([ADR 0006](agent-docs/adr/0006-type-guards-answer-holds-not-is.md)).
+([ADR 0006](agent-docs/architecture-decision-records/0006-type-guards-answer-holds-not-is.md)).
 Typechecking jbrowse against that build reports nine errors from eight sites,
 each of which moves to an `as*Type`:
 
@@ -148,8 +148,8 @@ also that a cross-process jest A/B of `createTestSession` is far too noisy to
 resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
 
 **Type construction is now ~2.4x faster** — see
-[ADR 0003](agent-docs/adr/0003-type-construction-is-per-type-work.md) (1.65x)
-and [ADR 0004](agent-docs/adr/0004-a-type-object-is-its-field-list.md) (a
+[ADR 0003](agent-docs/architecture-decision-records/0003-type-construction-is-per-type-work.md) (1.65x)
+and [ADR 0004](agent-docs/architecture-decision-records/0004-a-type-object-is-its-field-list.md) (a
 further 1.4-1.5x). The lesson generalizes: JBrowse builds ~20k unions and ~20k
 optionals per session load (one of each per config slot), so **anything a
 type's constructor does is multiplied by twenty thousand**. Name folding and
