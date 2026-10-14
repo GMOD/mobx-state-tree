@@ -73,6 +73,18 @@ A/B a change against it:
 5. Jest writes to **stderr**: capture with `> file 2>&1`, never `2>&1 > file`,
    which prints to the terminal and writes an empty file.
 
+**The swap is visible to every other session's jbrowse run for as long as it
+lasts**, and other agents do run jbrowse jest on this machine (seen October
+2026). For jest, a wrapper config that imports `$JB/jest.config.js`, sets
+`rootDir: $JB`, and gives each of its `projects` a `moduleNameMapper` entry
+leaves the store alone. Map `^@jbrowse/mobx-state-tree$` to the build's
+`mobx-state-tree.cjs`, and `^mobx$` to `$JB/node_modules/mobx/dist/index.js`;
+without the second entry the build's own `require("mobx")` resolves from this
+checkout, and jbrowse runs against two mobx copies. Run it once with a bogus
+build path first, which must fail with `Could not locate module`, to prove the
+mapping took. `tsc` has no such hook, so typechecking a `.d.ts` change still
+needs the swap; keep that window short.
+
 Run the three project groups separately: `packages/core/src packages/product-core
 packages/app-core` is fast and MST-dense (~100 s), `plugins` is the big one
 (~520 s), `products` holds the slow image-snapshot tests (~760 s). **Capture a
