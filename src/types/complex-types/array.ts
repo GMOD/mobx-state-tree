@@ -470,6 +470,9 @@ function reconcileArrayChildren<TT>(
   } catch (e) {
     built?.forEach(node => node.die())
     adopted?.forEach(([node, environment]) => {
+      if (node.parent !== parent) {
+        return
+      }
       try {
         node.clearParent(false)
         node.environment = environment

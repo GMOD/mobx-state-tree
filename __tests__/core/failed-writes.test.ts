@@ -146,6 +146,72 @@ describe("an array insertion that throws", () => {
       expect(getEnv(root)).toBe(env)
     })
 
+    describe("without taking identifiers from the element at the slot it would have had", () => {
+      const Child = types.model("Child", { id: types.identifier })
+      const Parent = types.model("Parent", {
+        id: types.identifier,
+        kids: types.array(Child)
+      })
+      const Tree = types.model({
+        items: types.array(Parent),
+        ref: types.maybe(types.reference(Child)),
+        safe: types.safeReference(Child)
+      })
+
+      test.each([
+        ["unshift", (s: any, r: any, o: any) => s.items.unshift(r, o)],
+        ["splice", (s: any, r: any, o: any) => s.items.splice(0, 1, r, o)],
+        ["assignment", (s: any, r: any, o: any) => (s.items = [r, o])]
+      ])("by %s", (_, write) => {
+        const store = Tree.create({
+          items: [{ id: "a", kids: [{ id: "k" }] }],
+          ref: "k",
+          safe: "k"
+        })
+        const other = Tree.create({ items: [{ id: "o" }] })
+        unprotect(store)
+        const root = Parent.create({ id: "r" })
+
+        expect(() => write(store, root, other.items[0])).toThrow(
+          "lives already at"
+        )
+
+        const k = store.items[0]!.kids[0]
+        expect(resolveIdentifier(Child, store, "k")).toBe(k)
+        expect(store.ref).toBe(k)
+        expect(store.safe).toBe(k)
+        expect(() => getParent(root)).toThrow()
+      })
+    })
+
+    test("but not one a hook moved into another tree meanwhile", () => {
+      const elsewhere = types
+        .model({ items: types.array(Item) })
+        .create({ items: [{ id: "e" }] })
+      unprotect(elsewhere)
+      const root = Item.create({ id: "r" })
+      const Mover = types
+        .model("Mover", { id: types.identifier, mover: true })
+        .actions(() => ({
+          afterAttach() {
+            detach(root)
+            elsewhere.items.push(root)
+          }
+        }))
+      const store = types
+        .model({ items: types.array(types.union(Mover, Item)) })
+        .create()
+      unprotect(store)
+      const mover = Mover.create({ id: "m" })
+
+      expect(() => store.items.push(root, mover, elsewhere.items[0]!)).toThrow(
+        "lives already at"
+      )
+
+      expect(getParent(root)).toBe(elsewhere.items)
+      expect(resolveIdentifier(Item, elsewhere, "r")).toBe(root)
+    })
+
     test("when a node from another tree follows it", () => {
       const store = Wide.create()
       const other = Wide.create({ items: [{ id: "o" }] })

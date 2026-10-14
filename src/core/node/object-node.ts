@@ -339,7 +339,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
     const root = this.root
     const newEnv = root.environment
-    const newIdCache = root.identifierCache!.splitCache(this)
+    const newIdCache = root.identifierCache!.splitCache(this, !removeFromParent)
 
     try {
       if (removeFromParent) {

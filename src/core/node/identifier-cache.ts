@@ -81,7 +81,9 @@ export class IdentifierCache {
     }
   }
 
-  splitCache(splitNode: AnyObjectNode): IdentifierCache {
+  // `byIdentity`: the split node never took its slot, so whatever its path
+  // names may be another node's subtree
+  splitCache(splitNode: AnyObjectNode, byIdentity = false): IdentifierCache {
     const newCache = new IdentifierCache()
     // The slash is added here so we only match children of the splitNode. In version 5.1.8 and
     // earlier there was no trailing slash, so non children that started with the same path string
@@ -91,7 +93,12 @@ export class IdentifierCache {
       let modified = false
       for (let i = nodes.length - 1; i >= 0; i--) {
         const node = nodes[i]!
-        if (node === splitNode || node.path.startsWith(basePath)) {
+        if (
+          node === splitNode ||
+          (byIdentity
+            ? node.isWithin(splitNode)
+            : node.path.startsWith(basePath))
+        ) {
           newCache.addNodeToCache(node, false) // no need to update lastUpdated since it is a whole new cache
           nodes.splice(i, 1)
           // remove empty sets from cache
