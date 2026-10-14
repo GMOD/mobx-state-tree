@@ -97,3 +97,35 @@ No scenario regressed.
   own property of the proxy _target_, so `value?.$treenode` costs a trap plus
   `getAdm`/`hasProp`. MST only ever holds the proxy, so there is nothing to
   shortcut.
+
+## Follow-up (October 2026): mobx's minified builds rename `values_`
+
+The "degrades to the previous speed" case above was already live. mobx's
+minified builds mangle every field ending in `_`, and `require("mobx")` under
+`NODE_ENV=production` loads one (`mobx.cjs.production.min.js`, where the field
+is `j`). So the fast path was off for every CommonJS consumer running in
+production. No test covered it, because vitest loads `mobx.mjs`, the
+unminified ESM build, which is also what webpack and Vite resolve for jbrowse.
+
+`getPropObservables` now reads `values_` first. When that field is missing,
+`findValuesKey` looks once for the administration's `Map` whose entry for a
+probe key is that key's `getAtom` result. Against the production CommonJS
+build:
+
+| scenario                          | speedup |
+| --------------------------------- | ------- |
+| `getSnapshot` of a 32-slot config | 9.4x    |
+| `onSnapshot(root)` per write      | 4.2x    |
+| create a 32-slot config           | 1.6x    |
+
+Load average was ~40, which inflates ratios, so re-measure on an idle machine
+before quoting one. The ESM path reads `values_` by name as before.
+
+**`ModelType.getChildNode` keeps `getAtom`.** A typed write calls it once
+through `willChange`, and for a single key `_getAdministration` costs about as
+many proxy-trap reads as `getAtom`, so moving it onto the map read 0.89–0.97x
+on bare ESM writes.
+
+`__tests__/core/mobx-minified.test.ts` mocks `_getAdministration` to rename the
+field, and to hide it, so both the discovery and the `getAtom` fallback run in
+CI.
