@@ -200,6 +200,40 @@ describe("createActionTrackingMiddleware", () => {
     expect(log).toEqual(["outer:success:outer"])
   })
 
+  test("a failed flow the action started is reported though a later one succeeds", async () => {
+    const store = Store.actions(self => ({
+      failThenOk() {
+        return Promise.allSettled([self.failAsync(), self.setAsync(3)])
+      }
+    })).create()
+    const log: string[] = []
+    addMiddleware(store, rootTracker(log))
+
+    await store.failThenOk()
+
+    expect(store.n).toBe(3)
+    expect(log).toEqual(["failAsync:fail:boom"])
+  })
+
+  test("a failure the awaiting flow catches is not reported", async () => {
+    const store = Store.actions(self => ({
+      recover: flow(function* recover() {
+        try {
+          yield self.failAsync()
+          return "not reached"
+        } catch {
+          return "recovered"
+        }
+      })
+    })).create()
+    const log: string[] = []
+    addMiddleware(store, rootTracker(log))
+
+    expect(await store.recover()).toBe("recovered")
+
+    expect(log).toEqual(["recover:success:recovered"])
+  })
+
   test("an action starting two flows settles after both", async () => {
     const store = Store.actions(self => ({
       both() {
