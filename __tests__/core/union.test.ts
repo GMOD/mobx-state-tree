@@ -783,3 +783,31 @@ describe("structurally identical unions are interned", () => {
     expect(types.union(A, B).flags).toBe(named.flags)
   })
 })
+
+test("a dispatcher returning nothing fails validation instead of throwing", () => {
+  const A = types.model("A", { a: 0 })
+  const U = types.union({ dispatcher: () => undefined as any }, A)
+
+  expect(U.is({ a: 1 })).toBe(false)
+})
+
+test("a member's throwing preprocessor counts as a mismatch", () => {
+  const A = types
+    .model("A", { kind: types.literal("a"), x: types.number })
+    .preProcessSnapshot((sn: any) => ({ ...sn, x: sn.legacy.x }))
+  const B = types.model("B", { kind: types.literal("b"), y: types.number })
+
+  const value = types.union(A, B).create({ kind: "b", y: 1 } as any)
+
+  expect(getSnapshot(value)).toEqual({ kind: "b", y: 1 })
+})
+
+test.runIf(process.env.NODE_ENV !== "production")(
+  "an undefined first member is refused rather than dropped",
+  () => {
+    const A = types.model("A", {})
+    expect(() => types.union(undefined as any, A)).toThrow(
+      "expected mobx-state-tree type as argument 1, got undefined instead"
+    )
+  }
+)

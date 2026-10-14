@@ -446,7 +446,15 @@ export class Union extends BaseType<any, any, any> {
     context: IValidationContext
   ): IValidationResult {
     if (this._dispatcher) {
-      return this._dispatcher(value).validate(value, context)
+      // a JS dispatcher can return nothing for a value it does not recognize
+      const type: IAnyType | undefined = this._dispatcher(value)
+      return type
+        ? type.validate(value, context)
+        : typeCheckFailure(
+            context,
+            value,
+            "The union's dispatcher returned no type"
+          )
     }
 
     // For plain-object snapshots carrying a `type` discriminator, validate only
@@ -727,6 +735,11 @@ export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
 
   // check all options
   if (devMode()) {
+    // an undefined member, typically from a circular import, would otherwise
+    // read as "no options" and drop out of the union
+    if (args.length > 0 && args[0] == null) {
+      assertIsType(args[0] as unknown as IAnyType, 1)
+    }
     if (options) {
       assertArg(
         options,
