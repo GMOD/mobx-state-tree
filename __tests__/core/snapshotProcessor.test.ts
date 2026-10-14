@@ -951,3 +951,18 @@ test("destroying a never-read post-processed child runs its hooks as if it had b
   ])
   expect(getSnapshot(outer)).toEqual({ p: { x: 1, label: "created" } })
 })
+
+test("post-processes an instance attached under it once", () => {
+  const Counter = types.snapshotProcessor(types.model("Counter", { n: 0 }), {
+    postProcessor: (sn: { n: number }) => ({ ...sn, n: sn.n + 1 })
+  })
+  const store = types.model({ list: types.array(Counter) }).create()
+  unprotect(store)
+
+  store.list.push(Counter.create({ n: 0 }))
+  expect(getSnapshot(store)).toEqual({ list: [{ n: 1 }] })
+
+  store.list.push(detach(store.list[0]!))
+  expect(getSnapshot(store)).toEqual({ list: [{ n: 1 }] })
+  expect(getSnapshot(clone(store))).toEqual({ list: [{ n: 2 }] })
+})
