@@ -100,7 +100,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   identifierCache?: IdentifierCache
   isProtectionEnabled = true
-  middlewares?: IMiddleware[]
+  middlewares?: IMiddleware[] | undefined
   hasSnapshotPostProcessor = false
   // `type` is the inner type when a snapshotProcessor wraps this node, so
   // recreating it from its post-processed snapshot has to go through the
@@ -777,22 +777,18 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     this._internalEvents?.unregister(InternalEvents.Dispose, disposer)
   }
 
+  // copy-on-write: an action running its middlewares holds this array, and a
+  // middleware disposing itself mid-run must not shift the ones after it
   private removeMiddleware(middleware: IMiddleware): void {
-    if (this.middlewares) {
-      const index = this.middlewares.indexOf(middleware)
-      if (index >= 0) {
-        this.middlewares.splice(index, 1)
-      }
-    }
+    const rest = this.middlewares?.filter(m => m !== middleware)
+    this.middlewares = rest?.length ? rest : undefined
   }
 
   addMiddleWare(handler: IMiddlewareHandler, includeHooks = true): IDisposer {
     const middleware = { handler, includeHooks }
-    if (!this.middlewares) {
-      this.middlewares = [middleware]
-    } else {
-      this.middlewares.push(middleware)
-    }
+    this.middlewares = this.middlewares
+      ? [...this.middlewares, middleware]
+      : [middleware]
 
     return () => {
       this.removeMiddleware(middleware)

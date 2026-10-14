@@ -447,3 +447,30 @@ test("after attach action should work correctly", () => {
     }
   ])
 })
+
+test("a middleware disposing itself mid-run does not skip the next one", () => {
+  const store = types
+    .model({ n: 0 })
+    .actions(self => ({
+      inc() {
+        self.n++
+      }
+    }))
+    .create()
+  const ran: string[] = []
+  const disposeA = addMiddleware(store, (call, next) => {
+    ran.push("A")
+    disposeA()
+    next(call)
+  })
+  addMiddleware(store, (call, next) => {
+    ran.push("B")
+    next(call)
+  })
+
+  store.inc()
+  store.inc()
+
+  expect(ran).toEqual(["A", "B", "B"])
+  expect(store.n).toBe(2)
+})
