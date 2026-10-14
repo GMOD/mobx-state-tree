@@ -845,6 +845,10 @@ export function getEnv<T = any>(target: IAnyStateTreeNode): T {
 
 /**
  * Performs a depth first walk through a tree.
+ *
+ * It visits only nodes that have been read. A child gets its instance on
+ * first read, and building one runs its initializers and `afterCreate`, so
+ * the walk leaves an unread subtree alone; read a node first to include it.
  */
 export function walk(
   target: IAnyStateTreeNode,
