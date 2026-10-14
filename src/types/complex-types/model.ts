@@ -25,7 +25,7 @@ import {
   EMPTY_ARRAY,
   EMPTY_OBJECT,
   type FunctionWithFlag,
-  Hook,
+  isHookName,
   type IAnyStateTreeNode,
   type IAnyType,
   type IChildNodesMap,
@@ -447,7 +447,7 @@ function toPropertiesObject(
   return Object.keys(declaredProps).reduce(
     (props, key) => {
       // warn if user intended a HOOK
-      if (key in Hook) {
+      if (isHookName(key)) {
         throw fail(
           `Hook '${key}' was defined as property. Hooks should be defined as part of the actions`
         )
@@ -659,7 +659,7 @@ export class ModelType<
 
       // apply hook composition
       const baseAction = (self as any)[name]
-      if (name in Hook && baseAction) {
+      if (isHookName(name) && baseAction) {
         const specializedAction = action2
         action2 = function (...args: any[]) {
           baseAction(...args)
