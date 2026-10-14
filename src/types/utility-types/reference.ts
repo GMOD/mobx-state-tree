@@ -128,6 +128,18 @@ class StoredReference<IT extends IAnyType> {
   }
 }
 
+// a reference whose target is gone points at nothing, so no instance matches it
+function resolvesTo(ref: StoredReference<any>, value: unknown) {
+  try {
+    return ref.resolvedValue === value
+  } catch (e) {
+    if (e instanceof InvalidReferenceError) {
+      return false
+    }
+    throw e
+  }
+}
+
 /**
  * @internal
  * @hidden
@@ -198,21 +210,23 @@ export abstract class BaseReferenceType<
     if (!storedRefParentValue) {
       return
     }
+    // closures rather than methods, so a handler can destructure them
+    const replaceRef = (newRef: ReferenceT<IT> | null | undefined) => {
+      applyPatch(storedRefNode.root.storedValue, {
+        op: "replace",
+        value: newRef,
+        path: storedRefNode.path
+      })
+    }
     this.onInvalidated!({
       cause,
       parent: storedRefParentValue,
       invalidTarget: refTargetNode ? refTargetNode.storedValue : undefined,
       invalidId: referenceId,
-      replaceRef(newRef) {
-        applyPatch(storedRefNode.root.storedValue, {
-          op: "replace",
-          value: newRef,
-          path: storedRefNode.path
-        })
-      },
+      replaceRef,
       removeRef() {
         if (isModelType(storedRefParentNode.type)) {
-          this.replaceRef(undefined)
+          replaceRef(undefined)
         } else {
           applyPatch(storedRefNode.root.storedValue, {
             op: "remove",
@@ -405,7 +419,7 @@ export class IdentifierReferenceType<
       const ref: StoredReference<IT> = current.storedValue
       if (
         (!compareByValue && ref.identifier === newValue) ||
-        (compareByValue && ref.resolvedValue === newValue)
+        (compareByValue && resolvesTo(ref, newValue))
       ) {
         current.setParent(parent, subpath)
         return current
@@ -478,7 +492,7 @@ export class CustomReferenceType<
     subpath: string
   ): this["N"] {
     const newIdentifier = isStateTreeNode(newValue)
-      ? this.options.set(newValue, current ? current.storedValue : null)
+      ? this.options.set(newValue, parent.storedValue)
       : newValue
     if (
       !current.isDetaching &&
