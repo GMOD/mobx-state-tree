@@ -329,15 +329,32 @@ export class Union extends BaseType<any, any, any> {
 
     // find the most accomodating type
     // if we are using reconciliation try the current node type first (fix for #1045)
-    if (reconcileCurrentType) {
-      if (reconcileCurrentType.is(value)) {
-        return reconcileCurrentType
+    //
+    // Every member sees the value, so a preprocessor that throws on a snapshot
+    // meant for another member counts as a refusal; validation still lets such
+    // an error surface, which is how a schema names what is wrong with a
+    // snapshot meant for it.
+    let failure: { error: unknown } | undefined
+    const fits = (type: IAnyType) => {
+      try {
+        return type.is(value)
+      } catch (error) {
+        failure ??= { error }
+        return false
       }
-      return this.members().find(
-        type => type !== reconcileCurrentType && type.is(value)
-      )
     }
-    return this.members().find(type => type.is(value))
+    const found =
+      reconcileCurrentType && fits(reconcileCurrentType)
+        ? reconcileCurrentType
+        : this.members().find(
+            type => type !== reconcileCurrentType && fits(type)
+          )
+    // when no member takes the value, the error a member's own check threw
+    // says why better than "no matching type"
+    if (!found && failure) {
+      throw failure.error
+    }
+    return found
   }
 
   private tryQuickMatch(
@@ -446,7 +463,15 @@ export class Union extends BaseType<any, any, any> {
     context: IValidationContext
   ): IValidationResult {
     if (this._dispatcher) {
-      return this._dispatcher(value).validate(value, context)
+      // a JS dispatcher can return nothing for a value it does not recognize
+      const type: IAnyType | undefined = this._dispatcher(value)
+      return type
+        ? type.validate(value, context)
+        : typeCheckFailure(
+            context,
+            value,
+            "The union's dispatcher returned no type"
+          )
     }
 
     // For plain-object snapshots carrying a `type` discriminator, validate only
@@ -727,6 +752,11 @@ export function union(...args: (UnionOptions | IAnyType)[]): IAnyType {
 
   // check all options
   if (devMode()) {
+    // an undefined member, typically from a circular import, would otherwise
+    // read as "no options" and drop out of the union
+    if (args.length > 0 && args[0] == null) {
+      assertIsType(args[0] as unknown as IAnyType, 1)
+    }
     if (options) {
       assertArg(
         options,

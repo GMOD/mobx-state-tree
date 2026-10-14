@@ -9,7 +9,8 @@ import {
   setLivelinessChecking,
   SnapshotIn,
   Instance,
-  IAnyType
+  IAnyType,
+  setTypeChecking
 } from "../../src"
 
 const createTestFactories = () => {
@@ -782,4 +783,74 @@ describe("structurally identical unions are interned", () => {
     expect(named.describe()).toBe(types.union(A, B).describe())
     expect(types.union(A, B).flags).toBe(named.flags)
   })
+})
+
+test("a dispatcher returning nothing fails validation instead of throwing", () => {
+  const A = types.model("A", { a: 0 })
+  const U = types.union({ dispatcher: () => undefined as any }, A)
+
+  expect(U.is({ a: 1 })).toBe(false)
+})
+
+test("choosing a member skips one whose preprocessor throws on the value", () => {
+  const A = types
+    .model("A", { kind: types.literal("a"), x: types.number })
+    .preProcessSnapshot((sn: any) => ({ ...sn, x: sn.legacy.x }))
+  const B = types.model("B", { kind: types.literal("b"), y: types.number })
+
+  const value = types.union(A, B).create({ kind: "b", y: 1 } as any)
+
+  expect(getSnapshot(value)).toEqual({ kind: "b", y: 1 })
+})
+
+test.runIf(process.env.NODE_ENV !== "production")(
+  "a member's preprocessor still names what is wrong with a snapshot meant for it",
+  () => {
+    const Filter = types
+      .model("Filter", { type: types.literal("filter"), expr: "" })
+      .preProcessSnapshot((sn: any) => {
+        if ("step" in sn) {
+          throw new Error("filter takes expr and type, not step")
+        }
+        return sn
+      })
+    const Bin = types.model("Bin", { type: types.literal("bin"), step: 0 })
+
+    expect(() => Filter.create({ type: "filter", step: 5 } as any)).toThrow(
+      "filter takes expr and type, not step"
+    )
+    expect(() =>
+      types.union(Filter, Bin).create({ type: "filter", step: 5 } as any)
+    ).toThrow("filter takes expr and type, not step")
+  }
+)
+
+test.runIf(process.env.NODE_ENV !== "production")(
+  "an undefined first member is refused rather than dropped",
+  () => {
+    const A = types.model("A", {})
+    expect(() => types.union(undefined as any, A)).toThrow(
+      "expected mobx-state-tree type as argument 1, got undefined instead"
+    )
+  }
+)
+
+test("with type checking off, a value no member takes names a member's own error", () => {
+  const A = types
+    .model("A", { a: types.number })
+    .preProcessSnapshot((sn: any) => {
+      if (!sn.ok) {
+        throw new Error("A needs ok")
+      }
+      return sn
+    })
+  const B = types.model("B", { b: types.number })
+  const M = types.model({ u: types.union(A, B) })
+
+  setTypeChecking(false)
+  try {
+    expect(() => M.create({ u: {} as any })).toThrow("A needs ok")
+  } finally {
+    setTypeChecking(undefined)
+  }
 })
