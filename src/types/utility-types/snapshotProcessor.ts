@@ -109,6 +109,11 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
 
   private _fixNode(node: this["N"]): void {
     if (node instanceof ObjectNode) {
+      // an instance created by this type and then attached under it again
+      // already post-processes; wrapping twice applies the processor twice
+      if (node.snapshotProcessorType === this) {
+        return
+      }
       node.snapshotProcessorType = this
       node.hasSnapshotPostProcessor = !!this._processors.postProcessor
     }
