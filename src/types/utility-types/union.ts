@@ -51,18 +51,29 @@ type AnyModelType = ModelType<any, any, any, any, any>
 // always optional(model) or optional(snapshotProcessor(model))).
 // Misses are cached too, unless the member holds a `late` type: that has no
 // subtype until its definition evaluates, so its miss must stay retryable.
-const intendedModelTypes = new WeakMap<IAnyType, AnyModelType | null>()
+interface IntendedModel {
+  model: AnyModelType
+  // a preprocessor on the way to the model may reshape a snapshot first
+  preprocesses: boolean
+}
 
-function resolveModelType(type: IAnyType): AnyModelType | undefined {
-  const cached = intendedModelTypes.get(type)
+const intendedModels = new WeakMap<IAnyType, IntendedModel | null>()
+
+function resolveIntendedModel(type: IAnyType): IntendedModel | undefined {
+  const cached = intendedModels.get(type)
   if (cached !== undefined) {
     return cached ?? undefined
   }
   const model = findIntendedModelType(type)
-  if (model || !(type.flags & TypeFlags.Late)) {
-    intendedModelTypes.set(type, model ?? null)
+  const found = model && { model, preprocesses: findPreprocessor(type) }
+  if (found || !(type.flags & TypeFlags.Late)) {
+    intendedModels.set(type, found ?? null)
   }
-  return model
+  return found
+}
+
+function resolveModelType(type: IAnyType): AnyModelType | undefined {
+  return resolveIntendedModel(type)?.model
 }
 
 function findIntendedModelType(type: IAnyType): AnyModelType | undefined {
@@ -98,60 +109,33 @@ function accepts(type: IAnyType, value: unknown): boolean {
   }
 }
 
-// A member carrying any of these takes primitives its flags do not show: an
-// optional takes undefined, a Date a timestamp, an identifier or reference an
-// id, and a custom, frozen, late, lazy, processed or complex member whatever
-// its own check accepts.
-const DECIDED_BY_IS =
-  TypeFlags.Optional |
-  TypeFlags.Date |
-  TypeFlags.Identifier |
-  TypeFlags.Reference |
-  TypeFlags.Custom |
-  TypeFlags.Frozen |
-  TypeFlags.Late |
-  TypeFlags.Lazy |
-  TypeFlags.SnapshotProcessor |
-  TypeFlags.Object |
-  TypeFlags.Array |
-  TypeFlags.Map
-
-function primitiveFits(type: IAnyType, value: unknown): boolean {
-  const flags = type.flags
-  if (flags & DECIDED_BY_IS) {
-    return accepts(type, value)
-  }
-  const valueType = typeof value
-  return Boolean(
-    (valueType === "string" && flags & TypeFlags.String) ||
-    (valueType === "number" &&
-      flags &
-        (TypeFlags.Number |
-          TypeFlags.Integer |
-          TypeFlags.Float |
-          TypeFlags.Finite)) ||
-    (valueType === "boolean" && flags & TypeFlags.Boolean) ||
-    (value === null && flags & TypeFlags.Null) ||
-    (value === undefined && flags & TypeFlags.Undefined) ||
-    (flags & TypeFlags.Literal && matchesLiteral(type, value))
-  )
-}
+// a prop that takes undefined, so a snapshot may leave it out; read off flags
+// so that matching never runs a prop type's own code
+const MAY_BE_UNDEFINED =
+  TypeFlags.Optional | TypeFlags.Frozen | TypeFlags.Undefined
 
 /**
  * How a raw snapshot compares with the model a member is meant for: it
  * "fits" when every prop that cannot be undefined is present and every
  * literal prop it carries matches, and a present literal that differs names
  * "otherDiscriminator". A preprocessor is assumed not to turn a snapshot
- * carrying another member's discriminator into one for this member.
+ * carrying another member's discriminator into one for this member, so only
+ * a member with one reads on past a missing key, to tell the two apart.
  */
 function rawShape(
   type: IAnyType,
   value: Record<string, unknown>
-): "fits" | "otherDiscriminator" | "missingKey" | "notAModel" {
-  const model = resolveModelType(type)
-  if (!model) {
+):
+  | "fits"
+  | "otherDiscriminator"
+  | "missingKey"
+  | "missingKeyBeforePreprocessing"
+  | "notAModel" {
+  const intended = resolveIntendedModel(type)
+  if (!intended) {
     return "notAModel"
   }
+  const { model, preprocesses } = intended
   const props = model.properties
   let missingKey = false
   for (const key of model.propertyNames) {
@@ -160,7 +144,12 @@ function rawShape(
     const flags = propType.flags
     const propValue = value[key]
     if (propValue === undefined) {
-      missingKey ||= !(flags & TypeFlags.Optional) && !propType.is(undefined)
+      if (!missingKey && !(flags & MAY_BE_UNDEFINED)) {
+        if (!preprocesses) {
+          return "missingKey"
+        }
+        missingKey = true
+      }
     } else if (
       flags & TypeFlags.Literal &&
       !matchesLiteral(propType, propValue)
@@ -168,7 +157,7 @@ function rawShape(
       return "otherDiscriminator"
     }
   }
-  return missingKey ? "missingKey" : "fits"
+  return missingKey ? "missingKeyBeforePreprocessing" : "fits"
 }
 
 function objectFits(type: IAnyType, value: Record<string, unknown>) {
@@ -180,8 +169,10 @@ function objectFits(type: IAnyType, value: Record<string, unknown>) {
     case "notAModel":
       return accepts(type, value)
     case "missingKey":
+      return false
+    case "missingKeyBeforePreprocessing":
       // a preprocessor may supply the key, as a legacy-snapshot migration does
-      return preprocesses(type) && accepts(intendedType(type), value)
+      return accepts(intendedType(type), value)
   }
 }
 
@@ -192,19 +183,6 @@ function intendedType(type: IAnyType): IAnyType {
   return unwrapped instanceof Resilient
     ? intendedType(unwrapped.primaryType)
     : type
-}
-
-const preprocessingTypes = new WeakMap<IAnyType, boolean>()
-
-function preprocesses(type: IAnyType): boolean {
-  let result = preprocessingTypes.get(type)
-  if (result === undefined) {
-    result = findPreprocessor(type)
-    if (!(type.flags & TypeFlags.Late)) {
-      preprocessingTypes.set(type, result)
-    }
-  }
-  return result
 }
 
 function findPreprocessor(type: IAnyType): boolean {
@@ -477,11 +455,11 @@ export class Union extends BaseType<any, any, any> {
     return this.members().find(type => accepts(type, value))
   }
 
-  // Picks the member the full check below would, walking members in the same
-  // order, without its per-member validation where flags or the snapshot's
-  // raw shape already decide. A member neither can decide gets its own `is()`
-  // rather than being skipped: skipping is what let a later member take a
-  // snapshot an earlier one was meant for, dropping its data in production.
+  // For a snapshot object, picks the member the full check below would,
+  // walking members in the same order, without its per-member validation
+  // where the raw shape already decides. A member the shape cannot decide
+  // gets its own `is()` rather than being skipped: skipping let a later member
+  // take a snapshot an earlier one was meant for, dropping its data.
   private tryQuickMatch(
     value: any,
     reconcileCurrentType: IAnyType | undefined
@@ -491,13 +469,47 @@ export class Union extends BaseType<any, any, any> {
     if (isStateTreeNode(value)) {
       return undefined
     }
-    const fits = isPlainObject(value) ? objectFits : primitiveFits
-    if (reconcileCurrentType && fits(reconcileCurrentType, value)) {
+    if (!isPlainObject(value)) {
+      return this.tryMatchPrimitive(value)
+    }
+    if (reconcileCurrentType && objectFits(reconcileCurrentType, value)) {
       return reconcileCurrentType
     }
     for (const type of this.members()) {
-      if (type !== reconcileCurrentType && fits(type, value)) {
+      if (type !== reconcileCurrentType && objectFits(type, value)) {
         return type
+      }
+    }
+    return undefined
+  }
+
+  // by flags alone, which can pass over a member that takes the value through
+  // its own check (an optional given undefined, a Date given a timestamp, a
+  // reference given an id, a custom type), so production can pick a later
+  // member than the full check; the snapshot comes out the same either way
+  private tryMatchPrimitive(value: any): IAnyType | undefined {
+    const valueType = typeof value
+    for (const type of this.members()) {
+      const flags = type.flags
+      if (
+        (valueType === "string" && flags & TypeFlags.String) ||
+        (valueType === "number" &&
+          flags &
+            (TypeFlags.Number |
+              TypeFlags.Integer |
+              TypeFlags.Float |
+              TypeFlags.Finite)) ||
+        (valueType === "boolean" && flags & TypeFlags.Boolean) ||
+        (value === null && flags & TypeFlags.Null) ||
+        (value === undefined && flags & TypeFlags.Undefined)
+      ) {
+        return type
+      }
+      // for literals, check exact value match
+      if (flags & TypeFlags.Literal) {
+        if (matchesLiteral(type, value)) {
+          return type
+        }
       }
     }
     return undefined

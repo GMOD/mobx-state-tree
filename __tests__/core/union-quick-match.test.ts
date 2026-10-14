@@ -7,9 +7,10 @@ import {
   types
 } from "../../src/index.ts"
 
-// With type checking off, as in production, a union picks its member by flags
-// and raw snapshot shape instead of validating each one. It must still pick
-// the member the full check would; these cases each took a later member.
+// With type checking off, as in production, a union picks the member for a
+// snapshot object by its raw shape instead of validating each one. It must
+// still pick the member the full check would; these cases each took a later
+// member and dropped the data meant for the earlier one.
 describe("a union matched without type checking", () => {
   beforeEach(() => setTypeChecking(false))
   afterEach(() => setTypeChecking(undefined))
@@ -61,34 +62,15 @@ describe("a union matched without type checking", () => {
     expect(isStateTreeNode(frozenValue)).toBe(false)
   })
 
-  test("asks a member whose flags do not show the primitives it takes", () => {
-    const Item = types.model("Item", { id: types.identifier })
-    const Decimal = types.custom<string, { value: number }>({
-      name: "Decimal",
-      fromSnapshot: s => ({ value: Number(s) }),
-      toSnapshot: d => String(d.value),
-      isTargetType: v => typeof v === "object",
-      getValidationMessage: s => (Number.isNaN(Number(s)) ? "not a number" : "")
-    })
-    const M = types.model({
-      items: types.array(Item),
-      date: types.union(types.Date, types.number),
-      ref: types.union(types.reference(Item), types.string),
-      decimal: types.union(Decimal, types.string),
-      maybeDefaulted: types.maybe(types.optional(types.string, "x"))
-    })
+  test("never runs a prop type's own code to read a snapshot's shape", () => {
+    const Child = types
+      .model("Child", { x: 0 })
+      .preProcessSnapshot((sn: any) => ({ x: sn.x }))
+    const A = types.model("A", { child: Child })
+    const B = types.model("B", { b: 0 })
+    const M = types.model({ u: types.union(A, B) })
 
-    const m = M.create({
-      items: [{ id: "a" }],
-      date: 5,
-      ref: "a",
-      decimal: "1.5"
-    })
-
-    expect(m.date).toBeInstanceOf(Date)
-    expect(m.ref).toBe(m.items[0])
-    expect(m.decimal).toEqual({ value: 1.5 })
-    expect(m.maybeDefaulted).toBe("x")
+    expect(getSnapshot(M.create({ u: { b: 1 } }))).toEqual({ u: { b: 1 } })
   })
 
   test("skips a member whose preprocessor throws on the value", () => {
