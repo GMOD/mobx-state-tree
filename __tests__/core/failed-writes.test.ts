@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
   destroy,
   detach,
+  getEnv,
   getParent,
   getRoot,
   getSnapshot,
@@ -70,6 +71,111 @@ describe("an array insertion that throws", () => {
     store.items.push({ id: "y" })
     expect(resolveIdentifier(Strict, store, "y")).toBe(store.items[0])
   })
+
+  describe("leaves an instance it adopted before a later value failed parentless", () => {
+    const Strict = types
+      .model("Strict", { id: types.identifier })
+      .preProcessSnapshot((sn: any) => {
+        if (sn.bad) {
+          throw new Error("bad snapshot")
+        }
+        return sn
+      })
+    const Other = types.model("Other", { kind: types.literal("other") })
+    const Wide = types.model({
+      maybes: types.array(types.maybe(Item)),
+      unions: types.array(types.union(Item, Other)),
+      lates: types.array(types.late(() => Item)),
+      items: types.array(Item),
+      stricts: types.array(Strict)
+    })
+
+    function expectUntouched(store: typeof Wide.Type, root: typeof Item.Type) {
+      expect(() => getParent(root)).toThrow()
+      expect(resolveIdentifier(Item, store, "r")).toBeUndefined()
+      store.items.push(root)
+      expect(resolveIdentifier(Item, store, "r")).toBe(root)
+    }
+
+    test.each(["maybes", "unions", "lates"] as const)(
+      "when %s is given it twice",
+      key => {
+        const store = Wide.create()
+        unprotect(store)
+        const root = Item.create({ id: "r" })
+
+        expect(() => store[key].push(root, root)).toThrow("lives already at")
+
+        expect(store[key].length).toBe(0)
+        expectUntouched(store, root)
+      }
+    )
+
+    test("pairing the afterAttach it fired with a beforeDetach", () => {
+      const calls: string[] = []
+      const Hooked = types
+        .model("Hooked", { id: types.identifier })
+        .actions(self => ({
+          afterAttach() {
+            calls.push(`attach ${self.id}`)
+          },
+          beforeDetach() {
+            calls.push(`detach ${self.id}`)
+          }
+        }))
+      const store = types
+        .model({ items: types.array(types.maybe(Hooked)) })
+        .create()
+      unprotect(store)
+      const root = Hooked.create({ id: "h" })
+
+      expect(() => store.items.push(root, root)).toThrow("lives already at")
+
+      expect(calls).toEqual(["attach h", "detach h"])
+      expect(() => getParent(root)).toThrow()
+    })
+
+    test("restoring the environment it had", () => {
+      const env = { name: "own" }
+      const store = Wide.create()
+      unprotect(store)
+      const root = Item.create({ id: "r" }, env)
+
+      expect(() => store.maybes.push(root, root)).toThrow()
+
+      expect(getEnv(root)).toBe(env)
+    })
+
+    test("when a node from another tree follows it", () => {
+      const store = Wide.create()
+      const other = Wide.create({ items: [{ id: "o" }] })
+      unprotect(store)
+      const root = Item.create({ id: "r" })
+
+      expect(() => store.items.push(root, other.items[0]!)).toThrow(
+        "lives already at '/items/0'"
+      )
+
+      expect(store.items.length).toBe(0)
+      expectUntouched(store, root)
+    })
+
+    test("when a snapshot whose preprocessor throws follows it", () => {
+      const store = Wide.create()
+      unprotect(store)
+      const root = Strict.create({ id: "r" })
+
+      expect(() =>
+        store.stricts.push(root, { id: "z", bad: true } as any)
+      ).toThrow("bad snapshot")
+
+      expect(store.stricts.length).toBe(0)
+      expect(() => getParent(root)).toThrow()
+      expect(resolveIdentifier(Strict, store, "r")).toBeUndefined()
+      store.stricts.push(root)
+      expect(resolveIdentifier(Strict, store, "r")).toBe(root)
+    })
+  })
 })
 
 describe("an identified map write under the wrong key", () => {
@@ -105,6 +211,35 @@ describe("an identified map write under the wrong key", () => {
     expect(getSnapshot(store)).toEqual({
       map: { a: { id: "a", v: 0 }, b: { id: "b", v: 0 } }
     })
+  })
+
+  test("leaves the replaced node alone when given a snapshot", () => {
+    const store = Store.create({ map: { b: { id: "b" } } })
+    unprotect(store)
+    const oldB = store.map.get("b")!
+
+    expect(() => store.map.set("b", { id: "c" })).toThrow(
+      "Trying to store key 'c', but expected: 'b'"
+    )
+
+    expect(isAlive(oldB)).toBe(true)
+    expect(store.map.get("b")).toBe(oldB)
+    expect(resolveIdentifier(Item, store, "b")).toBe(oldB)
+    expect(getSnapshot(store)).toEqual({ map: { b: { id: "b", v: 0 } } })
+  })
+
+  test("still lets a preprocessor rewrite the identifier a snapshot shows", () => {
+    const Renamed = types
+      .model("Renamed", { id: types.identifier, v: 0 })
+      .preProcessSnapshot((sn: any) => ({ ...sn, id: sn.id.toLowerCase() }))
+    const store = types
+      .model({ map: types.map(Renamed) })
+      .create({ map: { b: { id: "b" } } })
+    unprotect(store)
+
+    store.map.set("b", { id: "B", v: 2 })
+
+    expect(getSnapshot(store.map)).toEqual({ b: { id: "b", v: 2 } })
   })
 
   test("accepts a union member that has no identifier", () => {

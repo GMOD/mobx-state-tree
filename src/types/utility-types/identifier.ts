@@ -15,7 +15,7 @@ import {
   typeCheckSuccess
 } from "../../internal.ts"
 
-abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
+export abstract class BaseIdentifierType<T> extends SimpleType<T, T, T> {
   readonly flags = TypeFlags.Identifier
 
   constructor(

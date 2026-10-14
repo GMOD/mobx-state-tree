@@ -318,7 +318,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     return parent ? parent.root : this
   }
 
-  clearParent(): void {
+  // `removeFromParent` false: the parent never stored this node, since the
+  // write that attached it threw, so it is only handed back its own root
+  clearParent(removeFromParent = true): void {
     if (!this.parent) {
       return
     }
@@ -340,7 +342,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     const newIdCache = root.identifierCache!.splitCache(this)
 
     try {
-      this.parent.removeChild(this.subpath)
+      if (removeFromParent) {
+        this.parent.removeChild(this.subpath)
+      }
       this.baseSetParent(null, "")
       this.environment = newEnv
       this.identifierCache = newIdCache

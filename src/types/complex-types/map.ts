@@ -28,6 +28,7 @@ import {
   type IType,
   type IValidationContext,
   type IValidationResult,
+  BaseIdentifierType,
   ModelType,
   NO_HOOK_INITIALIZERS,
   ObjectNode,
@@ -388,18 +389,39 @@ export class MapType<IT extends IAnyType> extends ComplexType<
     return change
   }
 
-  // an instance's identifier is fixed, so a mismatch is refused before the
-  // write kills the node it replaces or adopts this one
+  // an instance's identifier is fixed, and so is a snapshot's when no
+  // processor stands between it and a plain identifier, so a mismatch is
+  // refused before the write kills the node it replaces or adopts this one
   private assertStorableUnder(key: string, value: unknown): void {
+    if (this.identifierMode !== MapIdentifierMode.YES) {
+      return
+    }
+    const identifier = isStateTreeNode(value)
+      ? getStateTreeNode(value).identifier
+      : this.fixedSnapshotIdentifier(value)
+    if (identifier != null && identifier !== key) {
+      throw fail(mismatchedKeyError(identifier, key))
+    }
+  }
+
+  private fixedSnapshotIdentifier(value: unknown): string | undefined {
+    const subType = this._subType
     if (
-      this.identifierMode === MapIdentifierMode.YES &&
-      isStateTreeNode(value)
+      subType instanceof ModelType &&
+      !subType.preProcessor &&
+      subType.identifierAttribute &&
+      isPlainObject(value)
     ) {
-      const node = getStateTreeNode(value)
-      if (node.identifier !== null && node.identifier !== key) {
-        throw fail(mismatchedKeyError(node.identifier, key))
+      const id = value[subType.identifierAttribute]
+      if (
+        (typeof id === "string" || typeof id === "number") &&
+        subType.properties[subType.identifierAttribute] instanceof
+          BaseIdentifierType
+      ) {
+        return normalizeIdentifier(id)
       }
     }
+    return undefined
   }
 
   // `built`: the node was made from a snapshot for this write, and nothing can

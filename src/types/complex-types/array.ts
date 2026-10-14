@@ -394,6 +394,8 @@ function reconcileArrayChildren<TT>(
   // nodes built here from snapshots, which nothing else can reach if a later
   // value throws and mobx drops the change
   let built: AnyNode[] | undefined
+  // parentless instances this write attached, with the environment each had
+  let adopted: [AnyObjectNode, unknown][] | undefined
 
   try {
     for (let i = 0; i < newValues.length; i++) {
@@ -423,8 +425,14 @@ function reconcileArrayChildren<TT>(
           )
         }
         nothingChanged = false
+        const orphan = orphanOf(newValue)
+        const environment = orphan?.environment
         const node = valueAsNode(childType, parent, newPath, newValue)
-        if (!isStateTreeNode(newValue)) {
+        if (orphan) {
+          if (orphan.parent === parent) {
+            ;(adopted ??= []).push([orphan, environment])
+          }
+        } else if (!isStateTreeNode(newValue)) {
           ;(built ??= []).push(node)
         }
         result.push(node)
@@ -446,8 +454,14 @@ function reconcileArrayChildren<TT>(
           claimed[j] = 1
           oldMatch = oldNodes[j]
         }
+        const orphan = oldMatch ? undefined : orphanOf(newValue)
+        const environment = orphan?.environment
         const node = valueAsNode(childType, parent, newPath, newValue, oldMatch)
-        if (!oldMatch && !isStateTreeNode(newValue)) {
+        if (orphan) {
+          if (orphan.parent === parent) {
+            ;(adopted ??= []).push([orphan, environment])
+          }
+        } else if (!oldMatch && !isStateTreeNode(newValue)) {
           ;(built ??= []).push(node)
         }
         result.push(node)
@@ -455,6 +469,14 @@ function reconcileArrayChildren<TT>(
     }
   } catch (e) {
     built?.forEach(node => node.die())
+    adopted?.forEach(([node, environment]) => {
+      try {
+        node.clearParent(false)
+        node.environment = environment
+      } catch {
+        // the write's own error is the one to report
+      }
+    })
     throw e
   }
 
@@ -516,6 +538,16 @@ function assertInsertable(
       ;(seen ??= new Map()).set(node, i)
     }
   }
+}
+
+function orphanOf(value: unknown): AnyObjectNode | undefined {
+  if (isStateTreeNode(value)) {
+    const node = getStateTreeNode(value)
+    if (!node.parent) {
+      return node
+    }
+  }
+  return undefined
 }
 
 function scanForSame(
