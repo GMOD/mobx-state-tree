@@ -6,6 +6,7 @@ import {
   type IType,
   type IValidationContext,
   type IValidationResult,
+  Frozen,
   Literal,
   ModelType,
   Resilient,
@@ -51,6 +52,33 @@ type AnyModelType = ModelType<any, any, any, any, any>
 // always optional(model) or optional(snapshotProcessor(model))).
 // Misses are cached too, unless the member holds a `late` type: that has no
 // subtype until its definition evaluates, so its miss must stay retryable.
+// Which members a snapshot object's validation errors are scoped to: those
+// whose model its raw keys and literals fit. Validation reports only these
+// when any fit, so this errs toward "no"; the dispatch shape test (rawShape)
+// reads more props as optional and must not decide it.
+function looksLikeMember(value: any, type: IAnyType): boolean {
+  const model = resolveModelType(type)
+  if (!model) {
+    return false
+  }
+  const props = model.properties
+  for (const key of model.propertyNames) {
+    const propType = props[key]!
+    const flags = propType.flags
+    const propValue = value[key]
+    if (
+      !(flags & TypeFlags.Optional) &&
+      (!(key in value) || propValue === undefined)
+    ) {
+      return false
+    }
+    if (flags & TypeFlags.Literal && !matchesLiteral(propType, propValue)) {
+      return false
+    }
+  }
+  return true
+}
+
 interface IntendedModel {
   model: AnyModelType
   // a preprocessor on the way to the model may reshape a snapshot first
@@ -109,10 +137,15 @@ function accepts(type: IAnyType, value: unknown): boolean {
   }
 }
 
-// a prop that takes undefined, so a snapshot may leave it out; read off flags
-// so that matching never runs a prop type's own code
-const MAY_BE_UNDEFINED =
-  TypeFlags.Optional | TypeFlags.Frozen | TypeFlags.Undefined
+// a prop that takes undefined, so a snapshot may leave it out. Decided without
+// running the prop type's own code; the Frozen flag alone is not enough, since
+// frozen(subType) and wrappers of frozen() refuse undefined
+function mayBeLeftOut(propType: IAnyType, flags: TypeFlags) {
+  return (
+    (flags & (TypeFlags.Optional | TypeFlags.Undefined)) !== 0 ||
+    (propType instanceof Frozen && propType.takesAnything)
+  )
+}
 
 /**
  * How a raw snapshot compares with the model a member is meant for: it
@@ -144,7 +177,7 @@ function rawShape(
     const flags = propType.flags
     const propValue = value[key]
     if (propValue === undefined) {
-      if (!missingKey && !(flags & MAY_BE_UNDEFINED)) {
+      if (!missingKey && !mayBeLeftOut(propType, flags)) {
         if (!preprocesses) {
           return "missingKey"
         }
@@ -167,7 +200,8 @@ function objectFits(type: IAnyType, value: Record<string, unknown>) {
     case "otherDiscriminator":
       return false
     case "notAModel":
-      return accepts(type, value)
+      // an unresolved late answers yes to anything, then cannot build
+      return unwrapType(type).flags !== TypeFlags.Late && accepts(type, value)
     case "missingKey":
       return false
     case "missingKeyBeforePreprocessing":
@@ -444,15 +478,27 @@ export class Union extends BaseType<any, any, any> {
 
     // find the most accomodating type
     // if we are using reconciliation try the current node type first (fix for #1045)
-    if (reconcileCurrentType) {
-      if (accepts(reconcileCurrentType, value)) {
-        return reconcileCurrentType
+    let failure: { error: unknown } | undefined
+    const fits = (type: IAnyType) => {
+      try {
+        return type.is(value)
+      } catch (error) {
+        failure ??= { error }
+        return false
       }
-      return this.members().find(
-        type => type !== reconcileCurrentType && accepts(type, value)
-      )
     }
-    return this.members().find(type => accepts(type, value))
+    const found =
+      reconcileCurrentType && fits(reconcileCurrentType)
+        ? reconcileCurrentType
+        : this.members().find(
+            type => type !== reconcileCurrentType && fits(type)
+          )
+    // when no member takes the value, the error a member's own check threw
+    // says why better than "no matching type"
+    if (!found && failure) {
+      throw failure.error
+    }
+    return found
   }
 
   // For a snapshot object, picks the member the full check below would,
@@ -560,7 +606,7 @@ export class Union extends BaseType<any, any, any> {
     // so error output is scoped to the intended branch instead of every member
     const members = this.members()
     const candidates = isSnapshotObject
-      ? members.filter(t => rawShape(t, value) === "fits")
+      ? members.filter(t => looksLikeMember(value, t))
       : []
     const typesToValidate = candidates.length > 0 ? candidates : members
 

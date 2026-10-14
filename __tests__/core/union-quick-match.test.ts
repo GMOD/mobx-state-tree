@@ -85,6 +85,41 @@ describe("a union matched without type checking", () => {
     expect(M.create({}).u).toBeUndefined()
   })
 
+  test("still requires a frozen prop whose subtype refuses undefined", () => {
+    const A = types.model("A", {
+      s: types.union(types.frozen(types.string), types.number),
+      b: 0
+    })
+    const B = types.model("B", { b: 0 })
+    const M = types.model({ u: types.union(A, B) })
+
+    expect(getType(M.create({ u: { b: 1 } }).u).name).toBe("B")
+  })
+
+  test("passes over a late member that is not defined yet", () => {
+    const B = types.model("B", { b: 0 })
+    const M = types.model({
+      u: types.union(types.late(() => undefined as any), B)
+    })
+
+    expect(getSnapshot(M.create({ u: { b: 1 } }))).toEqual({ u: { b: 1 } })
+  })
+
+  test("names a member's own error when no member takes the value", () => {
+    const A = types
+      .model("A", { a: types.number })
+      .preProcessSnapshot((sn: any) => {
+        if (!sn.ok) {
+          throw new Error("A needs ok")
+        }
+        return sn
+      })
+    const B = types.model("B", { b: types.number })
+    const M = types.model({ u: types.union(A, B) })
+
+    expect(() => M.create({ u: {} as any })).toThrow("A needs ok")
+  })
+
   test("still skips members whose discriminator differs", () => {
     const A = types.model("A", { type: types.literal("a"), a: 0 })
     const B = types.model("B", { type: types.literal("b"), b: 0 })

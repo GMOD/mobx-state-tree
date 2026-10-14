@@ -791,6 +791,13 @@ test("a dispatcher returning nothing fails validation instead of throwing", () =
   expect(U.is({ a: 1 })).toBe(false)
 })
 
+test("is() finds a later member when an earlier one's frozen prop refuses undefined", () => {
+  const A = types.model("A", { s: types.frozen(types.string) })
+  const U = types.union(A, types.frozen())
+
+  expect(U.is({})).toBe(true)
+})
+
 test("choosing a member skips one whose preprocessor throws on the value", () => {
   const A = types
     .model("A", { kind: types.literal("a"), x: types.number })

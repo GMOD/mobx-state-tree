@@ -26,6 +26,15 @@ export class Frozen<T> extends SimpleType<T, T, T> {
     super(subType ? undefined : "frozen")
   }
 
+  /**
+   * @internal
+   * @hidden
+   * whether it takes any serializable value, `undefined` included
+   */
+  get takesAnything(): boolean {
+    return !this.subType
+  }
+
   protected override computeName(): string {
     return `frozen(${this.subType!.name})`
   }
