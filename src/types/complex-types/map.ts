@@ -65,7 +65,7 @@ export interface IMapType<IT extends IAnyType> extends IType<
 > {
   hooks(hooks: IHooksGetter<IMSTMap<IT>>): IMapType<IT>
   /** the value type of the map */
-  getChildType(): IAnyType
+  getChildType(): IT
 }
 
 /**
@@ -83,7 +83,7 @@ export interface IMSTMap<IT extends IAnyType> {
   // bases on ObservableMap, but fine tuned to the auto snapshot conversion of MST
 
   clear(): void
-  delete(key: string): boolean
+  delete(key: string | number): boolean
   forEach(
     callbackfn: (value: IT["Type"], key: string, map: this) => void,
     thisArg?: any
@@ -165,7 +165,7 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
     return super.has(`${key}`)
   }
 
-  override delete(key: string) {
+  override delete(key: string | number) {
     return super.delete(`${key}`)
   }
 
@@ -230,7 +230,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   readonly flags = TypeFlags.Map
 
   constructor(
-    private readonly _subType: IAnyType,
+    private readonly _subType: IT,
     private readonly hookInitializers: HookInitializers<
       IMSTMap<IT>
     > = NO_HOOK_INITIALIZERS
@@ -511,7 +511,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
     }
   }
 
-  getChildType(): IAnyType {
+  getChildType(): IT {
     return this._subType
   }
 

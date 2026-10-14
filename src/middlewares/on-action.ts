@@ -94,7 +94,7 @@ function serializeTheUnserializable(baseType: string) {
  */
 export function applyAction(
   target: IAnyStateTreeNode,
-  actions: ISerializedActionCall | ISerializedActionCall[]
+  actions: ISerializedActionCall | readonly ISerializedActionCall[]
 ): void {
   // check all arguments
   assertIsStateTreeNode(target, 1)

@@ -1021,10 +1021,12 @@ export function cast(snapshotOrInstance: any): any {
  */
 export function castToSnapshot<I>(
   snapshotOrInstance: I
-): Extract<I, IAnyStateTreeNode> extends never
+): I extends null | undefined
   ? I
-  : TypeOfValue<I>["CreationType"] {
-  return snapshotOrInstance
+  : Extract<I, IAnyStateTreeNode> extends never
+    ? I
+    : TypeOfValue<I>["CreationType"] {
+  return snapshotOrInstance as any
 }
 
 /**
@@ -1057,7 +1059,11 @@ export function castToSnapshot<I>(
  */
 export function castToReferenceSnapshot<I>(
   instance: I
-): Extract<I, IAnyStateTreeNode> extends never ? I : ReferenceIdentifier {
+): I extends null | undefined
+  ? I
+  : Extract<I, IAnyStateTreeNode> extends never
+    ? I
+    : ReferenceIdentifier {
   return instance as any
 }
 
