@@ -475,11 +475,12 @@ function reconcileArrayChildren<TT>(
 }
 
 /**
- * An insertion refuses a node already in this array, and a node given twice
- * where this array adopts it, since the first copy lives here by the time the
- * second is placed. Both refusals are checked up front so the values before
- * them have not been attached yet; the message names where the node lives, or
- * would have lived.
+ * An insertion refuses a node already in this array, and a parentless node
+ * given twice to an array of a complex type, which adopts the first copy
+ * before it places the second. Both refusals are checked up front so the
+ * values before them have not been attached yet; the message names where the
+ * node lives, or would have lived. An array of references or frozen values
+ * adopts nothing, so a node may repeat in one.
  */
 function assertInsertable(
   parent: AnyObjectNode,
@@ -501,7 +502,7 @@ function assertInsertable(
         ? node.path
         : first !== undefined &&
             !node.parent &&
-            childType.isAssignableFrom(node.type)
+            unwrapType(childType) instanceof ComplexType
           ? `${parent.path}/${firstNewPath + first}`
           : undefined
     if (livesAt !== undefined) {

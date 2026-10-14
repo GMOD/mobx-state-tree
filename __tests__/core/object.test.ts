@@ -1,4 +1,4 @@
-import { test, expect } from "vitest"
+import { test, expect, vi } from "vitest"
 import {
   addDisposer,
   destroy,
@@ -528,6 +528,36 @@ test("a never-read child built after death runs the disposers its initializers a
     expect(display.editor.text).toBe("")
     expect(disposed).toBe(1)
   } finally {
+    setLivelinessChecking(liveliness)
+  }
+})
+
+test("a disposer throwing as a never-read child is built after death warns instead", () => {
+  const Editor = types.model("Editor", { text: "" }).extend(self => {
+    addDisposer(self, () => {
+      getParent(self)
+    })
+    return {}
+  })
+  const Display = types.model("Display", {
+    editor: types.optional(Editor, {})
+  })
+  const Track = types.model("Track", { display: Display })
+  const track = Track.create({ display: {} })
+  unprotect(track)
+  const display = track.display
+  track.display = Display.create()
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    expect(display.editor.text).toBe("")
+    expect(String(warn.mock.calls[0]?.[0])).toContain(
+      "threw while it was built after its death"
+    )
+  } finally {
+    warn.mockRestore()
     setLivelinessChecking(liveliness)
   }
 })
