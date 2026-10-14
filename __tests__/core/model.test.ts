@@ -311,6 +311,15 @@ describe("Model properties objects", () => {
       })
     })
   })
+  describe("when a user names a property after an Object.prototype member", () => {
+    test("it throws an error naming that", () => {
+      for (const name of ["toString", "constructor", "valueOf"]) {
+        expect(() => types.model({ [name]: types.string })).toThrow(
+          `Property '${name}' cannot be declared: it names an Object.prototype member`
+        )
+      }
+    })
+  })
   describe("when a user attempts to define a property with the get keyword", () => {
     test("it throws an error", () => {
       expect(() => {

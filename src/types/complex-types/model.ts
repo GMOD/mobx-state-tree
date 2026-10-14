@@ -452,6 +452,13 @@ function toPropertiesObject(
           `Hook '${key}' was defined as property. Hooks should be defined as part of the actions`
         )
       }
+      // mobx looks a property's annotation up with `in`, so it would read
+      // Object.prototype.toString as one and refuse the instance at create
+      if (key in Object.prototype) {
+        throw fail(
+          `Property '${key}' cannot be declared: it names an Object.prototype member, which mobx cannot observe as a property`
+        )
+      }
 
       // the user intended to use a view
       const descriptor = Object.getOwnPropertyDescriptor(declaredProps, key)!
