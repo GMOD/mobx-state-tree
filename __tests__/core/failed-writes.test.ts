@@ -3,6 +3,7 @@ import {
   destroy,
   detach,
   getParent,
+  getRoot,
   getSnapshot,
   isAlive,
   resolveIdentifier,
@@ -150,4 +151,42 @@ test("a detach refused by protection leaves identifiers and safe references alon
   expect(store.safe).toBe(store.items[0])
   expect(getSnapshot(store)).toEqual({ items: [{ id: "x", v: 0 }], safe: "x" })
   destroy(store)
+})
+
+test("an array that adopts nothing still takes the same instance twice", () => {
+  const Store = types.model({
+    items: types.array(Item),
+    refs: types.array(types.reference(Item)),
+    frozen: types.array(types.frozen())
+  })
+  const store = Store.create({ items: [{ id: "a" }] })
+  unprotect(store)
+  const root = Item.create({ id: "r" })
+
+  store.refs.push(root, root)
+
+  expect(getSnapshot(store.refs)).toEqual(["r", "r"])
+  if (process.env.NODE_ENV === "production") {
+    store.frozen.push(root, root)
+    expect(store.frozen.length).toBe(2)
+  }
+})
+
+test("a beforeDetach hook can still unprotect the tree it leaves", () => {
+  const Hooked = types
+    .model("Hooked", { id: types.identifier })
+    .actions(self => ({
+      beforeDetach() {
+        unprotect(getRoot(self))
+      }
+    }))
+  const store = types.model({ items: types.array(Hooked) }).create({
+    items: [{ id: "h" }]
+  })
+  const item = store.items[0]!
+
+  detach(item)
+
+  expect(store.items.length).toBe(0)
+  expect(isAlive(item)).toBe(true)
 })

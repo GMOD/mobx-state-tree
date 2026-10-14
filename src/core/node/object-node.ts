@@ -281,9 +281,18 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     this._childNodes = EMPTY_OBJECT
 
     if (diedUncreated) {
-      // a node read before death ran these at death, which this one is past
-      this._internalEvents?.emit(InternalEvents.Dispose)
-      this._internalEvents?.clear(InternalEvents.Dispose)
+      // a node read before death ran these at death, which this one is past.
+      // They now run with the parent gone, which a disposer may not expect,
+      // and a read must not fail over cleanup
+      try {
+        this._internalEvents?.emit(InternalEvents.Dispose)
+      } catch (e) {
+        warnError(
+          `a disposer of ${this} threw while it was built after its death: ${e}`
+        )
+      } finally {
+        this._internalEvents?.clear(InternalEvents.Dispose)
+      }
       return
     }
 
@@ -314,8 +323,12 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       return
     }
     // removeChild below makes the same check, but only after the hooks have
-    // run and the identifier cache has been split
-    this.parent.assertWritable({ subpath: this.subpath })
+    // run and the identifier cache has been split. The node's own
+    // beforeDetach runs first and may still change the outcome, so a node
+    // with one keeps the old order
+    if (typeof (this.storedValue as any)?.[Hook.beforeDetach] !== "function") {
+      this.parent.assertWritable({ subpath: this.subpath })
+    }
 
     this.fireHook(Hook.beforeDetach)
     this.notifyChildrenOfDetach(this)
