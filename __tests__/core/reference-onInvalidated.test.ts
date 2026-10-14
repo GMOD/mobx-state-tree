@@ -627,3 +627,21 @@ describe("detaching a subtree", () => {
     expect(root.outerBranch).toBeUndefined()
   })
 })
+
+test("an onInvalidated handler can destructure removeRef", () => {
+  const Item = types.model("Item", { id: types.identifier })
+  const Store = types.model({
+    items: types.array(Item),
+    selected: types.maybe(
+      types.reference(Item, {
+        onInvalidated: ({ removeRef }) => removeRef()
+      })
+    )
+  })
+  const store = Store.create({ items: [{ id: "a" }], selected: "a" })
+  unprotect(store)
+
+  store.items.clear()
+
+  expect(store.selected).toBeUndefined()
+})

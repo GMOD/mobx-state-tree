@@ -1133,3 +1133,44 @@ test("#1162 - reference to union", () => {
   expect(s.selected.type).toBe("type2")
   expect((s.selected as Instance<typeof M2>).data).toBe("3")
 })
+
+test("a dangling reference can be pointed at an instance", () => {
+  const Item = types.model("Item", { id: types.identifier })
+  const Store = types.model({
+    items: types.array(Item),
+    selected: types.maybe(types.reference(Item))
+  })
+  const store = Store.create({
+    items: [{ id: "a" }, { id: "b" }],
+    selected: "a"
+  })
+  unprotect(store)
+  store.items.splice(0, 1)
+
+  store.selected = store.items[0]
+
+  expect(getSnapshot(store).selected).toBe("b")
+})
+
+test("a custom reference's set receives the parent on reassignment too", () => {
+  const Item = types.model("Item", { id: types.identifier })
+  const parents: unknown[] = []
+  const Ref = types.reference(Item, {
+    get: (id, parent: any) => parent.items.find((i: any) => i.id === id),
+    set: (value, parent) => {
+      parents.push(parent)
+      return value.id
+    }
+  })
+  const Store = types.model({ items: types.array(Item), selected: Ref })
+  const store = Store.create({
+    items: [{ id: "a" }, { id: "b" }],
+    selected: "a"
+  })
+  unprotect(store)
+
+  store.selected = store.items[1]!
+
+  expect(parents).toEqual([store])
+  expect(getSnapshot(store).selected).toBe("b")
+})
