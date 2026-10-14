@@ -3,6 +3,7 @@ import { action } from "mobx"
 import {
   type BaseNode,
   assertArg,
+  devMode,
   fail,
   getStateTreeNode,
   getStateTreeNodeSafe,
@@ -565,6 +566,21 @@ export abstract class ComplexType<C, S, T> extends BaseType<
       if (!current.isDetaching && newNode.isWithin(current)) {
         throw fail(
           `Cannot assign ${newNode} to '${parent.path}/${subpath}': it is part of ${current}, which it would replace.`
+        )
+      }
+      // refused before current dies, in exactly the cases the attach below
+      // refuses after it: setParent's dev assertion, createObjectNode for a
+      // node this type cannot adopt, and production's mergeCache, which only
+      // gets past a node holding a stale cache of its own
+      if (
+        newNode.parent &&
+        newNode.parent !== parent &&
+        (devMode() ||
+          !newNode.identifierCache ||
+          !this.isAssignableFrom(newNode.type))
+      ) {
+        throw fail(
+          `Cannot add an object to a state tree if it is already part of the same or another state tree. Tried to assign an object to '${parent.path}/${subpath}', but it lives already at '${newNode.path}'`
         )
       }
     }

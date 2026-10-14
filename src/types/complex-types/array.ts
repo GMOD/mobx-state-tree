@@ -382,61 +382,80 @@ function reconcileArrayChildren<TT>(
   newValues: TT[],
   firstNewPath: number
 ): AnyNode[] | null {
+  if (oldNodes.length === 0) {
+    assertInsertable(parent, childType, newValues, firstNewPath)
+  }
   let nothingChanged = true
   const result: AnyNode[] = []
   // every old node before `next` is claimed
   const claimed = new Uint8Array(oldNodes.length)
   let next = 0
   let finder: ReuseFinder | undefined
+  // nodes built here from snapshots, which nothing else can reach if a later
+  // value throws and mobx drops the change
+  let built: AnyNode[] | undefined
 
-  for (let i = 0; i < newValues.length; i++) {
-    while (claimed[next]) {
-      next++
-    }
-    const oldNode = oldNodes[next]
-    let newValue = newValues[i]
-    const newPath = `${firstNewPath + i}`
-
-    // for some reason, instead of newValue we got a node, fallback to the storedValue
-    // TODO: https://github.com/mobxjs/mobx-state-tree/issues/340#issuecomment-325581681
-    if (isNode(newValue)) {
-      newValue = newValue.storedValue
-    }
-
-    if (!oldNode) {
-      if (
-        isStateTreeNode(newValue) &&
-        getStateTreeNode(newValue).parent === parent
-      ) {
-        // this node is owned by this parent, but not in the reconcilable set, so it must be double
-        throw fail(
-          `Cannot add an object to a state tree if it is already part of the same or another state tree. Tried to assign an object to '${
-            parent.path
-          }/${newPath}', but it lives already at '${getStateTreeNode(newValue).path}'`
-        )
+  try {
+    for (let i = 0; i < newValues.length; i++) {
+      while (claimed[next]) {
+        next++
       }
-      nothingChanged = false
-      result.push(valueAsNode(childType, parent, newPath, newValue))
-    } else if (areSame(oldNode, newValue)) {
-      claimed[next] = 1
-      result.push(valueAsNode(childType, parent, newPath, newValue, oldNode))
-    } else {
-      nothingChanged = false
-      // a single-element write scans one node, cheaper than building an index
-      const j =
-        oldNodes.length > 1
-          ? (finder ??= new ReuseFinder(childType, oldNodes, claimed)).find(
-              newValue,
-              next
-            )
-          : scanForSame(oldNodes, claimed, next, newValue)
-      let oldMatch: AnyNode | undefined
-      if (j >= 0) {
-        claimed[j] = 1
-        oldMatch = oldNodes[j]
+      const oldNode = oldNodes[next]
+      let newValue = newValues[i]
+      const newPath = `${firstNewPath + i}`
+
+      // for some reason, instead of newValue we got a node, fallback to the storedValue
+      // TODO: https://github.com/mobxjs/mobx-state-tree/issues/340#issuecomment-325581681
+      if (isNode(newValue)) {
+        newValue = newValue.storedValue
       }
-      result.push(valueAsNode(childType, parent, newPath, newValue, oldMatch))
+
+      if (!oldNode) {
+        if (
+          isStateTreeNode(newValue) &&
+          getStateTreeNode(newValue).parent === parent
+        ) {
+          // this node is owned by this parent, but not in the reconcilable set, so it must be double
+          throw fail(
+            `Cannot add an object to a state tree if it is already part of the same or another state tree. Tried to assign an object to '${
+              parent.path
+            }/${newPath}', but it lives already at '${getStateTreeNode(newValue).path}'`
+          )
+        }
+        nothingChanged = false
+        const node = valueAsNode(childType, parent, newPath, newValue)
+        if (!isStateTreeNode(newValue)) {
+          ;(built ??= []).push(node)
+        }
+        result.push(node)
+      } else if (areSame(oldNode, newValue)) {
+        claimed[next] = 1
+        result.push(valueAsNode(childType, parent, newPath, newValue, oldNode))
+      } else {
+        nothingChanged = false
+        // a single-element write scans one node, cheaper than building an index
+        const j =
+          oldNodes.length > 1
+            ? (finder ??= new ReuseFinder(childType, oldNodes, claimed)).find(
+                newValue,
+                next
+              )
+            : scanForSame(oldNodes, claimed, next, newValue)
+        let oldMatch: AnyNode | undefined
+        if (j >= 0) {
+          claimed[j] = 1
+          oldMatch = oldNodes[j]
+        }
+        const node = valueAsNode(childType, parent, newPath, newValue, oldMatch)
+        if (!oldMatch && !isStateTreeNode(newValue)) {
+          ;(built ??= []).push(node)
+        }
+        result.push(node)
+      }
     }
+  } catch (e) {
+    built?.forEach(node => node.die())
+    throw e
   }
 
   for (let j = next; j < oldNodes.length; j++) {
@@ -453,6 +472,49 @@ function reconcileArrayChildren<TT>(
   }
 
   return nothingChanged ? null : result
+}
+
+/**
+ * An insertion refuses a node already in this array, and a node given twice
+ * where this array adopts it, since the first copy lives here by the time the
+ * second is placed. Both refusals are checked up front so the values before
+ * them have not been attached yet; the message names where the node lives, or
+ * would have lived.
+ */
+function assertInsertable(
+  parent: AnyObjectNode,
+  childType: IAnyType,
+  newValues: unknown[],
+  firstNewPath: number
+) {
+  let seen: Map<AnyNode, number> | undefined
+  for (let i = 0; i < newValues.length; i++) {
+    const value = newValues[i]
+    const instance = isNode(value) ? value.storedValue : value
+    if (!isStateTreeNode(instance)) {
+      continue
+    }
+    const node = getStateTreeNode(instance)
+    const first = seen?.get(node)
+    const livesAt =
+      node.parent === parent
+        ? node.path
+        : first !== undefined &&
+            !node.parent &&
+            childType.isAssignableFrom(node.type)
+          ? `${parent.path}/${firstNewPath + first}`
+          : undefined
+    if (livesAt !== undefined) {
+      throw fail(
+        `Cannot add an object to a state tree if it is already part of the same or another state tree. Tried to assign an object to '${
+          parent.path
+        }/${firstNewPath + i}', but it lives already at '${livesAt}'`
+      )
+    }
+    if (first === undefined) {
+      ;(seen ??= new Map()).set(node, i)
+    }
+  }
 }
 
 function scanForSame(

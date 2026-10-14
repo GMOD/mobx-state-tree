@@ -310,6 +310,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     if (!this.parent) {
       return
     }
+    // removeChild below makes the same check, but only after the hooks have
+    // run and the identifier cache has been split
+    this.parent.assertWritable({ subpath: this.subpath })
 
     this.fireHook(Hook.beforeDetach)
     this.notifyChildrenOfDetach(this)
