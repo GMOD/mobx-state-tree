@@ -118,4 +118,100 @@ describe("createActionTrackingMiddleware", () => {
 
     expect(log).toEqual(["setAsync:ctx"])
   })
+
+  test("filtering out a flow action lets the flow run", async () => {
+    const store = Store.create()
+    const log: string[] = []
+    addMiddleware(
+      store,
+      createActionTrackingMiddleware<string>({
+        filter: () => false,
+        onStart: () => "ctx",
+        onResume: () => {},
+        onSuspend: () => {},
+        onSuccess: call => log.push(call.name),
+        onFail: () => {}
+      })
+    )
+
+    await store.setAsync(2)
+
+    expect(store.n).toBe(2)
+    expect(log).toEqual([])
+  })
+
+  test("a sync action's result reaches onSuccess", () => {
+    const store = types
+      .model({})
+      .actions(() => ({
+        answer() {
+          return 42
+        }
+      }))
+      .create()
+    const log: string[] = []
+    addMiddleware(store, tracker(log, "A"))
+
+    expect(store.answer()).toBe(42)
+
+    expect(log).toEqual(["A:success:A:42"])
+  })
+
+  function rootTracker(log: string[]) {
+    return createActionTrackingMiddleware<string>({
+      filter: call => call.parentId === 0,
+      onStart: () => "ctx",
+      onResume: () => {},
+      onSuspend: () => {},
+      onSuccess: (call, _context, result) =>
+        log.push(`${call.name}:success:${result}`),
+      onFail: (call, _context, error) =>
+        log.push(`${call.name}:fail:${(error as Error).message}`)
+    })
+  }
+
+  // flows share their root action's rootId, so the first to finish used to
+  // settle the root and the next resume dereferenced the deleted entry
+  test("a flow awaiting another flow settles once, after the outer one", async () => {
+    const store = types
+      .model({ n: 0 })
+      .actions(self => ({
+        inner: flow(function* inner() {
+          yield Promise.resolve()
+          self.n++
+          return "inner"
+        })
+      }))
+      .actions(self => ({
+        outer: flow(function* outer() {
+          yield self.inner()
+          yield Promise.resolve()
+          self.n++
+          return "outer"
+        })
+      }))
+      .create()
+    const log: string[] = []
+    addMiddleware(store, rootTracker(log))
+
+    expect(await store.outer()).toBe("outer")
+
+    expect(store.n).toBe(2)
+    expect(log).toEqual(["outer:success:outer"])
+  })
+
+  test("an action starting two flows settles after both", async () => {
+    const store = Store.actions(self => ({
+      both() {
+        return Promise.all([self.setAsync(1), self.setAsync(2)])
+      }
+    })).create()
+    const log: string[] = []
+    addMiddleware(store, rootTracker(log))
+
+    await store.both()
+
+    expect(store.n).toBe(2)
+    expect(log).toEqual(["setAsync:success:undefined"])
+  })
 })
