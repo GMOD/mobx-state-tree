@@ -94,7 +94,7 @@ export interface IArrayType<IT extends IAnyType> extends IType<
 > {
   hooks(hooks: IHooksGetter<IMSTArray<IT>>): IArrayType<IT>
   /** the element type of the array */
-  getChildType(): IAnyType
+  getChildType(): IT
 }
 
 /**
@@ -309,7 +309,7 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
     target.replace(snapshot as any)
   }
 
-  getChildType(): IAnyType {
+  getChildType(): IT {
     return this._subType
   }
 
