@@ -281,6 +281,9 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     this._childNodes = EMPTY_OBJECT
 
     if (diedUncreated) {
+      // a node read before death ran these at death, which this one is past
+      this._internalEvents?.emit(InternalEvents.Dispose)
+      this._internalEvents?.clear(InternalEvents.Dispose)
       return
     }
 

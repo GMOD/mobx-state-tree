@@ -505,6 +505,33 @@ test("it should warn if a replaced object is read or written to", () => {
   }).toThrow(error)
 })
 
+test("a never-read child built after death runs the disposers its initializers add", () => {
+  let disposed = 0
+  const Editor = types.model("Editor", { text: "" }).extend(self => {
+    addDisposer(self, () => {
+      disposed++
+    })
+    return {}
+  })
+  const Display = types.model("Display", {
+    editor: types.optional(Editor, {})
+  })
+  const Track = types.model("Track", { display: Display })
+  const track = Track.create({ display: {} })
+  unprotect(track)
+  const display = track.display
+  track.display = Display.create()
+
+  const liveliness = getLivelinessChecking()
+  setLivelinessChecking("ignore")
+  try {
+    expect(display.editor.text).toBe("")
+    expect(disposed).toBe(1)
+  } finally {
+    setLivelinessChecking(liveliness)
+  }
+})
+
 test("a replaced object's never-read children read as dead instances", () => {
   let afterCreates = 0
   let autorunRuns = 0
