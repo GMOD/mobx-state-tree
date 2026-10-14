@@ -226,6 +226,22 @@ export function decorate<T extends (...args: any[]) => any>(
   return fn
 }
 
+// mobx's action() allocates a wrapper and redefines its `name` on every call,
+// about a third of a typed write's cost when paid per invocation
+const mobxActions = new WeakMap<
+  (...args: any[]) => any,
+  (...args: any[]) => any
+>()
+
+function asMobxAction(fn: (...args: any[]) => any) {
+  let wrapped = mobxActions.get(fn)
+  if (!wrapped) {
+    wrapped = mobxAction(fn)
+    mobxActions.set(fn, wrapped)
+  }
+  return wrapped
+}
+
 class CollectedMiddlewares {
   private arrayIndex = 0
   private inArrayIndex = 0
@@ -274,7 +290,7 @@ function runMiddleWares(
   const middlewares = new CollectedMiddlewares(node, originalFn)
   // Short circuit
   if (middlewares.isEmpty) {
-    return mobxAction(originalFn)(...baseCall.args)
+    return asMobxAction(originalFn)(...baseCall.args)
   }
 
   let result: any = null
@@ -284,7 +300,7 @@ function runMiddleWares(
     const handler = middleware?.handler
 
     if (!handler) {
-      return mobxAction(originalFn)(...call.args)
+      return asMobxAction(originalFn)(...call.args)
     }
 
     // skip hooks if asked to
