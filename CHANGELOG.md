@@ -1,3 +1,45 @@
+## [6.8.0](https://github.com/GMOD/mobx-state-tree/compare/v6.7.0...v6.8.0) (2026-10-14)
+
+### Bug Fixes
+
+- V1 action tracking settles once its last flow does ([847e5d1](https://github.com/GMOD/mobx-state-tree/commit/847e5d18e67c77212237b1b31830bfbab39e11cb))
+- Disposing a middleware mid-run no longer skips the next ([692e139](https://github.com/GMOD/mobx-state-tree/commit/692e139b016b1b6f9574ca09fd16459eca8b2db4))
+- Reject, rather than hang, when a flow yields a non-promise ([cbeaa9f](https://github.com/GMOD/mobx-state-tree/commit/cbeaa9f0049665363f0cebec22c1d3feaefc8ba2))
+- A write that throws leaves the tree as it found it ([e5fffec](https://github.com/GMOD/mobx-state-tree/commit/e5fffecb6b33c7bb765caa223f0ef150fc34f7f2))
+- A dead node built on first read runs its initializers' disposers ([69cc648](https://github.com/GMOD/mobx-state-tree/commit/69cc6485ff698d078e5e5a98bd46b972fe15191c))
+- Post-process an instance attached under it once ([201a44b](https://github.com/GMOD/mobx-state-tree/commit/201a44b07c78b9e855f678c64f5a8382f508689d))
+- Three reference edge cases ([d71c9ed](https://github.com/GMOD/mobx-state-tree/commit/d71c9ed2f09431675e4ddd237f7181fb02054b4d))
+- Accept the string message its signature allows ([7dbe57f](https://github.com/GMOD/mobx-state-tree/commit/7dbe57f9267f8778c7427d2947e95d60190fbc61))
+- Only a real hook name is a hook ([c6aea59](https://github.com/GMOD/mobx-state-tree/commit/c6aea59b4a410113c43d0020e6a2592348dcf49b))
+- Three ways a union threw or dropped a member instead of choosing ([dcc259e](https://github.com/GMOD/mobx-state-tree/commit/dcc259e7fb1afcb432f48f6b648a97ca6e98f18e))
+- ExtendInstance refuses a member that redefines a property ([c278842](https://github.com/GMOD/mobx-state-tree/commit/c278842e9db3e90b1d3cb30d95ea4211ab3f329e))
+- Three cases where the failure-path fixes threw where main did not ([7677482](https://github.com/GMOD/mobx-state-tree/commit/7677482966d06b0bd97c32172bc1ac3af493f48f))
+- Refuse a property named after an Object.prototype member, saying why ([b9dabd0](https://github.com/GMOD/mobx-state-tree/commit/b9dabd0542156f66fdba9d77b7e701e238bded85))
+- V1 tracking reports a failed flow the action started ([bdb12a7](https://github.com/GMOD/mobx-state-tree/commit/bdb12a7ebfb29c0359319ba805f087b1969b48b1))
+
+### Documentation
+
+- Update CLAUDE.md's jbrowse premises to how jbrowse works now ([7aa73ca](https://github.com/GMOD/mobx-state-tree/commit/7aa73caed0f8354880c8f1ffa094226dc2593871))
+- Say that walk visits only nodes that have been read ([778b1ef](https://github.com/GMOD/mobx-state-tree/commit/778b1efe050567999a66ed79b62c7281a5f87588))
+- Say when adding or disposing a middleware takes effect ([7dca948](https://github.com/GMOD/mobx-state-tree/commit/7dca948aaca8cbbd660d7fdbe4f3667b4a777e46))
+- Jbrowse's pluggable unions take the quick-match, not a dispatcher ([4738eb7](https://github.com/GMOD/mobx-state-tree/commit/4738eb79538e642f5d29cd6bf5210bb3c99a8ab1))
+- A/B jest against jbrowse without swapping the shared store ([b2d73c3](https://github.com/GMOD/mobx-state-tree/commit/b2d73c36682d03066a209e0e85ae75ff7a11dd95))
+
+### Other Changes
+
+- Move agent-docs/adr to architecture-decision-records and add agent-docs/CLAUDE.md ([88921f1](https://github.com/GMOD/mobx-state-tree/commit/88921f1c6454be406ef16907a6a2f500249994a6))
+- Update .gitignore ([b68dd93](https://github.com/GMOD/mobx-state-tree/commit/b68dd936c826e902836cdba756a9adfc84823604))
+
+### Performance Improvements
+
+- Build each action's mobx wrapper once, not per call ([6d6d731](https://github.com/GMOD/mobx-state-tree/commit/6d6d731f7818fcda9f23a1e123a5a790b6e40c8d))
+- Find mobx's property map when a minified build renames it ([2da150e](https://github.com/GMOD/mobx-state-tree/commit/2da150e0c33741c3cf838be8e9e5fac1f3c23d5b))
+- Check a property name against Object.prototype by Set lookup ([421f7c7](https://github.com/GMOD/mobx-state-tree/commit/421f7c72470b44f8afda5cf3718105f8da6219a8))
+
+### Types
+
+- Four public signatures that said less than the runtime does ([25d6c5c](https://github.com/GMOD/mobx-state-tree/commit/25d6c5c1f46d287f58423c41aa1b83a54c7ccdcc))
+
 ## [6.7.0](https://github.com/GMOD/mobx-state-tree/compare/v6.6.1...v6.7.0) (2026-09-30)
 
 ### Bug Fixes
