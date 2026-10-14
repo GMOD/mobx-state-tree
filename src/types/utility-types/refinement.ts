@@ -87,6 +87,8 @@ class Refinement<IT extends IAnyType> extends BaseType<
   }
 }
 
+const defaultMessage = () => "Value does not respect the refinement predicate"
+
 export function refinement<IT extends IAnyType>(
   name: string,
   type: IT,
@@ -116,9 +118,12 @@ export function refinement(...args: any[]): IAnyType {
         : null
   const type = args[0]
   const predicate = args[1]
-  const message = args[2]
-    ? args[2]
-    : (_v: any) => "Value does not respect the refinement predicate"
+  const given = args[2]
+  const message = !given
+    ? defaultMessage
+    : typeof given === "string"
+      ? () => given
+      : given
   // ensures all parameters are correct
   assertIsType(type, [1, 2])
   assertIsString(name, 1)

@@ -52,3 +52,18 @@ if (process.env.NODE_ENV !== "production") {
     )
   })
 }
+
+test("takes its message as a string", () => {
+  const Long = types.refinement(types.string, s => s.length > 3, "too short")
+
+  expect(Long.is("x")).toBe(false)
+  expect(Long.is("long")).toBe(true)
+})
+
+test.runIf(process.env.NODE_ENV !== "production")(
+  "reports a string message",
+  () => {
+    const Long = types.refinement(types.string, s => s.length > 3, "too short")
+    expect(() => Long.create("x")).toThrow("too short")
+  }
+)
