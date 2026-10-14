@@ -191,9 +191,12 @@ function createFlowSpawner(name: string, generator: FunctionWithFlag) {
           return
         }
         // TODO: support more type of values? See https://github.com/tj/co/blob/249bbdc72da24ae44076afd716349d2089b31c4c/index.js#L100
+        // rejected rather than thrown: after the first step this runs inside a
+        // `.then` callback, where a throw would leave the flow's promise pending
         if (!ret.value || typeof ret.value.then !== "function") {
-          // istanbul ignore next
-          throw fail(`Only promises can be yielded to \`async\`, got: ${ret}`)
+          return onRejected(
+            fail(`Only promises can be yielded to \`async\`, got: ${ret.value}`)
+          )
         }
         return ret.value.then(onFulfilled, onRejected)
       }
