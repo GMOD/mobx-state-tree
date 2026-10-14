@@ -19,8 +19,9 @@ export interface IActionTrackingMiddlewareHooks<T> {
  * `onResume` can return any value, which will be passed as second argument to any other hook. This makes it possible to keep state during a process.
  *
  * An action that spawns flows, directly or through flows calling flows,
- * settles when the last of them does, and `onSuccess` / `onFail` report that
- * last one's outcome.
+ * settles when the last of them does. `onFail` reports the first failure of a
+ * flow the action started itself; otherwise the hooks report how the last one
+ * ended. A failure inside a flow another flow awaits is that flow's to catch.
  *
  * See the `atomic` middleware for an example
  *
@@ -37,7 +38,14 @@ export function createActionTrackingMiddleware<T = any>(
   //
   // `pending` counts the root action's synchronous run plus every flow spawned
   // under it, since nested flows share the root's rootId
-  const runningActions = new Map<number, { context: T; pending: number }>()
+  const runningActions = new Map<
+    number,
+    {
+      context: T
+      pending: number
+      failure?: { call: IMiddlewareEvent; error: unknown }
+    }
+  >()
 
   function settle(
     rootId: number,
@@ -45,11 +53,19 @@ export function createActionTrackingMiddleware<T = any>(
     outcome: { error: unknown } | { result: unknown }
   ) {
     const root = runningActions.get(rootId)
-    if (!root || --root.pending > 0) {
+    if (!root) {
+      return
+    }
+    if ("error" in outcome && !root.failure && !startedInFlow(call)) {
+      root.failure = { call, error: outcome.error }
+    }
+    if (--root.pending > 0) {
       return
     }
     runningActions.delete(rootId)
-    if ("error" in outcome) {
+    if (root.failure) {
+      hooks.onFail(root.failure.call, root.context, root.failure.error)
+    } else if ("error" in outcome) {
       hooks.onFail(call, root.context, outcome.error)
     } else {
       hooks.onSuccess(call, root.context, outcome.result)
@@ -104,4 +120,15 @@ export function createActionTrackingMiddleware<T = any>(
         return next(call)
     }
   }
+}
+
+// whether a flow event belongs to a flow spawned from inside another flow's
+// step, rather than by the action itself
+function startedInFlow(call: IMiddlewareEvent) {
+  for (let e = call.parentEvent; e; e = e.parentEvent) {
+    if (e.type === "flow_resume" || e.type === "flow_resume_error") {
+      return true
+    }
+  }
+  return false
 }
