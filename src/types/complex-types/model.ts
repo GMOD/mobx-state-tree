@@ -748,6 +748,17 @@ export class ModelType<
     self: this["T"],
     extension: { actions?: ModelActions; views?: object; state?: object }
   ): void {
+    // a member redefining a property throws partway through and leaves the
+    // property unreadable, so refuse it before anything is installed
+    for (const members of [extension.views, extension.actions]) {
+      for (const key of members ? Object.getOwnPropertyNames(members) : []) {
+        if (Object.prototype.hasOwnProperty.call(this.properties, key)) {
+          throw fail(
+            `extendInstance cannot define '${key}': it is a property of ${this.name}`
+          )
+        }
+      }
+    }
     this.applyExtension(self, extension, "extendInstance")
   }
 
