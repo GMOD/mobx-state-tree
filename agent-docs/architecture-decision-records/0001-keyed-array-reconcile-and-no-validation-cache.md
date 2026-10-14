@@ -90,29 +90,48 @@ unions containing `snapshotProcessor` or `late` members, whose identifier only
 exists after `preProcessSnapshot`, so a raw-snapshot lookup would miss. This is
 the code that broke four tests before; treat it as high risk.
 
-## Follow-up (October 2026): the quick-match keeps the full check's member order
+## Follow-up (October 2026): for a snapshot object, the quick-match keeps the full check's member order
 
 The quick-match skipped members it could not judge, so production handed a
-snapshot to a later member than the full check (and upstream MST) would, and
-dropped the data the earlier member was meant for. Four kinds of member were
-skipped:
+snapshot object to a later member than the full check (and upstream MST)
+would, and dropped the data the earlier member was meant for:
 
 - a member whose preprocessor turns a legacy snapshot into its shape, since
   the shape check reads the raw snapshot;
 - a model with a `frozen()` prop, which the check treated as required;
-- any member that is not a model: `maybe(Model)`, `frozen`, a nested union;
-- for primitives, members whose flags do not show what they take: an
-  `optional` given `undefined`, `Date` given a timestamp, a reference or
-  identifier given an id, a custom type.
+- any member that is not a model, such as `maybe(Model)`, `frozen` or a nested
+  union.
 
-The quick-match now walks members in order and asks a member's own `is()`
-wherever flags and raw shape cannot decide. A present literal that differs
-still rejects a member without asking it, so a discriminated union of
-preprocessed members, which every jbrowse config union is, stays on the fast
-path. The fast path assumes a preprocessor never rewrites a snapshot
-carrying another member's discriminator into one for its own.
+For a snapshot object the quick-match now walks members in order. It asks a
+member that is not a model its own `is()`, and asks the same of a
+preprocessing model whose raw snapshot lacks a required key, since its
+preprocessor may supply it. Reading the raw shape never runs a prop type's
+code, because whether a prop may be left out comes off its flags (`Optional`,
+`Frozen`, `Undefined`). A present literal that differs still rejects a member
+without asking it, so a discriminated union of preprocessed members, which
+every jbrowse config union is, stays on the fast path. The quick-match
+assumes a preprocessor never rewrites a snapshot carrying another member's
+discriminator into one for its own.
 
-`__tests__/core/union-quick-match.test.ts` pins each case. An alternating
-A/B of hydrating 262 configs through a 60-member union of preprocessed, wide
-config models read 0.94–1.06x, against a null control of 0.97–1.07x (load
-~33).
+**Primitives keep the flag match, divergence and all.** For a primitive, the
+flag match passes over a member that takes the value through its own check,
+such as an `optional` given `undefined`, `Date` given a timestamp, a
+reference or identifier given an id, or a custom type. A version that asked
+those members was reverted after review, because their preprocessors then ran
+on foreign primitives, `maybe(Model)` with a spreading preprocessor built an
+instance for an absent value, an unresolved `late` member was picked and
+threw, and a union of models given a string asked every model. The snapshot
+comes out the same either way, so production keeps its pick:
+`maybe(optional(string, "x"))` given `undefined` still yields `undefined` in
+production and `"x"` in dev.
+
+A member whose preprocessor throws on a value it was not meant for counts as
+a refusal while the union chooses, but validation still lets that error
+through, which is how a jbrowse schema names what is wrong with a snapshot
+meant for it.
+
+`__tests__/core/union-quick-match.test.ts` pins each case. An alternating A/B
+of hydrating 262 configs through a 60-member union of preprocessed, wide
+config models read 0.94–1.06x against a null control of 0.97–1.07x, and an
+undiscriminated union of 30 models with 30 required props each read
+1.19–1.43x against 0.93x (load 30–60, so treat both as "no regression").
