@@ -97,7 +97,9 @@ function getPropObservable(storedValue: any, key: string): PropObservable {
  *
  * `values_` is mobx-internal, hence the undefined result: every caller keeps a
  * path built on supported API, so a mobx that drops it degrades to the old
- * speed rather than breaking.
+ * speed rather than breaking. mobx's minified production builds rename it
+ * (`require("mobx")` under NODE_ENV=production loads one), so when the name is
+ * missing, `findValuesKey` finds the map by what it holds instead.
  *
  * The map is complete for our instances. `getAtom` falls back to
  * `materializeLazy{Computed,Observable}_` because mobx defers constructing an
@@ -111,7 +113,26 @@ function getPropObservables(
   const adm = _getAdministration(storedValue) as {
     values_?: Map<string, PropObservable>
   }
-  return adm.values_
+  if (adm.values_) {
+    return adm.values_
+  }
+  minifiedValuesKey ??= findValuesKey()
+  return minifiedValuesKey ? (adm as any)[minifiedValuesKey] : undefined
+}
+
+let minifiedValuesKey: string | false | undefined
+
+function findValuesKey(): string | false {
+  const probe = observable.object({ key: 0 }, EMPTY_OBJECT, mobxShallow)
+  const adm = _getAdministration(probe) as Record<string, unknown>
+  const atom = getAtom(probe, "key")
+  for (const field of Object.keys(adm)) {
+    const value = adm[field]
+    if (value instanceof Map && value.get("key") === atom) {
+      return field
+    }
+  }
+  return false
 }
 
 /** @hidden */
