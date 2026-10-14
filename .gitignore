@@ -16,3 +16,4 @@ package-lock.json
 junit.xml
 esm
 .eslintcache
+.claude
