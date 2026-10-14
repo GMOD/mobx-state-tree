@@ -86,6 +86,18 @@ function matchesLiteral(type: IAnyType, value: unknown): boolean {
   return type instanceof Literal ? type.value === value : type.is(value)
 }
 
+// A member's own check while choosing a member. Every member sees the value,
+// so a preprocessor that throws on a snapshot meant for another member counts
+// as a refusal here; validation still lets such an error surface, which is how
+// a schema names what is wrong with a snapshot meant for it.
+function accepts(type: IAnyType, value: unknown): boolean {
+  try {
+    return type.is(value)
+  } catch (_e) {
+    return false
+  }
+}
+
 // A member carrying any of these takes primitives its flags do not show: an
 // optional takes undefined, a Date a timestamp, an identifier or reference an
 // id, and a custom, frozen, late, lazy, processed or complex member whatever
@@ -107,7 +119,7 @@ const DECIDED_BY_IS =
 function primitiveFits(type: IAnyType, value: unknown): boolean {
   const flags = type.flags
   if (flags & DECIDED_BY_IS) {
-    return type.is(value)
+    return accepts(type, value)
   }
   const valueType = typeof value
   return Boolean(
@@ -166,10 +178,10 @@ function objectFits(type: IAnyType, value: Record<string, unknown>) {
     case "otherDiscriminator":
       return false
     case "notAModel":
-      return type.is(value)
+      return accepts(type, value)
     case "missingKey":
       // a preprocessor may supply the key, as a legacy-snapshot migration does
-      return preprocesses(type) && intendedType(type).is(value)
+      return preprocesses(type) && accepts(intendedType(type), value)
   }
 }
 
@@ -455,14 +467,14 @@ export class Union extends BaseType<any, any, any> {
     // find the most accomodating type
     // if we are using reconciliation try the current node type first (fix for #1045)
     if (reconcileCurrentType) {
-      if (reconcileCurrentType.is(value)) {
+      if (accepts(reconcileCurrentType, value)) {
         return reconcileCurrentType
       }
       return this.members().find(
-        type => type !== reconcileCurrentType && type.is(value)
+        type => type !== reconcileCurrentType && accepts(type, value)
       )
     }
-    return this.members().find(type => type.is(value))
+    return this.members().find(type => accepts(type, value))
   }
 
   // Picks the member the full check below would, walking members in the same

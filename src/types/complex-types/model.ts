@@ -1050,14 +1050,7 @@ export class ModelType<
     value: this["C"],
     context: IValidationContext
   ): IValidationResult {
-    // a union asks every member, so a preprocessor sees snapshots meant for
-    // other members; failing there is a mismatch, as in snapshotProcessor
-    let snapshot
-    try {
-      snapshot = this.applySnapshotPreProcessor(value)
-    } catch (_e) {
-      return typeCheckFailure(context, value, "Failed to preprocess value")
-    }
+    const snapshot = this.applySnapshotPreProcessor(value)
 
     if (!isPlainObject(snapshot)) {
       return typeCheckFailure(context, snapshot, "Value is not a plain object")

@@ -91,6 +91,18 @@ describe("a union matched without type checking", () => {
     expect(m.maybeDefaulted).toBe("x")
   })
 
+  test("skips a member whose preprocessor throws on the value", () => {
+    const Strict = types.model("Strict", { s: "" }).preProcessSnapshot(sn => {
+      if (sn === undefined) {
+        throw new Error("Strict needs a snapshot")
+      }
+      return sn
+    })
+    const M = types.model({ u: types.union(Strict, types.undefined) })
+
+    expect(M.create({}).u).toBeUndefined()
+  })
+
   test("still skips members whose discriminator differs", () => {
     const A = types.model("A", { type: types.literal("a"), a: 0 })
     const B = types.model("B", { type: types.literal("b"), b: 0 })
