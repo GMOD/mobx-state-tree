@@ -120,6 +120,9 @@ export interface IMSTMap<IT extends IAnyType> {
 
 const needsIdentifierError = `Map.put can only be used to store complex values that have an identifier type attribute`
 
+const mismatchedKeyError = (identifier: string, expected: string) =>
+  `A map of objects containing an identifier should always store the object under their own identifier. Trying to store key '${identifier}', but expected: '${expected}'`
+
 function tryCollectModelTypes(
   type: IAnyType,
   modelTypes: Array<IAnyModelType>
@@ -357,41 +360,65 @@ export class MapType<IT extends IAnyType> extends ComplexType<
             return null
           }
           typecheckInternal(subType, newValue)
-          change.newValue = subType.reconcile(
-            node.getChildNode(key),
-            change.newValue,
-            node,
-            key
+          mapType.assertStorableUnder(key, newValue)
+          const current = node.getChildNode(key)
+          const reconciled = subType.reconcile(current, newValue, node, key)
+          mapType.processIdentifier(
+            key,
+            reconciled,
+            reconciled !== current && !isStateTreeNode(newValue)
           )
-          mapType.processIdentifier(key, change.newValue)
+          change.newValue = reconciled
         }
         break
       case "add":
         {
-          typecheckInternal(subType, change.newValue)
-          change.newValue = subType.instantiate(
-            node,
+          const { newValue } = change
+          typecheckInternal(subType, newValue)
+          mapType.assertStorableUnder(key, newValue)
+          change.newValue = subType.instantiate(node, key, undefined, newValue)
+          mapType.processIdentifier(
             key,
-            undefined,
-            change.newValue
+            change.newValue,
+            !isStateTreeNode(newValue)
           )
-          mapType.processIdentifier(key, change.newValue)
         }
         break
     }
     return change
   }
 
-  private processIdentifier(expected: string, node: AnyNode): void {
+  // an instance's identifier is fixed, so a mismatch is refused before the
+  // write kills the node it replaces or adopts this one
+  private assertStorableUnder(key: string, value: unknown): void {
+    if (
+      this.identifierMode === MapIdentifierMode.YES &&
+      isStateTreeNode(value)
+    ) {
+      const node = getStateTreeNode(value)
+      if (node.identifier !== null && node.identifier !== key) {
+        throw fail(mismatchedKeyError(node.identifier, key))
+      }
+    }
+  }
+
+  // `built`: the node was made from a snapshot for this write, and nothing can
+  // reach it once the write is refused
+  private processIdentifier(
+    expected: string,
+    node: AnyNode,
+    built: boolean
+  ): void {
     if (
       this.identifierMode === MapIdentifierMode.YES &&
       node instanceof ObjectNode
     ) {
-      const identifier = node.identifier!
-      if (identifier !== expected) {
-        throw fail(
-          `A map of objects containing an identifier should always store the object under their own identifier. Trying to store key '${identifier}', but expected: '${expected}'`
-        )
+      const identifier = node.identifier
+      if (identifier !== null && identifier !== expected) {
+        if (built) {
+          node.die()
+        }
+        throw fail(mismatchedKeyError(identifier, expected))
       }
     }
   }
