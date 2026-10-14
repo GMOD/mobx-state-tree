@@ -142,48 +142,46 @@ with MST forced to production mode (`setDevMode(false)`; jest otherwise runs
   narrow one, i.e. noise. The cost is mobx's per-computed work, which batching
   does not remove.
 
-So **type construction is the open target for JBrowse startup**, and
-instance-path wins (however large in isolation) will not show up there. Note
-also that a cross-process jest A/B of `createTestSession` is far too noisy to
-resolve anything under ~1.3x — samples ranged 16–125 ms for one build.
+**That profile predates October 2026, and type construction is no longer the
+open target.** jbrowse now builds config-schema types per track _type_ at
+plugin registration: 3,415 MST types across module evaluation and registration,
+and 1 for hydrating 262 track configs (jbrowse's
+`agent-docs/reference/EAGER_BUNDLE.md`, pinned by
+`products/jbrowse-web/src/configSchemaCost.test.ts`). Its per-track cost is
+creating config _nodes_, ~0.24 ms per track in a production browser build. A
+cross-process jest A/B of `createTestSession` is far too noisy to resolve
+anything under ~1.3x — samples ranged 16–125 ms for one build.
 
-**Type construction is now ~2.4x faster** — see
+**Type construction is ~2.4x faster** — see
 [ADR 0003](agent-docs/architecture-decision-records/0003-type-construction-is-per-type-work.md) (1.65x)
 and [ADR 0004](agent-docs/architecture-decision-records/0004-a-type-object-is-its-field-list.md) (a
-further 1.4-1.5x). The lesson generalizes: JBrowse builds ~20k unions and ~20k
-optionals per session load (one of each per config slot), so **anything a
-type's constructor does is multiplied by twenty thousand**. Name folding and
-flag folding moved to first read; and **every field declared on a type class is
-materialized on every type object**, whether it is a phantom that has no runtime
-meaning (ADR 0003) or a real one that only ever holds its default (ADR 0004) —
-those go on the prototype. Reproduce with `scripts/config-schema-profile.mjs`,
-A/B with `scripts/ab-config-schema.mjs`, and read a profile with
-`scripts/prof-summary.mjs <file.cpuprofile>`.
+further 1.4-1.5x). Those ADRs measured ~20k unions and ~20k optionals, one of
+each per config slot of 262 track schemas, so **anything a type's constructor
+did ran twenty thousand times**. Name folding and flag folding moved to
+first read; and **every field declared on a type class is materialized on every
+type object**, whether it is a phantom that has no runtime meaning (ADR 0003) or
+a real one that only ever holds its default (ADR 0004) — those go on the
+prototype. Reproduce with `scripts/config-schema-profile.mjs`, A/B with
+`scripts/ab-config-schema.mjs`, and read a profile with
+`scripts/prof-summary.mjs <file.cpuprofile>`. Those scripts still build 262
+schema types, so retarget them at node creation before sizing a jbrowse startup
+change with them.
+
+**Since jbrowse ADR-155, most slots are refinements, not unions.** A slot
+without `contextVariable` is `stripDefault(refinement(value, v => !isJexl(v)))`,
+one fresh refinement per slot; only callback slots build
+`union(JexlString, value)`, so ADR 0005's union interning covers those alone.
 
 **ADR 0004 also lists four changes that looked obviously right and measured
 neutral or worse** — read it before re-trying anything in `cloneAndEnhance` or
-`toPropertiesObject`. Its prototype-hoisting trick is **ABI-safe**; see the
-`abi.test.ts` note below for why, and why deleting a field is not.
+`toPropertiesObject`.
 
-**Watch out for `abi.test.ts` when you change a type's own properties.**
-JBrowse's `packages/core/src/ReExports/abi.test.ts` pins the export names
-plugins may have linked against, and `@jbrowse/core/util/Base1DViewModel` is
-served as an MST **type object**, so its baseline enumerated MST's internals —
-`C`, `N`, `S`, `T`, `isType`, `propertiesArePreProcessed`, `preProcessor`,
-`duplicateKeysChecked` and friends — as if they were ABI. **The check is
-`n in mod`, so it follows the prototype chain**: moving a field off the instance
-is invisible to it, and only a name that stops existing anywhere fails. Size the
-blast radius of a change with `in`, not `Object.keys` — even though
-`Object.keys` is what generated the baseline.
-
-**That test is green again as of August 2026** — jbrowse regenerated
-`abiBaseline.json`, and the `Base1DViewModel` entry is now exactly the fourteen
-names that survive ADR 0003 (`C`, `N`, `S`, `T` and `propertiesArePreProcessed`
-are gone from the pin). So the old "3017/3018 in its group" is stale: verified
-against a swapped-in 6.2.0+ build, the group runs **3039/3039** and `plugins`
-**7996/7996**. Two of the pinned fourteen (`isType`, `name`) already answer
-`false` to `Object.keys` and `true` to `in`, which is the standing proof that
-the check is `in`. Keep all fourteen reachable and it stays green.
+**jbrowse's ABI check no longer pins MST internals.** Its `abi.test.ts` is gone,
+`packages/core/src/ReExports/abiPreviousRelease.json` pins
+`@jbrowse/core/util/Base1DViewModel` only as `default`, and
+`publishedPluginReads.json` shows published plugins reading 13 MST names, all
+public. Moving a field onto the prototype or deleting one fails no jbrowse test,
+though third-party code could still read a type object's fields.
 
 **Startup is not the interesting workload, though — value churn is.** For rapid
 value changes (dragging/scrolling a view, where one prop is written per frame
