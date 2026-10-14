@@ -1,7 +1,7 @@
 import { action as mobxAction } from "mobx"
 
 import {
-  Hook,
+  isHookName,
   devMode,
   fail,
   getRoot,
@@ -304,7 +304,7 @@ function runMiddleWares(
     }
 
     // skip hooks if asked to
-    if (!middleware.includeHooks && call.name in Hook) {
+    if (!middleware.includeHooks && isHookName(call.name)) {
       return runNextMiddleware(call)
     }
 

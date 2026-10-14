@@ -474,3 +474,13 @@ test("a middleware disposing itself mid-run does not skip the next one", () => {
   expect(ran).toEqual(["A", "B", "B"])
   expect(store.n).toBe(2)
 })
+
+test("an action named after an Object.prototype member is not a hook", () => {
+  const M = types.model({ v: 1 }).actions(self => ({
+    toString() {
+      return `M(${self.v})`
+    }
+  }))
+
+  expect(String(M.create())).toBe("M(1)")
+})
