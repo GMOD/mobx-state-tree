@@ -15,6 +15,8 @@ import {
   assertIsType,
   devMode,
   fail,
+  getWrappedType,
+  hasSnapshotPreProcessor,
   isPlainObject,
   isStateTreeNode,
   isType,
@@ -82,6 +84,129 @@ function findIntendedModelType(type: IAnyType): AnyModelType | undefined {
 // inherit the Literal flag from what they wrap and must keep the full check.
 function matchesLiteral(type: IAnyType, value: unknown): boolean {
   return type instanceof Literal ? type.value === value : type.is(value)
+}
+
+// A member carrying any of these takes primitives its flags do not show: an
+// optional takes undefined, a Date a timestamp, an identifier or reference an
+// id, and a custom, frozen, late, lazy, processed or complex member whatever
+// its own check accepts.
+const DECIDED_BY_IS =
+  TypeFlags.Optional |
+  TypeFlags.Date |
+  TypeFlags.Identifier |
+  TypeFlags.Reference |
+  TypeFlags.Custom |
+  TypeFlags.Frozen |
+  TypeFlags.Late |
+  TypeFlags.Lazy |
+  TypeFlags.SnapshotProcessor |
+  TypeFlags.Object |
+  TypeFlags.Array |
+  TypeFlags.Map
+
+function primitiveFits(type: IAnyType, value: unknown): boolean {
+  const flags = type.flags
+  if (flags & DECIDED_BY_IS) {
+    return type.is(value)
+  }
+  const valueType = typeof value
+  return Boolean(
+    (valueType === "string" && flags & TypeFlags.String) ||
+    (valueType === "number" &&
+      flags &
+        (TypeFlags.Number |
+          TypeFlags.Integer |
+          TypeFlags.Float |
+          TypeFlags.Finite)) ||
+    (valueType === "boolean" && flags & TypeFlags.Boolean) ||
+    (value === null && flags & TypeFlags.Null) ||
+    (value === undefined && flags & TypeFlags.Undefined) ||
+    (flags & TypeFlags.Literal && matchesLiteral(type, value))
+  )
+}
+
+/**
+ * How a raw snapshot compares with the model a member is meant for: it
+ * "fits" when every prop that cannot be undefined is present and every
+ * literal prop it carries matches, and a present literal that differs names
+ * "otherDiscriminator". A preprocessor is assumed not to turn a snapshot
+ * carrying another member's discriminator into one for this member.
+ */
+function rawShape(
+  type: IAnyType,
+  value: Record<string, unknown>
+): "fits" | "otherDiscriminator" | "missingKey" | "notAModel" {
+  const model = resolveModelType(type)
+  if (!model) {
+    return "notAModel"
+  }
+  const props = model.properties
+  let missingKey = false
+  for (const key of model.propertyNames) {
+    const propType = props[key]!
+    // a recomputed getter on the wrapper types, so read it once
+    const flags = propType.flags
+    const propValue = value[key]
+    if (propValue === undefined) {
+      missingKey ||= !(flags & TypeFlags.Optional) && !propType.is(undefined)
+    } else if (
+      flags & TypeFlags.Literal &&
+      !matchesLiteral(propType, propValue)
+    ) {
+      return "otherDiscriminator"
+    }
+  }
+  return missingKey ? "missingKey" : "fits"
+}
+
+function objectFits(type: IAnyType, value: Record<string, unknown>) {
+  switch (rawShape(type, value)) {
+    case "fits":
+      return true
+    case "otherDiscriminator":
+      return false
+    case "notAModel":
+      return type.is(value)
+    case "missingKey":
+      // a preprocessor may supply the key, as a legacy-snapshot migration does
+      return preprocesses(type) && intendedType(type).is(value)
+  }
+}
+
+// the type a member's own check stands for: a resilient member accepts
+// anything through its fallback, but is meant for its primary type
+function intendedType(type: IAnyType): IAnyType {
+  const unwrapped = unwrapType(type)
+  return unwrapped instanceof Resilient
+    ? intendedType(unwrapped.primaryType)
+    : type
+}
+
+const preprocessingTypes = new WeakMap<IAnyType, boolean>()
+
+function preprocesses(type: IAnyType): boolean {
+  let result = preprocessingTypes.get(type)
+  if (result === undefined) {
+    result = findPreprocessor(type)
+    if (!(type.flags & TypeFlags.Late)) {
+      preprocessingTypes.set(type, result)
+    }
+  }
+  return result
+}
+
+function findPreprocessor(type: IAnyType): boolean {
+  if (hasSnapshotPreProcessor(type)) {
+    return true
+  }
+  if (type instanceof ModelType) {
+    return !!type.preProcessor
+  }
+  if (type instanceof Resilient) {
+    return findPreprocessor(type.primaryType)
+  }
+  const wrapped = getWrappedType(type)
+  return wrapped ? findPreprocessor(wrapped) : false
 }
 
 /**
@@ -340,6 +465,11 @@ export class Union extends BaseType<any, any, any> {
     return this.members().find(type => type.is(value))
   }
 
+  // Picks the member the full check below would, walking members in the same
+  // order, without its per-member validation where flags or the snapshot's
+  // raw shape already decide. A member neither can decide gets its own `is()`
+  // rather than being skipped: skipping is what let a later member take a
+  // snapshot an earlier one was meant for, dropping its data in production.
   private tryQuickMatch(
     value: any,
     reconcileCurrentType: IAnyType | undefined
@@ -349,96 +479,16 @@ export class Union extends BaseType<any, any, any> {
     if (isStateTreeNode(value)) {
       return undefined
     }
-
-    // for non-object values, try primitive matching
-    if (!isPlainObject(value)) {
-      return this.tryMatchPrimitive(value)
-    }
-
-    // for objects, try structural matching against model types, preferring the
-    // reconciliation type (checked first, then skipped in the main pass) so a
-    // reconcile keeps its current member when it still fits — without building
-    // the reordered candidate list this used to allocate on every call
-    if (
-      reconcileCurrentType &&
-      this.snapshotLooksLikeType(value, reconcileCurrentType)
-    ) {
+    const fits = isPlainObject(value) ? objectFits : primitiveFits
+    if (reconcileCurrentType && fits(reconcileCurrentType, value)) {
       return reconcileCurrentType
     }
     for (const type of this.members()) {
-      if (
-        type !== reconcileCurrentType &&
-        this.snapshotLooksLikeType(value, type)
-      ) {
+      if (type !== reconcileCurrentType && fits(type, value)) {
         return type
       }
     }
     return undefined
-  }
-
-  private tryMatchPrimitive(value: any): IAnyType | undefined {
-    const valueType = typeof value
-    for (const type of this.members()) {
-      const flags = type.flags
-      if (
-        (valueType === "string" && flags & TypeFlags.String) ||
-        (valueType === "number" &&
-          flags &
-            (TypeFlags.Number |
-              TypeFlags.Integer |
-              TypeFlags.Float |
-              TypeFlags.Finite)) ||
-        (valueType === "boolean" && flags & TypeFlags.Boolean) ||
-        (value === null && flags & TypeFlags.Null) ||
-        (value === undefined && flags & TypeFlags.Undefined)
-      ) {
-        return type
-      }
-      // for literals, check exact value match
-      if (flags & TypeFlags.Literal) {
-        if (matchesLiteral(type, value)) {
-          return type
-        }
-      }
-    }
-    return undefined
-  }
-
-  private snapshotLooksLikeType(value: any, type: IAnyType): boolean {
-    // for model types, check if snapshot has all the required property keys
-    // and that any literal-typed properties match exactly. Unwrap optional() /
-    // snapshotProcessor() / refinement() / late() so wrapped members (e.g.
-    // jbrowse config schemas, which are always optional(model)) still match.
-    const model = resolveModelType(type)
-    if (model) {
-      const props = model.properties
-      // use cached propertyNames from ModelType instead of Object.keys()
-      for (const key of model.propertyNames) {
-        const propType = props[key]!
-        // `flags` is a recomputed getter on the wrapper types (optional,
-        // snapshotProcessor, late, union), so read it once per property
-        const flags = propType.flags
-        const propValue = value[key]
-
-        // check required properties exist and are not undefined
-        // (unless the type accepts undefined, which Optional types do)
-        if (!(flags & TypeFlags.Optional)) {
-          if (!(key in value) || propValue === undefined) {
-            return false
-          }
-        }
-
-        // for literal types, verify the value matches exactly
-        // this is critical for discriminated unions
-        if (flags & TypeFlags.Literal) {
-          if (!matchesLiteral(propType, propValue)) {
-            return false
-          }
-        }
-      }
-      return true
-    }
-    return false
   }
 
   isValidSnapshot(
@@ -486,7 +536,7 @@ export class Union extends BaseType<any, any, any> {
     // so error output is scoped to the intended branch instead of every member
     const members = this.members()
     const candidates = isSnapshotObject
-      ? members.filter(t => this.snapshotLooksLikeType(value, t))
+      ? members.filter(t => rawShape(t, value) === "fits")
       : []
     const typesToValidate = candidates.length > 0 ? candidates : members
 

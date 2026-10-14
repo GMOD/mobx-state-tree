@@ -116,9 +116,11 @@ move to `getWrappedType`. Within `types`, the shape that matters is
 sub-schemas nest the same way. That makes
 `StripDefaultValue.shouldStripFromSnapshot` one of the hottest paths in the whole
 app, and worth optimizing for "same key count as the default, differing only in
-the identifier" — the normal case, which no size guard catches. Unions, by
-contrast, barely matter to JBrowse and are mostly `dispatcher`-based (which
-bypasses the quick-match path entirely).
+the identifier" — the normal case, which no size guard catches. jbrowse's
+pluggable unions have no dispatcher: `pluggableConfigSchemaType` is a plain
+`types.union(...)` of config schemas and `pluggableMstType` a `members` thunk
+union, so hydrating a track config or a view goes through the production
+quick-match in `union.ts`.
 
 **Where JBrowse's MST time actually goes — measure before optimizing for it.**
 Profiled `createTestSession` over the 262-track `test_data/config_demo.json`

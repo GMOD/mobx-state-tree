@@ -89,3 +89,30 @@ for unions too, built from the old nodes' own `.identifier`, and run the full
 unions containing `snapshotProcessor` or `late` members, whose identifier only
 exists after `preProcessSnapshot`, so a raw-snapshot lookup would miss. This is
 the code that broke four tests before; treat it as high risk.
+
+## Follow-up (October 2026): the quick-match keeps the full check's member order
+
+The quick-match skipped members it could not judge, so production handed a
+snapshot to a later member than the full check (and upstream MST) would, and
+dropped the data the earlier member was meant for. Four kinds of member were
+skipped:
+
+- a member whose preprocessor turns a legacy snapshot into its shape, since
+  the shape check reads the raw snapshot;
+- a model with a `frozen()` prop, which the check treated as required;
+- any member that is not a model: `maybe(Model)`, `frozen`, a nested union;
+- for primitives, members whose flags do not show what they take: an
+  `optional` given `undefined`, `Date` given a timestamp, a reference or
+  identifier given an id, a custom type.
+
+The quick-match now walks members in order and asks a member's own `is()`
+wherever flags and raw shape cannot decide. A present literal that differs
+still rejects a member without asking it, so a discriminated union of
+preprocessed members, which every jbrowse config union is, stays on the fast
+path. The fast path assumes a preprocessor never rewrites a snapshot
+carrying another member's discriminator into one for its own.
+
+`__tests__/core/union-quick-match.test.ts` pins each case. An alternating
+A/B of hydrating 262 configs through a 60-member union of preprocessed, wide
+config models read 0.94–1.06x, against a null control of 0.97–1.07x (load
+~33).

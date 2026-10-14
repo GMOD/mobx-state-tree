@@ -72,6 +72,10 @@ class SnapshotProcessor<IT extends IAnyType, CustomC, CustomS> extends BaseType<
     return this._subtype.name
   }
 
+  get hasPreProcessor(): boolean {
+    return !!this._processors.preProcessor
+  }
+
   override describe() {
     return `snapshotProcessor(${this._subtype.describe()})`
   }
@@ -313,4 +317,12 @@ export function snapshotProcessor<
   }
 
   return new SnapshotProcessor(type, processors, name)
+}
+
+/**
+ * @internal
+ * @hidden
+ */
+export function hasSnapshotPreProcessor(type: IAnyType): boolean {
+  return type instanceof SnapshotProcessor && type.hasPreProcessor
 }
