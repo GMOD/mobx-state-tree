@@ -424,3 +424,16 @@ test("yield* typings for toGenerator", async () => {
   ensureNotAnyType<string, typeof result>(result)
   expect(result).toBe("test-result")
 })
+
+test("a flow yielding a non-promise after its first step rejects", async () => {
+  const M = types.model({}).actions(() => ({
+    bad: flow(function* bad() {
+      yield Promise.resolve()
+      yield 42 as any
+    })
+  }))
+
+  await expect(M.create().bad()).rejects.toThrow(
+    "Only promises can be yielded to `async`, got: 42"
+  )
+})
