@@ -440,6 +440,10 @@ function findIdentifierAttribute(
   return identifierAttribute
 }
 
+const objectPrototypeMembers = new Set(
+  Object.getOwnPropertyNames(Object.prototype)
+)
+
 function toPropertiesObject(
   declaredProps: ModelPropertiesDeclaration
 ): ModelProperties {
@@ -454,7 +458,7 @@ function toPropertiesObject(
       }
       // mobx looks a property's annotation up with `in`, so it would read
       // Object.prototype.toString as one and refuse the instance at create
-      if (key in Object.prototype) {
+      if (objectPrototypeMembers.has(key)) {
         throw fail(
           `Property '${key}' cannot be declared: it names an Object.prototype member, which mobx cannot observe as a property`
         )
