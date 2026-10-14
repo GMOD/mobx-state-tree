@@ -212,6 +212,35 @@ describe("an array insertion that throws", () => {
       expect(resolveIdentifier(Item, elsewhere, "r")).toBe(root)
     })
 
+    test("but not one a hook put back into this array meanwhile", () => {
+      const other = types
+        .model({ items: types.array(Item) })
+        .create({ items: [{ id: "o" }] })
+      const root = Item.create({ id: "r" })
+      const Mover = types
+        .model("Mover", { id: types.identifier, mover: true })
+        .actions(self => ({
+          afterAttach() {
+            const items = getParent<any>(self)
+            detach(root)
+            items.push(root)
+          }
+        }))
+      const store = types
+        .model({ items: types.array(types.union(Mover, Item)) })
+        .create()
+      unprotect(store)
+      const mover = Mover.create({ id: "m" })
+
+      expect(() => store.items.push(root, mover, other.items[0]!)).toThrow(
+        "lives already at"
+      )
+
+      expect(store.items.slice()).toEqual([root])
+      expect(getParent(root)).toBe(store.items)
+      expect(resolveIdentifier(Item, store, "r")).toBe(root)
+    })
+
     test("when a node from another tree follows it", () => {
       const store = Wide.create()
       const other = Wide.create({ items: [{ id: "o" }] })
