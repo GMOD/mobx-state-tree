@@ -57,7 +57,7 @@ export type IMiddleware = {
 
 export type IMiddlewareHandler = (
   actionCall: IMiddlewareEvent,
-  next: (actionCall: IMiddlewareEvent, callback?: (value: any) => any) => void,
+  next: (actionCall: IMiddlewareEvent, callback?: (value: any) => any) => any,
   abort: (value: any) => void
 ) => any
 
@@ -312,7 +312,7 @@ function runMiddleWares(
     function next(
       call2: IMiddlewareEvent,
       callback?: (value: any) => any
-    ): void {
+    ): any {
       nextInvoked = true
       // the result can contain
       // - the non manipulated return value from an action
@@ -322,6 +322,7 @@ function runMiddleWares(
       if (callback) {
         result = callback(result)
       }
+      return result
     }
 
     let abortInvoked = false
