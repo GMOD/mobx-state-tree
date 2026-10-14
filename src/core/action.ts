@@ -169,6 +169,9 @@ export function createActionInvoker<T extends FunctionWithFlag>(
  *
  * For more details, see the [middleware docs](concepts/middleware.md)
  *
+ * Adding or disposing a middleware takes effect from the next action call: one
+ * already running keeps the middlewares it started with.
+ *
  * @param target Node to apply the middleware to.
  * @param middleware Middleware to apply.
  * @returns A callable function to dispose the middleware.
