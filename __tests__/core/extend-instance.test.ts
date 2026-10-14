@@ -148,3 +148,20 @@ test("overrides members already declared on the type, in views and actions alike
   expect(m.label).toBe("loaded:15")
   expect(isComputedProp(m, "label")).toBe(true)
 })
+
+test("refuses a member that redefines a property, leaving it intact", () => {
+  const m = Base.create()
+
+  expect(() =>
+    extendInstance(m, () => ({
+      views: {
+        get count() {
+          return 42
+        }
+      }
+    }))
+  ).toThrow("extendInstance cannot define 'count': it is a property of Base")
+
+  expect(m.count).toBe(5)
+  expect(getSnapshot(m)).toEqual({ count: 5 })
+})
