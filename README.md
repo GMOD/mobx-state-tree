@@ -65,3 +65,7 @@ Code that worked on upstream can break in these places:
 ## Design records
 
 [agent-docs/architecture-decision-records](https://github.com/GMOD/mobx-state-tree/tree/main/agent-docs/architecture-decision-records) holds the decisions where the obvious change is wrong for a measured reason. Read the matching ADR before touching array reconciliation, union dispatch, type construction or the `isXType` guards.
+
+## Foonote
+
+Used Claude Code extensively
