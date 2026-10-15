@@ -1,3 +1,11 @@
+## [6.8.1](https://github.com/GMOD/mobx-state-tree/compare/v6.8.0...v6.8.1) (2026-10-15)
+
+### Bug Fixes
+
+- Two more writes that threw with the tree changed ([45cb3c5](https://github.com/GMOD/mobx-state-tree/commit/45cb3c585ce924b9930ebe84a702410e51f16b04))
+- Roll back an adoption by node identity, not by path ([19904f7](https://github.com/GMOD/mobx-state-tree/commit/19904f7bbc51f5ffbfd204962fc8d8daebd5f60c))
+- Leave an orphan a nested write stored back in this array ([4561789](https://github.com/GMOD/mobx-state-tree/commit/45617891d515d9e75831a8a91578d6f85176f240))
+
 ## [6.8.0](https://github.com/GMOD/mobx-state-tree/compare/v6.7.0...v6.8.0) (2026-10-14)
 
 ### Bug Fixes
