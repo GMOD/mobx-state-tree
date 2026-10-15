@@ -1,3 +1,15 @@
+## [6.9.0](https://github.com/GMOD/mobx-state-tree/compare/v6.8.1...v6.9.0) (2026-10-15)
+
+### Bug Fixes
+
+- Roll back an orphan whose hook threw during a failed write ([2f7ceb6](https://github.com/GMOD/mobx-state-tree/commit/2f7ceb64c06fcf0e3558809581634439a6cd5d25))
+- Rollback still notifies detach and restores a parentless orphan's environment ([967bd4a](https://github.com/GMOD/mobx-state-tree/commit/967bd4afdfaa0c44f54d58a9fc47cea950cdbc83))
+
+### Documentation
+
+- Shorten README to bullets; move detail to docs/ ([ee6b7ed](https://github.com/GMOD/mobx-state-tree/commit/ee6b7ed28ef5fdfe6d02dc62fc7920af4c2de780))
+- Absolute links for npm, and an upgrading-from-upstream list ([dc5f85a](https://github.com/GMOD/mobx-state-tree/commit/dc5f85aefc40cb32dc7be1443ad9008a43020f4d))
+
 ## [6.8.1](https://github.com/GMOD/mobx-state-tree/compare/v6.8.0...v6.8.1) (2026-10-15)
 
 ### Bug Fixes
