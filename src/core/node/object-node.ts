@@ -335,12 +335,19 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       this.parent.assertWritable({ subpath: this.subpath })
     }
 
-    try {
+    if (removeFromParent) {
       this.fireHook(Hook.beforeDetach)
       this.notifyChildrenOfDetach(this)
-    } catch (e) {
-      if (removeFromParent) {
-        throw e
+    } else {
+      try {
+        this.fireHook(Hook.beforeDetach)
+      } catch {
+        // the failed write's own error is the one to report
+      }
+      try {
+        this.notifyChildrenOfDetach(this)
+      } catch {
+        // the failed write's own error is the one to report
       }
     }
     const previousState = this.state

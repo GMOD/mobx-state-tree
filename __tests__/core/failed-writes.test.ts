@@ -422,6 +422,43 @@ test("a beforeDetach hook can still unprotect the tree it leaves", () => {
 })
 
 describe("an array write that throws while attaching or rolling back", () => {
+  test("still invalidates a safeReference into an orphan whose beforeDetach threw", () => {
+    const Leaf = types.model("Leaf", { id: types.identifier })
+    const Hooked = types
+      .model("Hooked", { id: types.identifier, leaf: Leaf })
+      .actions(self => ({
+        afterAttach() {
+          getRoot<any>(self).sel = self.leaf
+        },
+        beforeDetach() {
+          throw new Error("boom")
+        }
+      }))
+    const store = types
+      .model({
+        xs: types.array(types.union(Hooked, types.string)),
+        sel: types.safeReference(Leaf)
+      })
+      .create({ xs: [] })
+    unprotect(store)
+    const h = Hooked.create({ id: "h", leaf: { id: "l" } })
+
+    expect(() => store.xs.push(h, 5 as any)).toThrow()
+    expect(store.sel).toBeUndefined()
+  })
+
+  test("keeps the environment of an orphan that failed before attaching", () => {
+    const Node: any = types.model("Node", {
+      id: types.identifier,
+      kids: types.array(types.late((): any => Node))
+    })
+    const root = Node.create({ id: "r", kids: [{ id: "k" }] }, { e: 1 })
+    unprotect(root)
+
+    expect(() => root.kids.push(root)).toThrow()
+    expect(getEnv(root)).toEqual({ e: 1 })
+  })
+
   test("detaches an orphan whose afterAttach threw", () => {
     const Hooked = types
       .model("Hooked", { id: types.identifier })

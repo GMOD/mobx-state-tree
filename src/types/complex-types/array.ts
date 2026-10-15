@@ -468,6 +468,10 @@ function reconcileArrayChildren<TT>(
   } catch (e) {
     built?.forEach(node => node.die())
     adopted?.forEach(([node, environment]) => {
+      if (!node.parent) {
+        node.environment = environment
+        return
+      }
       // a node already stored here was re-added by a write that succeeded
       if (node.parent !== parent || parent.getChildren().includes(node)) {
         return
