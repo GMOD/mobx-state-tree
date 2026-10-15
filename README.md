@@ -5,11 +5,11 @@ Fork of [mobx-state-tree](https://mobx-state-tree.js.org) v5.4.2 for [JBrowse 2]
 - **In:** any upstream MST code. Every upstream type and API is still here.
 - **Out:** the same trees, with the additions and fixes below.
 - Each bullet links to the page, ADR or commit that has the detail.
-- [CHANGELOG.md](CHANGELOG.md) lists every release.
+- [CHANGELOG.md](https://github.com/GMOD/mobx-state-tree/blob/main/CHANGELOG.md) lists every release.
 
 ## Added APIs
 
-Details in [docs/added-apis.md](docs/added-apis.md).
+Details in [docs/added-apis.md](https://github.com/GMOD/mobx-state-tree/blob/main/docs/added-apis.md).
 
 - `types.resilient(type, fallback, createFallbackSnapshot)`: an unrecognized snapshot builds the fallback instead of crashing the tree.
 - `types.stripDefault(type, default)`: like `optional`, but the key leaves the snapshot when the value equals the default.
@@ -21,14 +21,14 @@ Details in [docs/added-apis.md](docs/added-apis.md).
 
 ## Error messages
 
-Details in [docs/error-messages.md](docs/error-messages.md).
+Details in [docs/error-messages.md](https://github.com/GMOD/mobx-state-tree/blob/main/docs/error-messages.md).
 
 - Conversion errors are depth-bound, length-capped and limited to 10 entries.
 - A discriminated union reports only the member whose literal `type` matched.
 
 ## Behavior changes
 
-Details in [docs/behavior-changes.md](docs/behavior-changes.md).
+Details in [docs/behavior-changes.md](https://github.com/GMOD/mobx-state-tree/blob/main/docs/behavior-changes.md).
 
 - A refused write leaves the tree as it found it.
 - A never-read node still runs `beforeDestroy` and its disposers.
@@ -39,21 +39,29 @@ Details in [docs/behavior-changes.md](docs/behavior-changes.md).
 
 ## Performance
 
-Details in [docs/performance.md](docs/performance.md).
+Details in [docs/performance.md](https://github.com/GMOD/mobx-state-tree/blob/main/docs/performance.md).
 
 - Keyed array reconcile is linear: 10x at n=1000.
 - Type construction is ~2.4x faster, and no-options unions are interned: −34% heap.
 - `onSnapshot` and `getSnapshot` reads are ~2x faster, and the `onSnapshot` reaction dies with its last listener.
 - The validation-result cache is gone.
 
+## Upgrading from upstream
+
+Code that worked on upstream can break in these places:
+
+- `isArrayType`, `isMapType` and `isModelType` no longer narrow. Type errors move to `asArrayType`, `asMapType` and `asModelType` ([ADR 0006](https://github.com/GMOD/mobx-state-tree/blob/main/agent-docs/architecture-decision-records/0006-type-guards-answer-holds-not-is.md)).
+- `NonEmptyObject` is removed, so code that imported it must stop.
+- A property or action named `toString`, `valueOf`, `constructor` or another `Object.prototype` member throws at definition.
+- In production, `union(A, 5)` throws `Invalid value used as weak map key`; upstream built a broken union.
+- `union(A, B) === union(A, B)`, so a write to one union's type object shows up in every caller's ([ADR 0005](https://github.com/GMOD/mobx-state-tree/blob/main/agent-docs/architecture-decision-records/0005-a-union-is-a-pure-function-of-its-members.md)).
+
 ## Types and build
 
-- `isArrayType`, `isMapType` and `isModelType` return `boolean`; use the `as*Type` helpers to narrow ([ADR 0006](agent-docs/architecture-decision-records/0006-type-guards-answer-holds-not-is.md)).
 - Phantom `unique symbol` properties became string-keyed brand interfaces, which fixes tsgo TS4058/TS4023.
-- `NonEmptyObject` is removed.
-- `setDevMode()` replaces reading `process.env.NODE_ENV`.
+- `setDevMode()` toggles dev mode at runtime. `NODE_ENV` is read once at load.
 - Dual CJS/ESM build, Vitest instead of Jest, eslint instead of tslint.
 
 ## Design records
 
-[agent-docs/architecture-decision-records](agent-docs/architecture-decision-records) holds the decisions where the obvious change is wrong for a measured reason. Read the matching ADR before touching array reconciliation, union dispatch, type construction or the `isXType` guards.
+[agent-docs/architecture-decision-records](https://github.com/GMOD/mobx-state-tree/tree/main/agent-docs/architecture-decision-records) holds the decisions where the obvious change is wrong for a measured reason. Read the matching ADR before touching array reconciliation, union dispatch, type construction or the `isXType` guards.
