@@ -394,7 +394,7 @@ function reconcileArrayChildren<TT>(
   // nodes built here from snapshots, which nothing else can reach if a later
   // value throws and mobx drops the change
   let built: AnyNode[] | undefined
-  // parentless instances this write attached, with the environment each had
+  // parentless instances this write tried to attach, with the environment each had
   let adopted: [AnyObjectNode, unknown][] | undefined
 
   try {
@@ -427,12 +427,11 @@ function reconcileArrayChildren<TT>(
         nothingChanged = false
         const orphan = orphanOf(newValue)
         const environment = orphan?.environment
-        const node = valueAsNode(childType, parent, newPath, newValue)
         if (orphan) {
-          if (orphan.parent === parent) {
-            ;(adopted ??= []).push([orphan, environment])
-          }
-        } else if (!isStateTreeNode(newValue)) {
+          ;(adopted ??= []).push([orphan, environment])
+        }
+        const node = valueAsNode(childType, parent, newPath, newValue)
+        if (!orphan && !isStateTreeNode(newValue)) {
           ;(built ??= []).push(node)
         }
         result.push(node)
@@ -456,12 +455,11 @@ function reconcileArrayChildren<TT>(
         }
         const orphan = oldMatch ? undefined : orphanOf(newValue)
         const environment = orphan?.environment
-        const node = valueAsNode(childType, parent, newPath, newValue, oldMatch)
         if (orphan) {
-          if (orphan.parent === parent) {
-            ;(adopted ??= []).push([orphan, environment])
-          }
-        } else if (!oldMatch && !isStateTreeNode(newValue)) {
+          ;(adopted ??= []).push([orphan, environment])
+        }
+        const node = valueAsNode(childType, parent, newPath, newValue, oldMatch)
+        if (!orphan && !oldMatch && !isStateTreeNode(newValue)) {
           ;(built ??= []).push(node)
         }
         result.push(node)

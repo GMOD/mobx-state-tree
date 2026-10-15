@@ -328,12 +328,21 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // run and the identifier cache has been split. The node's own
     // beforeDetach runs first and may still change the outcome, so a node
     // with one keeps the old order
-    if (typeof (this.storedValue as any)?.[Hook.beforeDetach] !== "function") {
+    if (
+      removeFromParent &&
+      typeof (this.storedValue as any)?.[Hook.beforeDetach] !== "function"
+    ) {
       this.parent.assertWritable({ subpath: this.subpath })
     }
 
-    this.fireHook(Hook.beforeDetach)
-    this.notifyChildrenOfDetach(this)
+    try {
+      this.fireHook(Hook.beforeDetach)
+      this.notifyChildrenOfDetach(this)
+    } catch (e) {
+      if (removeFromParent) {
+        throw e
+      }
+    }
     const previousState = this.state
     this.state = NodeLifeCycle.DETACHING
 

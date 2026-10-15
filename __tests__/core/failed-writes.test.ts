@@ -420,3 +420,44 @@ test("a beforeDetach hook can still unprotect the tree it leaves", () => {
   expect(store.items.length).toBe(0)
   expect(isAlive(item)).toBe(true)
 })
+
+describe("an array write that throws while attaching or rolling back", () => {
+  test("detaches an orphan whose afterAttach threw", () => {
+    const Hooked = types
+      .model("Hooked", { id: types.identifier })
+      .actions(() => ({
+        afterAttach() {
+          throw new Error("boom")
+        }
+      }))
+    const store = types.model({ xs: types.array(Hooked) }).create({ xs: [] })
+    unprotect(store)
+    const h = Hooked.create({ id: "h" })
+
+    expect(() => store.xs.push(h)).toThrow("boom")
+    expect(store.xs.length).toBe(0)
+    expect(isAlive(h)).toBe(true)
+    expect(getRoot(h)).toBe(h)
+    expect(resolveIdentifier(Hooked, store, "h")).toBeUndefined()
+  })
+
+  test("detaches an orphan whose beforeDetach throws", () => {
+    const Hooked = types
+      .model("Hooked", { id: types.identifier })
+      .actions(() => ({
+        beforeDetach() {
+          throw new Error("boom")
+        }
+      }))
+    const store = types
+      .model({ xs: types.array(types.union(Hooked, types.string)) })
+      .create({ xs: [] })
+    unprotect(store)
+    const h = Hooked.create({ id: "h" })
+
+    expect(() => store.xs.push(h, h)).toThrow("already")
+    expect(store.xs.length).toBe(0)
+    expect(getRoot(h)).toBe(h)
+    expect(resolveIdentifier(Hooked, store, "h")).toBeUndefined()
+  })
+})
