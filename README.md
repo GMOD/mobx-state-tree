@@ -7,6 +7,13 @@ Fork of [mobx-state-tree](https://mobx-state-tree.js.org) v5.4.2 for [JBrowse 2]
 - Each bullet links to the page, ADR or commit that has the detail.
 - [CHANGELOG.md](https://github.com/GMOD/mobx-state-tree/blob/main/CHANGELOG.md) lists every release.
 
+## Highlights
+
+- **Lazy loading and plugins:** `types.union({ members: () => [...] })` re-reads its members on every operation, so a plugin can register a type after the tree exists. `extendInstance` adds views and actions to a live node. `types.resilient` keeps the tree alive when a plugin is missing.
+- **Smaller snapshots:** `types.stripDefault` drops a key from the snapshot while it holds the default value.
+- **Faster at scale:** array replacement, `applySnapshot`, `onSnapshot` and type construction are 2x to 35x faster in the cases measured ([Performance](#performance)).
+- **Safer writes:** a refused write leaves the tree untouched.
+
 ## Added APIs
 
 Details in [docs/added-apis.md](https://github.com/GMOD/mobx-state-tree/blob/main/docs/added-apis.md).
