@@ -50,6 +50,8 @@ Details in [docs/performance.md](https://github.com/GMOD/mobx-state-tree/blob/ma
 
 Code that worked on upstream can break in these places:
 
+- The peer dependency is `mobx ^7.0.0`; upstream accepts `^6.3.0`.
+- Node `>=22` is required.
 - `isArrayType`, `isMapType` and `isModelType` no longer narrow. Type errors move to `asArrayType`, `asMapType` and `asModelType` ([ADR 0006](https://github.com/GMOD/mobx-state-tree/blob/main/agent-docs/architecture-decision-records/0006-type-guards-answer-holds-not-is.md)).
 - `NonEmptyObject` is removed, so code that imported it must stop.
 - A property or action named `toString`, `valueOf`, `constructor` or another `Object.prototype` member throws at definition.
@@ -66,6 +68,6 @@ Code that worked on upstream can break in these places:
 
 [agent-docs/architecture-decision-records](https://github.com/GMOD/mobx-state-tree/tree/main/agent-docs/architecture-decision-records) holds the decisions where the obvious change is wrong for a measured reason. Read the matching ADR before touching array reconciliation, union dispatch, type construction or the `isXType` guards.
 
-## Foonote
+## Footnote
 
-Used Claude Code extensively
+Written with extensive use of Claude Code.
