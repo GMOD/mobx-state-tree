@@ -2,7 +2,6 @@ import {
   type IComputedValue,
   _allowStateChangesInsideComputed,
   action,
-  compareShallow,
   computed,
   reaction
 } from "mobx"
@@ -79,6 +78,23 @@ const snapshotReactionOptions = {
 // so getSnapshot() stays referentially stable without an eager snapshot
 // reaction serializing the whole tree at create time. Shared: mobx only reads it.
 const snapshotComputedOptions = { keepAlive: true }
+
+function sameEntries(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true
+  }
+  if (typeof a !== "object" || typeof b !== "object" || !a || !b) {
+    return false
+  }
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  return (
+    keysA.length === keysB.length &&
+    keysA.every(
+      (key, i) => key === keysB[i] && (a as any)[key] === (b as any)[key]
+    )
+  )
+}
 
 type InternalEventHandlers<S> = {
   [InternalEvents.Dispose]: IDisposer
@@ -159,7 +175,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       const initial = this._cachedInitialSnapshot!
       this._cachedInitialSnapshot = undefined
       this._cachedInitialSnapshotCreated = false
-      return compareShallow(snapshot, initial) ? initial : snapshot
+      return sameEntries(snapshot, initial) ? freeze(initial) : snapshot
     }, snapshotComputedOptions)
 
     this.unbox = this.unbox.bind(this)
