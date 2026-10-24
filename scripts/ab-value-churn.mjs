@@ -16,7 +16,7 @@ async function makeWorkload(distDir) {
     new URL(`${distDir}/mobx-state-tree.mjs`, `file://${process.cwd()}/`).href
   )
   const { autorun } = await import("mobx")
-  setDevMode(false)
+  setDevMode?.(false)
 
   // a view model of jbrowse-ish width: ~40 props, many computed views
   const viewProps = {
