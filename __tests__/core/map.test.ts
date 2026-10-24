@@ -609,3 +609,37 @@ describe("#2072 - IObservableMapInitialValues types should work correctly", () =
     expect(mapInstance.size).toBe(0)
   })
 })
+
+describe("a map key named __proto__", () => {
+  const Store = types.model({
+    m: types.map(types.model({ x: types.number }))
+  })
+
+  test("set keeps it in the snapshot", () => {
+    const m = types.map(types.number).create()
+    unprotect(m)
+    m.set("__proto__", 1)
+    m.set("a", 2)
+    const snapshot = getSnapshot(m)
+    expect(Object.keys(snapshot)).toEqual(["__proto__", "a"])
+    expect(Object.getPrototypeOf(snapshot)).toBe(Object.prototype)
+    expect(JSON.stringify(snapshot)).toBe('{"__proto__":1,"a":2}')
+  })
+
+  test("a JSON snapshot holding it round-trips", () => {
+    const json = '{"m":{"__proto__":{"x":1},"a":{"x":2}}}'
+    const store = Store.create(JSON.parse(json))
+    expect(JSON.stringify(getSnapshot(store))).toBe(json)
+    expect(store.m.get("__proto__")!.x).toBe(1)
+    expect(store.m.size).toBe(2)
+  })
+
+  test("applySnapshot removes it with a patch", () => {
+    const store = Store.create(JSON.parse('{"m":{"__proto__":{"x":1}}}'))
+    const patches: IJsonPatch[] = []
+    onPatch(store, p => patches.push(p))
+    applySnapshot(store, { m: {} })
+    expect(patches).toEqual([{ op: "remove", path: "/m/__proto__" }])
+    expect(store.m.size).toBe(0)
+  })
+})

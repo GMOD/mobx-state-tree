@@ -42,7 +42,6 @@ import {
   escapeJsonPath,
   fail,
   getContextForPath,
-  getSnapshot,
   getStateTreeNode,
   installHookInitializers,
   isMutable,
@@ -123,6 +122,19 @@ const needsIdentifierError = `Map.put can only be used to store complex values t
 
 const mismatchedKeyError = (identifier: string, expected: string) =>
   `A map of objects containing an identifier should always store the object under their own identifier. Trying to store key '${identifier}', but expected: '${expected}'`
+
+function setOwn(target: Record<string, unknown>, key: string, value: unknown) {
+  if (key === "__proto__") {
+    Object.defineProperty(target, key, {
+      value,
+      enumerable: true,
+      writable: true,
+      configurable: true
+    })
+  } else {
+    target[key] = value
+  }
+}
 
 function tryCollectModelTypes(
   type: IAnyType,
@@ -205,10 +217,9 @@ class MSTMap<IT extends IAnyType> extends ObservableMap<string, any> {
       if (!isValidIdentifier(id)) {
         // try again but this time after creating a node for the value
         // since it might be an optional identifier
-        const newNode = this.put(
+        return this.put(
           mapType.getChildType().create(value, mapNode.environment)
         )
-        return this.put(getSnapshot(newNode))
       }
       const key = normalizeIdentifier(id)
       this.set(key, value)
@@ -299,11 +310,10 @@ export class MapType<IT extends IAnyType> extends ComplexType<
     const subType = (objNode.type as this)._subType
     const result: IChildNodesMap = {}
     Object.keys(initialSnapshot).forEach(name => {
-      result[name] = subType.instantiate(
-        objNode,
+      setOwn(
+        result,
         name,
-        undefined,
-        initialSnapshot[name]
+        subType.instantiate(objNode, name, undefined, initialSnapshot[name])
       )
     })
 
@@ -448,7 +458,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   override getSnapshot(node: this["N"]): this["S"] {
     const res: any = {}
     node.getChildren().forEach(childNode => {
-      res[childNode.subpath] = childNode.snapshot
+      setOwn(res, childNode.subpath, childNode.snapshot)
     })
     return res
   }
@@ -456,7 +466,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
   processInitialSnapshot(childNodes: IChildNodesMap): this["S"] {
     const processed: any = {}
     Object.keys(childNodes).forEach(key => {
-      processed[key] = childNodes[key]!.getSnapshot()
+      setOwn(processed, key, childNodes[key]!.getSnapshot())
     })
     return processed
   }
