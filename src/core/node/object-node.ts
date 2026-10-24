@@ -129,7 +129,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
   private _observableInstanceState = ObservableInstanceLifecycle.UNINITIALIZED
   private _childNodes: IChildNodesMap
   private _initialSnapshot: C
-  private _cachedInitialSnapshot?: S
+  private _cachedInitialSnapshot?: S | undefined
   private _cachedInitialSnapshotCreated = false
   private _snapshotComputed: IComputedValue<S>
   // whether _snapshotComputed has ever run — see createObservableInstance
