@@ -7,8 +7,6 @@ import {
   type IValidationResult,
   TypeFlags,
   assertIsType,
-  getStateTreeNode,
-  isStateTreeNode,
   isType,
   typeCheckFailure,
   typeCheckSuccess
@@ -62,11 +60,7 @@ class Refinement<IT extends IAnyType> extends BaseType<
       return subtypeErrors
     }
 
-    const snapshot = isStateTreeNode(value)
-      ? getStateTreeNode(value).snapshot
-      : value
-
-    if (!this._predicate(snapshot)) {
+    if (!this._predicate(value)) {
       return typeCheckFailure(context, value, this._message(value))
     }
 

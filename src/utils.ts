@@ -109,17 +109,14 @@ export function isMutable(value: unknown) {
  * @internal
  * @hidden
  */
-export function isPrimitive(
-  value: unknown,
-  includeDate = true
-): value is Primitives {
+export function isPrimitive(value: unknown): value is Primitives {
   return (
     value === null ||
     value === undefined ||
     typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean" ||
-    (includeDate && value instanceof Date)
+    value instanceof Date
   )
 }
 
