@@ -29,8 +29,11 @@ More ADRs:
 
 ## Verification norm
 
-`npx tsc --noEmit`, `pnpm typecheck`, `pnpm lint src/`, `pnpm test:dev --run`,
-`pnpm test:prod --run`, `pnpm test:types`.
+`npx tsc --noEmit`, `pnpm typecheck`, `pnpm lint src/`, `pnpm format:check`,
+`pnpm test:dev --run`, `pnpm test:prod --run`, `pnpm test:types`.
+
+**`pnpm format:check` covers `__tests__/` and `scripts/`, which `pnpm lint src/`
+does not.** CI and `preversion` both run it, so an unformatted test fails CI.
 
 **`npx tsc --noEmit` checks `src/` only.** `pnpm typecheck` adds `__tests__/`
 under looser flags, and `pnpm version` runs it in `preversion`, so a type error
