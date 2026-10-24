@@ -15,6 +15,7 @@ import {
   assertIsType,
   devMode,
   fail,
+  getStateTreeNode,
   isPlainObject,
   isStateTreeNode,
   isType,
@@ -343,12 +344,28 @@ export class Union extends BaseType<any, any, any> {
         return false
       }
     }
-    const found =
-      reconcileCurrentType && fits(reconcileCurrentType)
+    const preferring = (accepts: (type: IAnyType) => boolean) =>
+      reconcileCurrentType && accepts(reconcileCurrentType)
         ? reconcileCurrentType
         : this.members().find(
-            type => type !== reconcileCurrentType && fits(type)
+            type => type !== reconcileCurrentType && accepts(type)
           )
+    // a snapshotProcessor member judges an instance by its snapshot's shape, so
+    // an instance goes to a member of its own type first
+    let found: IAnyType | undefined
+    if (isStateTreeNode(value)) {
+      const nodeType = getStateTreeNode(value).type
+      const holdsNodeType = (type: IAnyType) => {
+        try {
+          return type.isAssignableFrom(nodeType)
+        } catch (error) {
+          failure ??= { error }
+          return false
+        }
+      }
+      found = preferring(type => holdsNodeType(type) && fits(type))
+    }
+    found ??= preferring(fits)
     // when no member takes the value, the error a member's own check threw
     // says why better than "no matching type"
     if (!found && failure) {

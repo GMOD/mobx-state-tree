@@ -966,3 +966,43 @@ test("post-processes an instance attached under it once", () => {
   expect(getSnapshot(store)).toEqual({ list: [{ n: 1 }] })
   expect(getSnapshot(clone(store))).toEqual({ list: [{ n: 2 }] })
 })
+
+test("a union hands an instance to its own type, not to a processor of a same-shaped one", () => {
+  const A = types.model("A", { x: types.number })
+  const B = types.model("B", { x: types.number })
+  const ProcessedA = types.snapshotProcessor(A, {
+    postProcessor: sn => ({ ...sn, viaA: true })
+  })
+  const store = types
+    .model({ item: types.maybe(types.union(ProcessedA, B)) })
+    .create()
+  unprotect(store)
+
+  store.item = B.create({ x: 1 })
+  expect(getType(store.item)).toBe(B)
+  expect(getSnapshot(store)).toEqual({ item: { x: 1 } })
+
+  store.item = B.create({ x: 2 })
+  expect(getSnapshot(store)).toEqual({ item: { x: 2 } })
+
+  store.item = A.create({ x: 3 })
+  expect(getSnapshot(store)).toEqual({ item: { x: 3, viaA: true } })
+})
+
+test.runIf(process.env.NODE_ENV === "production")(
+  "a union member that throws while matching an instance counts as a refusal",
+  () => {
+    const B = types.model("B", { x: types.number })
+    const Boom = types.late((): typeof B => {
+      throw new Error("boom")
+    })
+    const store = types
+      .model({ item: types.union(Boom, B) })
+      .create({ item: B.create({ x: 0 }) })
+    unprotect(store)
+
+    store.item = B.create({ x: 1 })
+    expect(getType(store.item)).toBe(B)
+    expect(store.item.x).toBe(1)
+  }
+)
