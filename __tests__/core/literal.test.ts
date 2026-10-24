@@ -1,6 +1,13 @@
 import { test, expect } from "vitest"
 import { types } from "../../src"
 
+test("a literal undefined is named undefined", () => {
+  expect(types.literal(undefined).name).toBe("undefined")
+  expect(types.union(types.literal(undefined), types.number).name).toBe(
+    "(undefined | number)"
+  )
+})
+
 if (process.env.NODE_ENV !== "production") {
   test("it should allow only primitives", () => {
     const error = expect(() => {

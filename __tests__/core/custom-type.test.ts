@@ -114,6 +114,12 @@ class Decimal {
     Wallet.create({ balance: "3.0" }, env)
     expect(env.test).toBeCalledWith("3.0")
   })
+
+  test("passes environment to fromSnapshot when created as a root", () => {
+    const env = { test: vi.fn() }
+    DecimalPrimitive.create("4.0", env)
+    expect(env.test).toBeCalledWith("4.0")
+  })
 }
 
 {

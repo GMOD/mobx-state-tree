@@ -951,10 +951,8 @@ export interface IModelReflectionData extends IModelReflectionPropertiesData {
  * @returns
  */
 export function getMembers(target: IAnyStateTreeNode): IModelReflectionData {
-  const type = getStateTreeNode(target).type as unknown as IAnyModelType
-
   const reflected: IModelReflectionData = {
-    ...getPropertyMembers(type),
+    ...getPropertyMembers(target),
     actions: [],
     volatile: [],
     views: [],
@@ -963,7 +961,11 @@ export function getMembers(target: IAnyStateTreeNode): IModelReflectionData {
 
   const props = Object.getOwnPropertyNames(target)
   props.forEach(key => {
-    if (key in reflected.properties) {
+    if (
+      key === "$treenode" ||
+      key === "toJSON" ||
+      Object.prototype.hasOwnProperty.call(reflected.properties, key)
+    ) {
       return
     }
     const descriptor = Object.getOwnPropertyDescriptor(target, key)!

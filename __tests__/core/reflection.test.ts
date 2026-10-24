@@ -284,3 +284,24 @@ test("reflection - conditionals respected", () => {
   expect(reflection2.views.includes("view1")).toBe(false)
   expect(reflection2.views.includes("view2")).toBe(true)
 })
+
+test("reflection - getMembers lists only declared members, including ones named like Object.prototype's", () => {
+  const M = types
+    .model({ x: 0 })
+    .views(self => ({
+      get double() {
+        return self.x * 2
+      },
+      toString() {
+        return "M"
+      }
+    }))
+    .actions(() => ({
+      valueOf() {
+        return 1
+      }
+    }))
+  const reflection = getMembers(M.create())
+  expect(reflection.views).toEqual(["double", "toString"])
+  expect(reflection.actions).toEqual(["valueOf"])
+})

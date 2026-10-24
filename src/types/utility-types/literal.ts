@@ -29,7 +29,7 @@ export class Literal<T> extends SimpleType<T, T, T> {
   }
 
   protected override computeName(): string {
-    return JSON.stringify(this.value)
+    return String(JSON.stringify(this.value))
   }
 
   instantiate(
