@@ -25,7 +25,22 @@ The workload that drives these is JBrowse: hundreds of config-schema types built
 - Hoisting `flags` to the prototype saved 0.6% heap and no time, so it was reverted ([ADR 0004](../agent-docs/architecture-decision-records/0004-a-type-object-is-its-field-list.md)).
 - Compiling with `useDefineForClassFields: false` (upstream #2309) measured inside the noise of a null control. The build targets `esnext`, so classes already emit native fields.
 
-## Where upstream 9.0.0 is faster
+## Against upstream 9.0.0
 
-- Reordering or undoing through `applySnapshot` re-validates the whole snapshot, because the validation cache is gone: one page moved in a 100-page document takes 16.8 ms here and 0.24 ms upstream. Only undo/redo and session loads reach it.
-- `scripts/ab-editor.mjs` compares a build against upstream's published `dist/mobx-state-tree.module.js`, copied to `mobx-state-tree.mjs` in a directory of its own.
+Fork 6.10.0 against upstream `mobx-state-tree` 9.0.0 (the published `dist/mobx-state-tree.module.js`), production mode, alternating rounds, medians. The machine was loaded (load average 8-15), so read ratios under ~1.1x as ties.
+
+| Scenario                                         | upstream 9.0.0 | fork 6.10.0 | Ratio               |
+| ------------------------------------------------ | -------------- | ----------- | ------------------- |
+| `onSnapshot(root)` per write (`ab-value-churn`)  | 65 µs          | 27 µs       | 2.4x faster         |
+| `autorun(getSnapshot(view))` per write           | 91 µs          | 28 µs       | 3.2x faster         |
+| Bare typed write                                 | 6.8 µs         | 3.8 µs      | 1.8x faster         |
+| Drag 600 elements x10, `getSnapshot` each step   | 676 ms         | 232 ms      | 2.9x faster         |
+| Reverse-replace 600 elements via `applySnapshot` | 490 ms         | 227 ms      | 2.2x faster         |
+| `detach` 600 of 3,600 nodes                      | 52-66 ms       | 34 ms       | 1.5x faster         |
+| Drag 600 elements x10, no snapshot reads         | 62 ms          | 52 ms       | 1.2x (near the tie) |
+| Move one page of 100 via `applySnapshot`         | 0.24 ms        | 16.8 ms     | 70x **slower**      |
+| Undo to a snapshot, 600 changed elements         | 69-80 ms       | 87-138 ms   | 1.2-2x **slower**   |
+
+- Reproduce the editor rows with `scripts/ab-editor.mjs <baselineDist> <newDist>` and the first three with `scripts/ab-value-churn.mjs`.
+- The baseline directory holds upstream's `mobx-state-tree.module.js` copied to `mobx-state-tree.mjs`.
+- The two slower rows come from re-validating the whole snapshot: the validation cache is gone (ADR 0001). Only undo/redo and session loads reach it.
