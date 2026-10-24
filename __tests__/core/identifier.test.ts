@@ -1,4 +1,4 @@
-import { test, expect } from "vitest"
+import { test, expect, vi } from "vitest"
 import {
   types,
   tryResolve,
@@ -8,8 +8,10 @@ import {
   IAnyComplexType,
   resolveIdentifier,
   getIdentifier,
-  detach
+  detach,
+  unprotect
 } from "../../src"
+import { BaseNode } from "../../src/internal"
 
 if (process.env.NODE_ENV !== "production") {
   test("#275 - Identifiers should check refinement", () => {
@@ -326,4 +328,47 @@ test("items detached from arrays don't corrupt identifierCache", () => {
   expect(resolveIdentifier(Item, largeArray, "J")).toBeDefined()
   // The following expectation was failing in version 5.1.8 and earlier
   expect(resolveIdentifier(Item, largeArray, "K")).toBeDefined()
+})
+
+test("detach moves the detached subtree's identifiers and keeps the rest", () => {
+  const Child = types.model("Child", { id: types.identifier })
+  const Item = types.model("Item", {
+    id: types.identifier,
+    child: types.maybe(Child)
+  })
+  const Store = types
+    .model("Store", { items: types.array(Item) })
+    .actions(self => ({
+      detachItem(index: number) {
+        return detach(self.items[index]!)
+      }
+    }))
+  const store = Store.create({
+    items: Array.from({ length: 1000 }, (_, i) => ({
+      id: `item-${i}`,
+      child: i === 500 ? { id: "child" } : undefined
+    }))
+  })
+  const [item, next] = [store.items[500]!, store.items[501]!]
+
+  store.detachItem(500)
+
+  expect(resolveIdentifier(Item, store, "item-500")).toBeUndefined()
+  expect(resolveIdentifier(Item, store, "item-501")).toBe(next)
+  expect(resolveIdentifier(Child, store, "child")).toBeUndefined()
+  expect(resolveIdentifier(Item, item, "item-500")).toBe(item)
+  expect(resolveIdentifier(Child, item, "child")).toBe(item.child!)
+})
+
+test("detach does not read the path of every node in the tree", () => {
+  const Item = types.model("Item", { id: types.identifier })
+  const Store = types.model("Store", { items: types.array(Item) })
+  const store = Store.create({
+    items: Array.from({ length: 1000 }, (_, i) => ({ id: `item-${i}` }))
+  })
+  const target = store.items[500]!
+  unprotect(store)
+  const pathRead = vi.spyOn(BaseNode.prototype, "path", "get")
+  detach(target)
+  expect(pathRead.mock.calls.length).toBeLessThan(10)
 })

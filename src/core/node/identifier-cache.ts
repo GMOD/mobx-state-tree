@@ -1,9 +1,10 @@
-import { type IObservableArray, entries, observable, values } from "mobx"
+import { type IObservableArray, observable, values } from "mobx"
 
 import {
+  type AnyNode,
   type AnyObjectNode,
   type IAnyComplexType,
-  type ObjectNode,
+  ObjectNode,
   fail,
   mobxShallow
 } from "../../internal.ts"
@@ -81,37 +82,22 @@ export class IdentifierCache {
     }
   }
 
-  // `byIdentity`: the split node never took its slot, so whatever its path
-  // names may be another node's subtree
-  splitCache(splitNode: AnyObjectNode, byIdentity = false): IdentifierCache {
+  splitCache(splitNode: AnyObjectNode): IdentifierCache {
     const newCache = new IdentifierCache()
-    // The slash is added here so we only match children of the splitNode. In version 5.1.8 and
-    // earlier there was no trailing slash, so non children that started with the same path string
-    // were being matched incorrectly.
-    const basePath = `${splitNode.path}/`
-    entries(this.cache).forEach(([id, nodes]) => {
-      let modified = false
-      for (let i = nodes.length - 1; i >= 0; i--) {
-        const node = nodes[i]!
-        if (
-          node === splitNode ||
-          (byIdentity
-            ? node.isWithin(splitNode)
-            : node.path.startsWith(basePath))
-        ) {
-          newCache.addNodeToCache(node, false) // no need to update lastUpdated since it is a whole new cache
-          nodes.splice(i, 1)
-          // remove empty sets from cache
-          if (!nodes.length) {
-            this.cache.delete(id)
-          }
-          modified = true
-        }
+    if (this.cache.size === 0) {
+      return newCache
+    }
+    const moveSubtree = (node: AnyNode) => {
+      if (!(node instanceof ObjectNode)) {
+        return
       }
-      if (modified) {
-        this.updateLastCacheModificationPerId(id)
+      if (node.identifierAttribute && this.cache.get(node.identifier!)?.includes(node)) {
+        this.notifyDied(node)
+        newCache.addNodeToCache(node, false)
       }
-    })
+      node.getChildren().forEach(moveSubtree)
+    }
+    moveSubtree(splitNode)
     return newCache
   }
 
