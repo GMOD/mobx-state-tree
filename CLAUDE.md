@@ -70,7 +70,10 @@ A/B a change against it:
    set — `config/jest/babelTransform.cjs` cannot resolve `babel-jest` and jest
    exits having run **0 of N suites** while still printing a summary that looks
    like a result.
-5. Jest writes to **stderr**: capture with `> file 2>&1`, never `2>&1 > file`,
+5. `--ignoreProjects` takes a list, so `jest --ignoreProjects jbrowse-web <paths>`
+   reads the paths as project names and runs the whole suite. Put the paths first
+   or write `--ignoreProjects=jbrowse-web`.
+6. Jest writes to **stderr**: capture with `> file 2>&1`, never `2>&1 > file`,
    which prints to the terminal and writes an empty file.
 
 **The swap is visible to every other session's jbrowse run for as long as it
@@ -94,12 +97,19 @@ side first, and only run the baseline if something goes red. An all-pass result
 cannot be concealing a pre-existing failure, which halves the wall clock on the
 common outcome.
 
-**Verified green on the tree as of August 2026** (six commits after 6.2.0:
-dedupe, the `createActionTrackingMiddleware` fix, the `isXType` guard
-signatures, redundant-assertion removal): `packages/core+product-core+app-core`
+**Verified green as of October 2026** (6.9.0 plus the `splitCache` subtree walk and
+the snapshot-identity change, swapped side only): `packages/core+product-core+app-core`
+**5056/5056**, `plugins` **15019/15026** (7 skipped), `products` default project
+**2402/2402**, and `products/jbrowse-web` (the CI-only project) **1248/1248**.
+`pnpm typecheck` was skipped, since that change leaves the `.d.ts` unchanged apart
+from the non-exported `IdentifierCache`.
+
+The August run (six commits after 6.2.0: dedupe, the
+`createActionTrackingMiddleware` fix, the `isXType` guard signatures,
+redundant-assertion removal) had `packages/core+product-core+app-core`
 **3039/3039** on both sides, `plugins` **7996/7996**, `products` **1870/1870**,
-and `pnpm typecheck` **0 errors** on both sides — that last one is the only run
-that exercises a `.d.ts` change, since jest transforms with babel and never
+and `pnpm typecheck` **0 errors** on both sides. Typecheck is the only run that
+exercises a `.d.ts` change, since jest transforms with babel and never
 typechecks.
 
 **`isArrayType`/`isMapType`/`isModelType` stopped narrowing in September 2026**
