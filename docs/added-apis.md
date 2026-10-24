@@ -210,5 +210,6 @@ The `isXType` guards answer "holds an X", not "is exactly an X": `isArrayType(ty
 - `types.compose` takes up to 11 parts. Upstream's overloads stopped at 9 and dropped every prop silently past that.
 - `getChildType`, `getUnionSubtypes` and `getDefaultInstanceOrSnapshot` are documented above under reflection.
 - `setDevMode(boolean)` replaces reading `process.env.NODE_ENV` at runtime.
+- `findParent(node, predicate)` returns the nearest ancestor the predicate accepts, or `undefined`. A type-guard predicate narrows the result. `getParentOfType` matches only by type and throws on a miss.
 - `types.union` and `types.compose` have variadic signatures in place of generated overloads.
 - A custom `preProcessSnapshot` or `postProcessSnapshot` types the keys it does not own as passing through ([ADR 0007](../agent-docs/architecture-decision-records/0007-snapshot-processors-are-typed-pass-through.md)).

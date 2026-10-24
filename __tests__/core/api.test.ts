@@ -41,6 +41,7 @@ const METHODS_AND_INTERNAL_TYPES = stringToArray(`
     getParent,
     hasParentOfType,
     getParentOfType,
+    findParent,
     getRoot,
     getPath,
     getPathParts,

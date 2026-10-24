@@ -18,6 +18,7 @@ import {
   unprotect,
   hasParentOfType,
   getParentOfType,
+  findParent,
   detach,
   getNodeId
 } from "../../src"
@@ -91,6 +92,22 @@ test("it should throw if there is not parent of type", () => {
   expect(() => getParentOfType(row.cells[0], Document)).toThrowError(
     "[mobx-state-tree] Failed to find the parent of AnonymousModel@/cells/0 of a given type"
   )
+})
+test("findParent returns the nearest ancestor a predicate accepts, or undefined", () => {
+  const Cell = types.model({})
+  const Row = types.model({ cells: types.array(Cell), label: "row" })
+  const Document = types.model({ rows: types.array(Row), label: "doc" })
+  const doc = Document.create({ rows: [{ cells: [{}] }] })
+  const cell = doc.rows[0].cells[0]
+  const hasLabel = (node: object): node is { label: string } =>
+    "label" in node
+
+  const labelled = findParent(cell, hasLabel)
+  expect(labelled).toBe(doc.rows[0])
+  expect(labelled?.label).toBe("row")
+  expect(findParent(cell, node => node === doc)).toBe(doc)
+  expect(findParent(doc, () => true)).toBeUndefined()
+  expect(findParent(cell, () => false)).toBeUndefined()
 })
 // hasParentOfType
 test("it should check for parent instance of given type", () => {

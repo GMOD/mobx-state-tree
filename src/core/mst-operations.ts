@@ -483,6 +483,42 @@ export function getParentOfType<IT extends IAnyComplexType>(
 }
 
 /**
+ * Returns the nearest ancestor of the target that satisfies the predicate, or
+ * `undefined`. Unlike `getParentOfType`, it can match by shape, e.g. any node
+ * with a `displays` member, and it does not throw when nothing matches.
+ *
+ * @param target
+ * @param predicate called on each ancestor, nearest first
+ * @returns
+ */
+export function findParent<T extends IAnyStateTreeNode>(
+  target: IAnyStateTreeNode,
+  predicate: (node: IAnyStateTreeNode) => node is T
+): T | undefined
+export function findParent(
+  target: IAnyStateTreeNode,
+  predicate: (node: IAnyStateTreeNode) => boolean
+): IAnyStateTreeNode | undefined
+export function findParent(
+  target: IAnyStateTreeNode,
+  predicate: (node: IAnyStateTreeNode) => boolean
+): IAnyStateTreeNode | undefined {
+  assertIsStateTreeNode(target, 1)
+  assertIsFunction(predicate, 2)
+
+  for (
+    let parent = getStateTreeNode(target).parent;
+    parent;
+    parent = parent.parent
+  ) {
+    if (predicate(parent.storedValue)) {
+      return parent.storedValue
+    }
+  }
+  return undefined
+}
+
+/**
  * Given an object in a model tree, returns the root object of that tree.
  *
  * Please note that in child nodes access to the root is only possible

@@ -103,6 +103,7 @@ export {
   detach,
   escapeJsonPath,
   extendInstance,
+  findParent,
   flow,
   getChildType,
   getEnv,
