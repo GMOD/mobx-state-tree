@@ -1,3 +1,646 @@
+## [6.10.0](https://github.com/GMOD/mobx-state-tree/compare/v6.9.0...v6.10.0) (2026-10-24)
+
+### Bug Fixes
+
+- Compare a node's first snapshot by key order and identity, and freeze it ([e76b625](https://github.com/GMOD/mobx-state-tree/commit/e76b6252c27cf5fa41346bab75d6f56e9ab2572b))
+- Keep a key named __proto__ in snapshots; put creates once ([4471abc](https://github.com/GMOD/mobx-state-tree/commit/4471abc7d1af6bf337115d543fee9ab26d2e6826))
+- Call the generator with the action's this ([8e72aae](https://github.com/GMOD/mobx-state-tree/commit/8e72aae90288fe63cb60ee4f24e7b3ff5a66f1f5))
+- Print a value through its toJSON in error messages ([58a23c3](https://github.com/GMOD/mobx-state-tree/commit/58a23c3a251ec2c963d7afca56338c09a6d4a698))
+- Leave out extendInstance's internal action ([54439b6](https://github.com/GMOD/mobx-state-tree/commit/54439b697efd8f37b60925bd179a306e9bd80c19))
+- A child whose build throws keeps its snapshot ([e91e072](https://github.com/GMOD/mobx-state-tree/commit/e91e072e437d29035cac7f22d06185ab7547c253))
+- Give an instance to a member of its own type first ([55c9118](https://github.com/GMOD/mobx-state-tree/commit/55c91183932ca293bbbd2de083709747b0cb6d23))
+- Three small reflection and env slips ([0968502](https://github.com/GMOD/mobx-state-tree/commit/0968502d267cbf67d1101ecd30ddb47c1bcaf035))
+
+### Documentation
+
+- List the mobx 7 and Node 22 requirements; fix footnote heading ([fa325e8](https://github.com/GMOD/mobx-state-tree/commit/fa325e887d6697364bdee647e9a24fd6abd7d97c))
+- Add highlights section leading with lazy loading and plugins ([1e46514](https://github.com/GMOD/mobx-state-tree/commit/1e46514529d49b00ade4277688180dc3062fa589))
+- Add detach and snapshot-identity rows; note where upstream 9.0.0 is faster ([f36eb48](https://github.com/GMOD/mobx-state-tree/commit/f36eb4809cdfcb06bbe7b0633d3ef0d877c92040))
+- October JBrowse baselines; --ignoreProjects swallows paths ([9b04114](https://github.com/GMOD/mobx-state-tree/commit/9b041147fb3755985c0711bbf50dc75227900f16))
+- Table fork 6.10.0 against upstream 9.0.0 ([dcee8a0](https://github.com/GMOD/mobx-state-tree/commit/dcee8a00674025633ae4756ce3f847ae3dd77810))
+
+### Features
+
+- FindParent(node, predicate) returns the nearest matching ancestor ([bb7ae06](https://github.com/GMOD/mobx-state-tree/commit/bb7ae06a6935a8c513630d0ace915747ce911195))
+
+### Other Changes
+
+- Footnote ([f1b7310](https://github.com/GMOD/mobx-state-tree/commit/f1b7310f456499dbef5a2dd57f5877b25e8f7b1b))
+- Add editor-shaped A/B; let the value-churn script load a dist without setDevMode ([d53b6ed](https://github.com/GMOD/mobx-state-tree/commit/d53b6ed66c0bc0ab8273f9cda0dfd57b2ce49f15))
+
+### Performance Improvements
+
+- Detach walks only the detached subtree ([d86682d](https://github.com/GMOD/mobx-state-tree/commit/d86682d2a2033fb13e3b17959d8f3670fbfbab91))
+- Keep a node's snapshot object when it is first read after instantiation ([a76a5a3](https://github.com/GMOD/mobx-state-tree/commit/a76a5a36cf810cfce5c7fbeb07562532408a26ac))
+
+### Refactoring
+
+- Drop isPrimitive's unused includeDate and refinement's dead node branch ([f552d4d](https://github.com/GMOD/mobx-state-tree/commit/f552d4d58c4f61e88a265d8cff9f4e575e65eb39))
+
+### Styling
+
+- Prettier the files preversion rejected ([9c27646](https://github.com/GMOD/mobx-state-tree/commit/9c27646a46ec1aaecb993a66e49da9c6c001eeaf))
+
+### Tests
+
+- Pin that a moved child keeps its node and an inserted one validates once ([ea041f1](https://github.com/GMOD/mobx-state-tree/commit/ea041f171c876c38158ad15e150e6062dec989fb))
+
+## [6.9.0](https://github.com/GMOD/mobx-state-tree/compare/v6.8.1...v6.9.0) (2026-10-15)
+
+### Bug Fixes
+
+- Roll back an orphan whose hook threw during a failed write ([2f7ceb6](https://github.com/GMOD/mobx-state-tree/commit/2f7ceb64c06fcf0e3558809581634439a6cd5d25))
+- Rollback still notifies detach and restores a parentless orphan's environment ([967bd4a](https://github.com/GMOD/mobx-state-tree/commit/967bd4afdfaa0c44f54d58a9fc47cea950cdbc83))
+
+### Documentation
+
+- Shorten README to bullets; move detail to docs/ ([ee6b7ed](https://github.com/GMOD/mobx-state-tree/commit/ee6b7ed28ef5fdfe6d02dc62fc7920af4c2de780))
+- Absolute links for npm, and an upgrading-from-upstream list ([dc5f85a](https://github.com/GMOD/mobx-state-tree/commit/dc5f85aefc40cb32dc7be1443ad9008a43020f4d))
+
+## [6.8.1](https://github.com/GMOD/mobx-state-tree/compare/v6.8.0...v6.8.1) (2026-10-15)
+
+### Bug Fixes
+
+- Two more writes that threw with the tree changed ([45cb3c5](https://github.com/GMOD/mobx-state-tree/commit/45cb3c585ce924b9930ebe84a702410e51f16b04))
+- Roll back an adoption by node identity, not by path ([19904f7](https://github.com/GMOD/mobx-state-tree/commit/19904f7bbc51f5ffbfd204962fc8d8daebd5f60c))
+- Leave an orphan a nested write stored back in this array ([4561789](https://github.com/GMOD/mobx-state-tree/commit/45617891d515d9e75831a8a91578d6f85176f240))
+
+### Other Changes
+
+- 6.8.1 ([beb090f](https://github.com/GMOD/mobx-state-tree/commit/beb090fdb080d00ef8238d275ea3e60b449aafb1))
+
+## [6.8.0](https://github.com/GMOD/mobx-state-tree/compare/v6.7.0...v6.8.0) (2026-10-14)
+
+### Bug Fixes
+
+- V1 action tracking settles once its last flow does ([847e5d1](https://github.com/GMOD/mobx-state-tree/commit/847e5d18e67c77212237b1b31830bfbab39e11cb))
+- Disposing a middleware mid-run no longer skips the next ([692e139](https://github.com/GMOD/mobx-state-tree/commit/692e139b016b1b6f9574ca09fd16459eca8b2db4))
+- Reject, rather than hang, when a flow yields a non-promise ([cbeaa9f](https://github.com/GMOD/mobx-state-tree/commit/cbeaa9f0049665363f0cebec22c1d3feaefc8ba2))
+- A write that throws leaves the tree as it found it ([e5fffec](https://github.com/GMOD/mobx-state-tree/commit/e5fffecb6b33c7bb765caa223f0ef150fc34f7f2))
+- A dead node built on first read runs its initializers' disposers ([69cc648](https://github.com/GMOD/mobx-state-tree/commit/69cc6485ff698d078e5e5a98bd46b972fe15191c))
+- Post-process an instance attached under it once ([201a44b](https://github.com/GMOD/mobx-state-tree/commit/201a44b07c78b9e855f678c64f5a8382f508689d))
+- Three reference edge cases ([d71c9ed](https://github.com/GMOD/mobx-state-tree/commit/d71c9ed2f09431675e4ddd237f7181fb02054b4d))
+- Accept the string message its signature allows ([7dbe57f](https://github.com/GMOD/mobx-state-tree/commit/7dbe57f9267f8778c7427d2947e95d60190fbc61))
+- Only a real hook name is a hook ([c6aea59](https://github.com/GMOD/mobx-state-tree/commit/c6aea59b4a410113c43d0020e6a2592348dcf49b))
+- Three ways a union threw or dropped a member instead of choosing ([dcc259e](https://github.com/GMOD/mobx-state-tree/commit/dcc259e7fb1afcb432f48f6b648a97ca6e98f18e))
+- ExtendInstance refuses a member that redefines a property ([c278842](https://github.com/GMOD/mobx-state-tree/commit/c278842e9db3e90b1d3cb30d95ea4211ab3f329e))
+- Three cases where the failure-path fixes threw where main did not ([7677482](https://github.com/GMOD/mobx-state-tree/commit/7677482966d06b0bd97c32172bc1ac3af493f48f))
+- Refuse a property named after an Object.prototype member, saying why ([b9dabd0](https://github.com/GMOD/mobx-state-tree/commit/b9dabd0542156f66fdba9d77b7e701e238bded85))
+- V1 tracking reports a failed flow the action started ([bdb12a7](https://github.com/GMOD/mobx-state-tree/commit/bdb12a7ebfb29c0359319ba805f087b1969b48b1))
+
+### Documentation
+
+- Update CLAUDE.md's jbrowse premises to how jbrowse works now ([7aa73ca](https://github.com/GMOD/mobx-state-tree/commit/7aa73caed0f8354880c8f1ffa094226dc2593871))
+- Say that walk visits only nodes that have been read ([778b1ef](https://github.com/GMOD/mobx-state-tree/commit/778b1efe050567999a66ed79b62c7281a5f87588))
+- Say when adding or disposing a middleware takes effect ([7dca948](https://github.com/GMOD/mobx-state-tree/commit/7dca948aaca8cbbd660d7fdbe4f3667b4a777e46))
+- Jbrowse's pluggable unions take the quick-match, not a dispatcher ([4738eb7](https://github.com/GMOD/mobx-state-tree/commit/4738eb79538e642f5d29cd6bf5210bb3c99a8ab1))
+- A/B jest against jbrowse without swapping the shared store ([b2d73c3](https://github.com/GMOD/mobx-state-tree/commit/b2d73c36682d03066a209e0e85ae75ff7a11dd95))
+
+### Other Changes
+
+- Move agent-docs/adr to architecture-decision-records and add agent-docs/CLAUDE.md ([88921f1](https://github.com/GMOD/mobx-state-tree/commit/88921f1c6454be406ef16907a6a2f500249994a6))
+- Update .gitignore ([b68dd93](https://github.com/GMOD/mobx-state-tree/commit/b68dd936c826e902836cdba756a9adfc84823604))
+
+### Performance Improvements
+
+- Build each action's mobx wrapper once, not per call ([6d6d731](https://github.com/GMOD/mobx-state-tree/commit/6d6d731f7818fcda9f23a1e123a5a790b6e40c8d))
+- Find mobx's property map when a minified build renames it ([2da150e](https://github.com/GMOD/mobx-state-tree/commit/2da150e0c33741c3cf838be8e9e5fac1f3c23d5b))
+- Check a property name against Object.prototype by Set lookup ([421f7c7](https://github.com/GMOD/mobx-state-tree/commit/421f7c72470b44f8afda5cf3718105f8da6219a8))
+
+### Types
+
+- Four public signatures that said less than the runtime does ([25d6c5c](https://github.com/GMOD/mobx-state-tree/commit/25d6c5c1f46d287f58423c41aa1b83a54c7ccdcc))
+
+## [6.7.0](https://github.com/GMOD/mobx-state-tree/compare/v6.6.1...v6.7.0) (2026-09-30)
+
+### Bug Fixes
+
+- A dead node's never-read child reads as a dead instance ([a6c430e](https://github.com/GMOD/mobx-state-tree/commit/a6c430e926ec31fe226a10cafff6e2ea0add4012))
+- Exempt only never-created dead nodes; ADR 0008 ([d15fb5b](https://github.com/GMOD/mobx-state-tree/commit/d15fb5b99399d7844af910db689cbb5c403ddbc3))
+- A never-read node dies as if it had been read ([3ffffae](https://github.com/GMOD/mobx-state-tree/commit/3ffffae9f5f44e7c5ea1573364da2ce6224ff288))
+- Fail clearly, before damaging the tree, on impossible attaches ([25e0dff](https://github.com/GMOD/mobx-state-tree/commit/25e0dffd31b02c57ec31195685e3551de7167bb0))
+- Destroy children that hooks add while a node is built at death ([743f887](https://github.com/GMOD/mobx-state-tree/commit/743f887f0a749f5dff727c86429c5ffb7ce4b726))
+
+### Styling
+
+- Format ADR 0008 ([4290662](https://github.com/GMOD/mobx-state-tree/commit/42906620c1c6fc58526251310468d0012f446159))
+
+## [6.6.1](https://github.com/GMOD/mobx-state-tree/compare/v6.6.0...v6.6.1) (2026-09-25)
+
+### Performance Improvements
+
+- Reconcile children in linear time ([530e27f](https://github.com/GMOD/mobx-state-tree/commit/530e27f20046ba449d45c2724106fcb5b4133e06))
+
+### Tests
+
+- Typecheck the reconcile tests; add pnpm typecheck to the verification norm ([a23e4f3](https://github.com/GMOD/mobx-state-tree/commit/a23e4f34f718dfd398b696ca5e36be88bbe52454))
+
+## [6.6.0](https://github.com/GMOD/mobx-state-tree/compare/v6.5.2...v6.6.0) (2026-09-24)
+
+### Bug Fixes
+
+- Stop overwriting the wrapped type's create ([f8a73dc](https://github.com/GMOD/mobx-state-tree/commit/f8a73dc2f1963828ac51d8bf7ef3ee18d2bb416a))
+- Invalidate references whose target leaves with an ancestor ([fb1a8ee](https://github.com/GMOD/mobx-state-tree/commit/fb1a8ee3d2b73e4793737b8061ad2fa1ddf088aa))
+
+### Documentation
+
+- ADRs for the guard and processor-typing decisions; refresh CLAUDE.md ([a6a1776](https://github.com/GMOD/mobx-state-tree/commit/a6a17769cf715b8a2a8807e110ceedcda34680af))
+
+### Refactoring
+
+- Chain snapshot processors only where there are two ([133a750](https://github.com/GMOD/mobx-state-tree/commit/133a75096a5a266ac31cfd75730e9cd35fdae135))
+- Dedupe the node lifecycle and drop dead weight ([0f3f682](https://github.com/GMOD/mobx-state-tree/commit/0f3f68216b84d2080793f8b141ea4033d2c6f528))
+
+### Types
+
+- Infer enumeration members, export what public signatures name ([ba784a6](https://github.com/GMOD/mobx-state-tree/commit/ba784a6bbc750bc3e361273330d0be054264202e))
+- Variadic signatures in place of the generated overloads ([c8d062d](https://github.com/GMOD/mobx-state-tree/commit/c8d062d14fadc99c93dfd2c05fb2dd444f813227))
+- Snapshot processors pass through keys they do not own ([bc6c747](https://github.com/GMOD/mobx-state-tree/commit/bc6c7479f5b362c94db5d81de00afaad88c87d56))
+- IsArrayType/isMapType/isModelType stop narrowing unsoundly ([540e9f7](https://github.com/GMOD/mobx-state-tree/commit/540e9f74a5878d8c817dbc3521c42ef6a984ab0b))
+
+## [6.5.2](https://github.com/GMOD/mobx-state-tree/compare/v6.5.1...v6.5.2) (2026-09-19)
+
+### Features
+
+- Extend types.compose to 11 model parts ([854d3f2](https://github.com/GMOD/mobx-state-tree/commit/854d3f2c6dd8bb13c0be28eb9ce0a8390bcf0992))
+
+## [6.5.1](https://github.com/GMOD/mobx-state-tree/compare/v6.5.0...v6.5.1) (2026-08-22)
+
+### Chores
+
+- One workflow, and no run without a reason ([920ee52](https://github.com/GMOD/mobx-state-tree/commit/920ee5280f315b3c3d44d3e7506c0744dbe5638d))
+- Enforce prettier, and keep it away from generated files ([801c920](https://github.com/GMOD/mobx-state-tree/commit/801c9204bed084e3a7031bcfa54cf19acb36e0f7))
+- Pin the toolchain the way the sibling GMOD repos do ([28ec9b0](https://github.com/GMOD/mobx-state-tree/commit/28ec9b0c4a00da23dfedbafe6c8b747d82e933c2))
+- Check every pull request, whatever its base ([b0d8421](https://github.com/GMOD/mobx-state-tree/commit/b0d8421adbec70859f7fa3a74b9e00266cd5cecd))
+
+### Tests
+
+- Stop the timer test rounding its way to a failure ([b24bcf5](https://github.com/GMOD/mobx-state-tree/commit/b24bcf5ef25bd927624c7cecba7ef1aed43f4732))
+- Fix what typechecking the suite turns up ([982bf00](https://github.com/GMOD/mobx-state-tree/commit/982bf00d3cfbd5d4c08e9f07fcd498b09d7f54d6))
+- Typecheck the test suite in CI ([d785a10](https://github.com/GMOD/mobx-state-tree/commit/d785a10bceef5e424dfba1ba97b92c0f3037e63b))
+
+### Types
+
+- Allow a zero-arg create() when the type defaults its own snapshot ([800ce20](https://github.com/GMOD/mobx-state-tree/commit/800ce2098a91933a040cb557af4ceee4a79baf9a))
+
+## [6.5.0](https://github.com/GMOD/mobx-state-tree/compare/v6.4.0...v6.5.0) (2026-08-22)
+
+### Bug Fixes
+
+- Reconcile through the loaded type instead of recreating the node ([3741894](https://github.com/GMOD/mobx-state-tree/commit/37418940fe11bc243b77d389f8e6e95cf77d2abe))
+
+### Chores
+
+- Create a GitHub release on publish, with git-cliff changelog notes ([3f1e16f](https://github.com/GMOD/mobx-state-tree/commit/3f1e16f455066ee8aabc975ea7bb72e328e3ad00))
+
+### Features
+
+- Late-bound membership via a members thunk, plus a name option ([af4084d](https://github.com/GMOD/mobx-state-tree/commit/af4084d35a40783c9af5fce6ee7c18b155e8b12f))
+
+## [6.4.0](https://github.com/GMOD/mobx-state-tree/compare/v6.3.0...v6.4.0) (2026-08-22)
+
+### Chores
+
+- Delete the union overload generator, dead since the variadic signatures ([0591a1a](https://github.com/GMOD/mobx-state-tree/commit/0591a1a58e5cd200b0329c4c169973d434498057))
+
+### Documentation
+
+- Update stale mst-reflection note in CLAUDE.md ([b3daf01](https://github.com/GMOD/mobx-state-tree/commit/b3daf010bb4e6bad2fe688d55de16473774dec14))
+- Scale caveat on ADR 0005 — 262 hydrated schemas is an upper bound ([9c2fccc](https://github.com/GMOD/mobx-state-tree/commit/9c2fccc065a021eb4bafd6d6cc1e9386dea3522f))
+
+### Performance Improvements
+
+- Hoist ModelType closure fields; stripDefault and union quick-match fast paths ([37a27ce](https://github.com/GMOD/mobx-state-tree/commit/37a27ce992a9e65d92b711129f1e92e6e2ec42bc))
+- Intern no-options unions on their member-identity tuple ([f0c516f](https://github.com/GMOD/mobx-state-tree/commit/f0c516f410cea8a42f68f50b497d627ee0cc5e6b))
+
+### Refactoring
+
+- Dead-code and consistency sweep ([7c14475](https://github.com/GMOD/mobx-state-tree/commit/7c1447565f470dc440622ee01a7e2a2395b0b11d))
+- Default BaseType.describe to the type name; drop nine equivalent overrides ([837350e](https://github.com/GMOD/mobx-state-tree/commit/837350e2ee9c38e80cf51ef288f5a09178eaad9a))
+
+### Types
+
+- Guard signatures, variadic union(), readonly validation results, stricter tsconfig ([43b086e](https://github.com/GMOD/mobx-state-tree/commit/43b086e1612a90e9264c99bfdc52710aab3fba38))
+- Restore generic-member inference with a leading 2-arity overload ([4759372](https://github.com/GMOD/mobx-state-tree/commit/475937291d73861f05492f369c425cf4c8d59dd1))
+
+## [6.3.0](https://github.com/GMOD/mobx-state-tree/compare/v6.2.0...v6.3.0) (2026-08-13)
+
+### Bug Fixes
+
+- Scope createActionTrackingMiddleware's running-action map per instance ([6f29930](https://github.com/GMOD/mobx-state-tree/commit/6f2993054c3b4dc11c3e3a770287f0f03eaf806e))
+- Stop the isXType guards from narrowing their negative branch to never ([8313f79](https://github.com/GMOD/mobx-state-tree/commit/8313f795d7dd71e4b101f1225eb478ab120debf7))
+- Drop the non-null assertion flow() immediately null-checks ([20f4114](https://github.com/GMOD/mobx-state-tree/commit/20f4114cebdb3f4f5828e0391b31be374d37d835))
+
+### Chores
+
+- Drop 26 type assertions the checker proves redundant, and lint for them ([ae202bb](https://github.com/GMOD/mobx-state-tree/commit/ae202bb889487fbd6125b945bc4fc2c6f568c63e))
+
+### Documentation
+
+- Record the jbrowse A/B, and fix two things in the procedure that bite ([414bda6](https://github.com/GMOD/mobx-state-tree/commit/414bda61a999ef4860d5efcf6d3055bec995dff1))
+
+### Performance Improvements
+
+- Put the constant `flags` on the prototype, not on every type object ([f6a4906](https://github.com/GMOD/mobx-state-tree/commit/f6a4906c4b7fbcddb875eff8e301a30329b5bc90))
+
+### Refactoring
+
+- Dedupe and de-clutter without touching the public surface ([2cd9579](https://github.com/GMOD/mobx-state-tree/commit/2cd95790367628fc960a3b300466c418b3041a72))
+
+### Reverts
+
+- Don't hoist `flags` to the prototype; keep the measurement ([a59898d](https://github.com/GMOD/mobx-state-tree/commit/a59898d3cb378ecbb67ef367b9d1e1d51cd2f3f0))
+
+## [6.2.0](https://github.com/GMOD/mobx-state-tree/compare/v6.1.0...v6.2.0) (2026-08-13)
+
+### Bug Fixes
+
+- Dispose the snapshot reaction with its last onSnapshot listener ([65aeb85](https://github.com/GMOD/mobx-state-tree/commit/65aeb85cb6188a1215a5eba7863ddfd45ba65839))
+- Kill the fallback node when the snapshot recovers ([e81a964](https://github.com/GMOD/mobx-state-tree/commit/e81a964c6fb4680b258deba66bd1b9952f04255c))
+- Count float/finite as primitive types, and guard lazy's splice index ([f0212cc](https://github.com/GMOD/mobx-state-tree/commit/f0212ccb255c3f6ff6951dae410ca37e18ae8539))
+- Echo the worktree path from the WorktreeCreate hook ([1e4ad0b](https://github.com/GMOD/mobx-state-tree/commit/1e4ad0beb96124897d321d367e5537fe05f59559))
+- An empty name still falls through to the subtype's ([b326bf4](https://github.com/GMOD/mobx-state-tree/commit/b326bf401e1cb65dcac1aacb8c2845e32a7e3fde))
+
+### Chores
+
+- Set up new git worktrees automatically, and record the scroll fix ([becf8b4](https://github.com/GMOD/mobx-state-tree/commit/becf8b4cf7223a939ba3d4af641c3231f21b9cf4))
+
+### Documentation
+
+- Record how to work on this fork, and why reconcile looks the way it does ([b408c3a](https://github.com/GMOD/mobx-state-tree/commit/b408c3a0c62d27d30800c69bdd95915997527668))
+- Record the mobx proxy-trap finding and the process.env benchmark trap ([1d113da](https://github.com/GMOD/mobx-state-tree/commit/1d113dac5d3cdb1bd96451d0e71625fb80e33278))
+- Record where JBrowse's MST time actually goes ([6e66023](https://github.com/GMOD/mobx-state-tree/commit/6e660234261525f0c5fd4cb9b2b7aa41b563a914))
+- Measure the value-churn path, which is where ADR 0002 actually lands ([982513e](https://github.com/GMOD/mobx-state-tree/commit/982513e4cfebcaf8668c49678e4a002672fe0a25))
+- Census of what fires per frame during a real LGV scroll ([0d19e66](https://github.com/GMOD/mobx-state-tree/commit/0d19e6610af64ab29c12aefdbd314ac6376c770c))
+- Record the type-construction work, and check in its harnesses ([6719977](https://github.com/GMOD/mobx-state-tree/commit/6719977d58c6eec9e2911364bd6c83419ed08c45))
+- Record the second type-construction pass, and what it cost to learn ([a40084c](https://github.com/GMOD/mobx-state-tree/commit/a40084cbffa34d9986c954b3ddd1c77694e87c02))
+- Correct ADR 0004's ABI claim — the check is `in`, not own keys ([68a5b8c](https://github.com/GMOD/mobx-state-tree/commit/68a5b8c2aefc13bb21d7ae93d6b385ac44f73a60))
+
+### Performance Improvements
+
+- Stop copying the whole array on a single-element write ([f001867](https://github.com/GMOD/mobx-state-tree/commit/f0018671f6b77e058b0f753ba90dd173b4c07f95))
+- Cheap fast paths in isPlainObject, union member resolution, id cache ([2e4c046](https://github.com/GMOD/mobx-state-tree/commit/2e4c04621e508fb542daaf750bb63f962f16b590))
+- Resolve the property observables once, not once per property ([e82f19a](https://github.com/GMOD/mobx-state-tree/commit/e82f19ab8fb2fed1e54736e3f351f314a3ce3d2c))
+- Stop materializing five phantom fields on every type object ([7a3c5a9](https://github.com/GMOD/mobx-state-tree/commit/7a3c5a90adcdbffacaa18762244819119b4afc5e))
+- Fold a composite type's name and flags on first read ([912444e](https://github.com/GMOD/mobx-state-tree/commit/912444e6dc8f36f5693ebbe679dfb8c4eb631e9f))
+- Undo a slow unshift, and get isType off every type object ([ab4498e](https://github.com/GMOD/mobx-state-tree/commit/ab4498e31bde80f70af2c46c940f64f584421241))
+- Keep a type's unset fields on the prototype, not on every type ([c294178](https://github.com/GMOD/mobx-state-tree/commit/c294178d9c4faa55dd4a82d25ed6033898c857ed))
+- Hand the rest array straight to the Union ([597a6e0](https://github.com/GMOD/mobx-state-tree/commit/597a6e0c5357d761c21c7e6e7f1c7fc66a3ab9f5))
+
+### Refactoring
+
+- Drop dead parameters, a redundant flags override, and duplicated checks ([b13df37](https://github.com/GMOD/mobx-state-tree/commit/b13df37dd4f428a24fac1d9a7210c1a90425db76))
+
+## [6.1.0](https://github.com/GMOD/mobx-state-tree/compare/v6.0.0...v6.1.0) (2026-08-04)
+
+### Bug Fixes
+
+- Track applySnapshot's stale keys in a Set ([535764e](https://github.com/GMOD/mobx-state-tree/commit/535764e4e871a60e07c5aa4eee286d7b5dbd4c1d))
+
+### Performance Improvements
+
+- One mobx lookup per property in getSnapshot ([fe0adbf](https://github.com/GMOD/mobx-state-tree/commit/fe0adbf2d742d29addd17b25bdd7e558f1e8d7ea))
+- Compare strip-default snapshots by walking, not stringifying ([524c2d6](https://github.com/GMOD/mobx-state-tree/commit/524c2d677e7e33795f2074c6e5b6bf57db1f8ca3))
+- Stop allocating candidate arrays on every dispatch ([225b195](https://github.com/GMOD/mobx-state-tree/commit/225b195cfb8f09e26ee982ace6de740ea2bd7a48))
+- Fast paths for unescapeJsonPath and EventHandler.emit ([9d1fe92](https://github.com/GMOD/mobx-state-tree/commit/9d1fe92b88affd53dc7c1b2e068d3f4c9f16b60d))
+
+### Refactoring
+
+- Drop dead statements and an unused abstract parameter ([c88f8a0](https://github.com/GMOD/mobx-state-tree/commit/c88f8a0ef003d4ee2c4eedd8a248512411fdc4c0))
+- Give reconcileArrayChildren a start index, and type areSame ([35b45cf](https://github.com/GMOD/mobx-state-tree/commit/35b45cfb3595b0fe0703bbbabac2db249c8daa69))
+
+## [6.0.0](https://github.com/GMOD/mobx-state-tree/compare/v5.13.0...v6.0.0) (2026-07-31)
+
+### Bug Fixes
+
+- Drop the mobx internals removed in mobx 7 ([6a7ee02](https://github.com/GMOD/mobx-state-tree/commit/6a7ee024eab2554e59dd59309598a5dbc373cea8))
+
+## [5.13.0](https://github.com/GMOD/mobx-state-tree/compare/v5.12.0...v5.13.0) (2026-07-18)
+
+### Features
+
+- Export extendInstance for lazy runtime augmentation ([35b3f3e](https://github.com/GMOD/mobx-state-tree/commit/35b3f3e2ec5ea4075f7a4d176823619d3c539a1d))
+
+### Performance Improvements
+
+- Skip property reprocessing on no-new-prop chain steps ([382419f](https://github.com/GMOD/mobx-state-tree/commit/382419f360420a6f678abc1d646e9988f41b9a96))
+- Memoize discriminated-member scan by type string ([e10cc61](https://github.com/GMOD/mobx-state-tree/commit/e10cc61c860ec065bb51a4fa6feda8e0a5b8b33f))
+- Reuse derived state + convert only the prop delta on chain steps ([83e523e](https://github.com/GMOD/mobx-state-tree/commit/83e523ef7c4c65d747b7aa373a9c0556f7a137fc))
+- Defer eager root snapshot serialization at instance creation ([743526b](https://github.com/GMOD/mobx-state-tree/commit/743526bd2162a1aa97d9bd1ad149f4d3cf436071))
+- Read ENABLE_TYPE_CHECK env var once, not per check ([a367cc0](https://github.com/GMOD/mobx-state-tree/commit/a367cc06d029463c59441f40f7f447a2466cad6c))
+
+## [5.12.0](https://github.com/GMOD/mobx-state-tree/compare/v5.11.2...v5.12.0) (2026-07-08)
+
+### Other Changes
+
+- Make keyed array reconciliation O(n) instead of O(n^2) (#13) ([c892379](https://github.com/GMOD/mobx-state-tree/commit/c892379eae39b2fa670139787ba012dc07f4a0e8))
+- Clean up snapshot hot path, type casts, and a latent getMembers crash (#12) ([38920db](https://github.com/GMOD/mobx-state-tree/commit/38920dbbe2dd21b0f7fb940b83b8aefe6621d193))
+- Remove validation result cache (#14) ([ff0b059](https://github.com/GMOD/mobx-state-tree/commit/ff0b059525d6079caea3d0fcb2ffc1c98d3c9158))
+- Remove dead second loop in union determineType (#15) ([412b566](https://github.com/GMOD/mobx-state-tree/commit/412b5664cc1ca38d1ccf33cbf88b6bbd2cbf584b))
+- Fix reentrant emit skipping handlers in EventHandler (#16) ([f39d990](https://github.com/GMOD/mobx-state-tree/commit/f39d990de67a5e54e505189f2214ff75b8b454ee))
+
+## [5.11.2](https://github.com/GMOD/mobx-state-tree/compare/v5.11.1...v5.11.2) (2026-07-01)
+
+### Documentation
+
+- Document error message simplifications in README ([9327140](https://github.com/GMOD/mobx-state-tree/commit/9327140beab6ac358d52cccd57fdcf4e01a7ad70))
+
+### Other Changes
+
+- Format ([08fa62f](https://github.com/GMOD/mobx-state-tree/commit/08fa62f3ebbd28980165cd24baa795668ddfb735))
+- Modernize tooling, strict types, and remove dead code (#11) ([6c85d4e](https://github.com/GMOD/mobx-state-tree/commit/6c85d4e4ab8ecf2f50dbc4ef1597cb22649e65c2))
+
+## [5.11.1](https://github.com/GMOD/mobx-state-tree/compare/v5.11.0...v5.11.1) (2026-06-10)
+
+### Other Changes
+
+- Improve README: reorganize and add docs for resilient, stripDefault, reflection API ([42745c9](https://github.com/GMOD/mobx-state-tree/commit/42745c91a279bd6765cb586c8f06d70202640029))
+
+### Performance Improvements
+
+- Size short-circuit in defaultSnapshotEquals ([cca7803](https://github.com/GMOD/mobx-state-tree/commit/cca7803351447f58ce5fdb9c6acc671f3159188e))
+
+## [5.11.0](https://github.com/GMOD/mobx-state-tree/compare/v5.10.8...v5.11.0) (2026-06-07)
+
+### Other Changes
+
+- Add types.stripDefault: optional that omits its key from snapshots when default ([1092278](https://github.com/GMOD/mobx-state-tree/commit/1092278f1ac317d50b435216ea49950302469873))
+
+## [5.10.8](https://github.com/GMOD/mobx-state-tree/compare/v5.10.7...v5.10.8) (2026-06-03)
+
+### Other Changes
+
+- Various small refactorings to use better types, (#10) ([b99ad03](https://github.com/GMOD/mobx-state-tree/commit/b99ad03da130c0c57d979a415ca40134769e5045))
+
+## [5.10.7](https://github.com/GMOD/mobx-state-tree/compare/v5.10.6...v5.10.7) (2026-06-03)
+
+### Tests
+
+- Guard snapshotProcessor preProcessor loose-return typing ([150cf91](https://github.com/GMOD/mobx-state-tree/commit/150cf91f8f11103380aa7cafd046e698398037c1))
+
+### Types
+
+- Loosen snapshotProcessor preProcessor return to CreationType | CustomC ([f921ee8](https://github.com/GMOD/mobx-state-tree/commit/f921ee8cdaf5f07d4d9974bf7c04104ec3dd0b63))
+
+## [5.10.6](https://github.com/GMOD/mobx-state-tree/compare/v5.10.5...v5.10.6) (2026-06-02)
+
+### Other Changes
+
+- Type IMSTMap.forEach key as string (keys always normalize to string) ([32e6d85](https://github.com/GMOD/mobx-state-tree/commit/32e6d85f72b5ae58a7ec2dbe32ca3f8f82a9ec78))
+
+## [5.10.5](https://github.com/GMOD/mobx-state-tree/compare/v5.10.4...v5.10.5) (2026-06-02)
+
+### Other Changes
+
+- Last-wins prop merge so overridden discriminants don't collapse to never ([c10543f](https://github.com/GMOD/mobx-state-tree/commit/c10543fe4f9044ffed3da1649e69529042600217))
+
+## [5.10.4](https://github.com/GMOD/mobx-state-tree/compare/v5.10.3...v5.10.4) (2026-06-02)
+
+### Other Changes
+
+- Confine empty-model brand to creation type; stricter create(); runnable type tests ([22fad7a](https://github.com/GMOD/mobx-state-tree/commit/22fad7ae6cd0848f8a0798f5940f903ac74df1a6))
+
+## [5.10.3](https://github.com/GMOD/mobx-state-tree/compare/v5.10.2...v5.10.3) (2026-06-01)
+
+### Other Changes
+
+- Small readme notes ([2f98be4](https://github.com/GMOD/mobx-state-tree/commit/2f98be4b16e8aebffc284c858d8be6d5990629d1))
+- Preprocess type ([a09b58d](https://github.com/GMOD/mobx-state-tree/commit/a09b58da9affdf7c491ab444abfe7d56a06cc56a))
+
+## [5.10.2](https://github.com/GMOD/mobx-state-tree/compare/v5.10.1...v5.10.2) (2026-05-29)
+
+### Other Changes
+
+- Format ([f30c5ee](https://github.com/GMOD/mobx-state-tree/commit/f30c5eee9a3f96b180d8111852e51ad705b09d40))
+- Add getUnionSubtypes reflection helper and surface getDefaultInstanceOrSnapshot ([2e2f513](https://github.com/GMOD/mobx-state-tree/commit/2e2f51350e659af84c1ea9cc150996b4b44174e1))
+
+## [5.10.1](https://github.com/GMOD/mobx-state-tree/compare/v5.10.0...v5.10.1) (2026-05-29)
+
+### Other Changes
+
+- Add reflection concepts used by jbrowse into public api ([705680d](https://github.com/GMOD/mobx-state-tree/commit/705680d99e31aa3ae447f9398521f1d8c4faa29c))
+
+## [5.10.0](https://github.com/GMOD/mobx-state-tree/compare/v5.9.3...v5.10.0) (2026-05-29)
+
+### Other Changes
+
+- Scope discriminated-union validation errors to the matching member ([eebbad3](https://github.com/GMOD/mobx-state-tree/commit/eebbad37fe919f32402d5845daa7248f4a93e4bc))
+
+## [5.9.3](https://github.com/GMOD/mobx-state-tree/compare/v5.9.2...v5.9.3) (2026-05-28)
+
+### Other Changes
+
+- Update README with tsgo unique-symbol fix notes ([59e1270](https://github.com/GMOD/mobx-state-tree/commit/59e1270390d3d1ec4f2373699c972ffe09d2ee52))
+- Clean up README ([a394de3](https://github.com/GMOD/mobx-state-tree/commit/a394de39b6cbb481caa2ad0f2f6dd4d978ce24df))
+- Clarify phantom property comment in IStateTreeNode ([c3bc00f](https://github.com/GMOD/mobx-state-tree/commit/c3bc00fc0c3ad48d6598ce542f9249d3f385556e))
+- Add more error messaging when snapshot fails ([3b044c3](https://github.com/GMOD/mobx-state-tree/commit/3b044c3fc8262efd80dcbf23deb352ff1f4048e4))
+
+## [5.9.2](https://github.com/GMOD/mobx-state-tree/compare/v5.9.1...v5.9.2) (2026-05-27)
+
+### Other Changes
+
+- Add type-level test for TypeOfValue on reference node instances ([8613279](https://github.com/GMOD/mobx-state-tree/commit/8613279a7c962dcb52b6dc9823e2a11b9d518eee))
+
+## [5.9.1](https://github.com/GMOD/mobx-state-tree/compare/v5.9.0...v5.9.1) (2026-05-27)
+
+### Other Changes
+
+- Updates ([8a2985f](https://github.com/GMOD/mobx-state-tree/commit/8a2985f54a384249390f4238703ec8eb05beedd2))
+- Replaced declare const $emptyObject: unique symbol + EmptyObject = { [$emptyObject]?: never } with export interface $EmptyObjectBrand { readonly $__mstEmpty__?: never }. This fixes TS4058 for tsgo (which has a bug handling exported unique symbol in .d.ts files) while still preventing the empty-model snapshot type from collapsing to {}. ([42d5b77](https://github.com/GMOD/mobx-state-tree/commit/42d5b77c72212fee7c02a99bc725aee784792ba1))
+- Replace \$stateTreeNodeType unique symbol with string property + export \$EmptyObjectBrand ([7d74330](https://github.com/GMOD/mobx-state-tree/commit/7d7433048941bf7255eab1cb1f273fabb88507c6))
+
+## [5.9.0](https://github.com/GMOD/mobx-state-tree/compare/v5.8.7...v5.9.0) (2026-05-27)
+
+### Other Changes
+
+- Remove public NonEmptyObject, keep internal EmptyObject brand for empty models ([5e5ae2a](https://github.com/GMOD/mobx-state-tree/commit/5e5ae2a23d13dab8740851c7dc60e10eaa187d0a))
+- Replace bare Function type with callable signatures ([a5c013e](https://github.com/GMOD/mobx-state-tree/commit/a5c013e78bca1150e5938dfa48a57da39139b0fc))
+- Remove dead tslint disable comments, stale TS3 TODO, enable no-unsafe-function-type ([4ea5001](https://github.com/GMOD/mobx-state-tree/commit/4ea50011b399e8a3ed31515bfdc3a089f63c7872))
+- Drop ad-hoc as-any casts now that FunctionWithFlag types its brand fields ([2c09604](https://github.com/GMOD/mobx-state-tree/commit/2c09604e308bed0d7b3d9361237e5cb9e32c5183))
+- Use discriminated-union narrowing in willChange/didChange instead of casts ([beb4025](https://github.com/GMOD/mobx-state-tree/commit/beb402589bef20c4b86a67a687c16dbe9271ce1e))
+- Remove redundant this.flags assignment in CoreType constructor ([f1fc0ea](https://github.com/GMOD/mobx-state-tree/commit/f1fc0ea83827469477216b9f4fec9d9f93000eee))
+- Tighten deepFreeze and trivial cast cleanups ([c20fcbb](https://github.com/GMOD/mobx-state-tree/commit/c20fcbbe6976e41a8a5d8e290b510434735991f9))
+- Use 'in Hook' instead of (Hook as any)[k] for hook-name check ([b413207](https://github.com/GMOD/mobx-state-tree/commit/b4132074034e650967e4fbb5806c8fed5612dd6f))
+- Remove concept of NonEmptyObject (#9) ([b424edc](https://github.com/GMOD/mobx-state-tree/commit/b424edca805aa8651b3c907d4556ee554f286f13))
+
+## [5.8.7](https://github.com/GMOD/mobx-state-tree/compare/v5.8.6...v5.8.7) (2026-05-24)
+
+### Other Changes
+
+- Bump mobx-state-tree ([cab34ad](https://github.com/GMOD/mobx-state-tree/commit/cab34ad20121ee52f8134a72c1bfe63c998a9835))
+
+## [5.8.6](https://github.com/GMOD/mobx-state-tree/compare/v5.8.5...v5.8.6) (2026-05-24)
+
+### Other Changes
+
+- M1 ([b803ed6](https://github.com/GMOD/mobx-state-tree/commit/b803ed6e3063b7e3a68e4f71faca15c6f15cbab5))
+
+## [5.8.5](https://github.com/GMOD/mobx-state-tree/compare/v5.8.4...v5.8.5) (2026-05-24)
+
+### Other Changes
+
+- Updates ([b4b7f6e](https://github.com/GMOD/mobx-state-tree/commit/b4b7f6ea367d88efbdb65e4fcaf9d148781042c9))
+
+## [5.8.3](https://github.com/GMOD/mobx-state-tree/compare/v5.8.2...v5.8.3) (2026-05-24)
+
+### Other Changes
+
+- Modernize rollup build: real bundling, sourcemaps, bundled .d.ts ([11a58b9](https://github.com/GMOD/mobx-state-tree/commit/11a58b900a6e8751c2575776136a3d6e3b0d77e5))
+
+## [5.8.2](https://github.com/GMOD/mobx-state-tree/compare/v5.8.1...v5.8.2) (2026-05-24)
+
+### Other Changes
+
+- Restore trusted publishing workflow, switch all CI/scripts to pnpm ([64eb0ee](https://github.com/GMOD/mobx-state-tree/commit/64eb0ee1eb5216302f03ddba3bd66bb5e2a73bb8))
+
+## [5.8.1](https://github.com/GMOD/mobx-state-tree/compare/v5.7.1...v5.8.1) (2026-05-24)
+
+### Other Changes
+
+- Circulars ([c5a3e6f](https://github.com/GMOD/mobx-state-tree/commit/c5a3e6fb91ab86f82a7644c613395d7673c43aa9))
+- Revert to b1b9b4d8 build/source state, bump to 5.8.0 ([aec18ba](https://github.com/GMOD/mobx-state-tree/commit/aec18ba2f6b24ddc6f37ee8c397ff5c137354cf7))
+
+## [5.7.1](https://github.com/GMOD/mobx-state-tree/compare/v5.7.0...v5.7.1) (2026-05-23)
+
+### Other Changes
+
+- CI ([df62e02](https://github.com/GMOD/mobx-state-tree/commit/df62e022a3226fa154d0b41c10b3bb6778ab069c))
+
+## [5.7.0](https://github.com/GMOD/mobx-state-tree/compare/v5.6.10...v5.7.0) (2026-05-23)
+
+### Other Changes
+
+- Switch to tsc-only dual ESM/CJS build, fix webpack scope-hoisting TDZ ([2557e0f](https://github.com/GMOD/mobx-state-tree/commit/2557e0f28ae5506d43876314505012ed60199f1c))
+- Clean up package.json to match bam-js conventions ([61e65c6](https://github.com/GMOD/mobx-state-tree/commit/61e65c604ba5ca46283c8c7a6ddeb6abb70bed42))
+
+## [5.6.10](https://github.com/GMOD/mobx-state-tree/compare/v5.6.9...v5.6.10) (2026-05-23)
+
+### Other Changes
+
+- Add sourcemap ([ead14f5](https://github.com/GMOD/mobx-state-tree/commit/ead14f5ac8592f87696d824fb8a330629de5aef5))
+
+## [5.6.9](https://github.com/GMOD/mobx-state-tree/compare/v5.6.8...v5.6.9) (2026-05-23)
+
+### Other Changes
+
+- Format ([ddbb0bc](https://github.com/GMOD/mobx-state-tree/commit/ddbb0bcc1b0a83fa1c5911f387cb3f0a5a5619bd))
+
+## [5.6.7](https://github.com/GMOD/mobx-state-tree/compare/v5.6.6...v5.6.7) (2026-05-23)
+
+### Other Changes
+
+- Misc ([81b6d6a](https://github.com/GMOD/mobx-state-tree/commit/81b6d6aae9cec9722abb43ff48587feb0387b68f))
+
+## [5.6.5](https://github.com/GMOD/mobx-state-tree/compare/v5.6.4...v5.6.5) (2026-05-22)
+
+### Other Changes
+
+- Bump node version ([bf32317](https://github.com/GMOD/mobx-state-tree/commit/bf3231745679b37b480fc3b4c3f7754a2071e825))
+
+## [5.6.4](https://github.com/GMOD/mobx-state-tree/compare/v5.6.3...v5.6.4) (2026-05-22)
+
+### Other Changes
+
+- Normalize ([ac8bd45](https://github.com/GMOD/mobx-state-tree/commit/ac8bd45ef2023bffd1e69556a090ef0894ee76d8))
+
+## [5.6.3](https://github.com/GMOD/mobx-state-tree/compare/v5.6.2...v5.6.3) (2026-05-22)
+
+### Other Changes
+
+- Update repo ([2166457](https://github.com/GMOD/mobx-state-tree/commit/2166457e5855fca2376beed66a9853d6ed1fd9ac))
+
+## [5.6.2](https://github.com/GMOD/mobx-state-tree/compare/v5.6.1...v5.6.2) (2026-05-22)
+
+### Other Changes
+
+- Add trusted publishing ([2e61daf](https://github.com/GMOD/mobx-state-tree/commit/2e61daf5f810d6dc586fd99463ed970e3226c5d5))
+- README note about publish ([26dc211](https://github.com/GMOD/mobx-state-tree/commit/26dc211fea70c8573975d40cbbb98b25f9b7db48))
+
+## [5.6.1](https://github.com/GMOD/mobx-state-tree/compare/v5.6.0...v5.6.1) (2026-05-22)
+
+### Other Changes
+
+- Add types.resilient to readme ([011464a](https://github.com/GMOD/mobx-state-tree/commit/011464ac241e4333c3676029ae70e3b748f756eb))
+- Get rid of insanely long error messages (#8) ([b1b9b4d](https://github.com/GMOD/mobx-state-tree/commit/b1b9b4d85dab8c07889ff5977a008171f7c3b934))
+- No bundle ([8056d8a](https://github.com/GMOD/mobx-state-tree/commit/8056d8a02020570fd3d1a0be44d450283ce56934))
+- Shorter errors ([0b3a1eb](https://github.com/GMOD/mobx-state-tree/commit/0b3a1eb5c596d4d9db72fcc83d136f66d2a4bd66))
+
+## [5.6.0](https://github.com/GMOD/mobx-state-tree/compare/v5.5.0...v5.6.0) (2026-02-26)
+
+### Other Changes
+
+- Creates types.resilient to avoid total crashes when something in a types.array fails to initialize (#7) ([0015754](https://github.com/GMOD/mobx-state-tree/commit/0015754081b6626804b23e1d645640d5ef8e6294))
+
+## [5.5.0](https://github.com/GMOD/mobx-state-tree/compare/v5.4.7...v5.5.0) (2025-12-04)
+
+### Other Changes
+
+- Prettier ([5aefa86](https://github.com/GMOD/mobx-state-tree/commit/5aefa8691f1eaf1398c7ccc7ea0aa5337c1d9be5))
+- Add optimizations generated by claude code (#6) ([a1fe5ae](https://github.com/GMOD/mobx-state-tree/commit/a1fe5ae0abefd1e0befa6ee0961253a57e97e01c))
+
+## [5.4.7](https://github.com/GMOD/mobx-state-tree/compare/v5.4.6...v5.4.7) (2025-11-30)
+
+### Other Changes
+
+- Not a esm module ([6c3e864](https://github.com/GMOD/mobx-state-tree/commit/6c3e864969f1042fce801e2a1348f25403e5b819))
+
+## [5.4.6](https://github.com/GMOD/mobx-state-tree/compare/v5.4.5...v5.4.6) (2025-11-29)
+
+### Other Changes
+
+- Remove pure-ESM style dual CJS/ESM build (#5) ([1c12368](https://github.com/GMOD/mobx-state-tree/commit/1c12368f5389d87162a09e73bdbe2bbed0aa8610))
+
+## [5.4.5](https://github.com/GMOD/mobx-state-tree/compare/v5.4.4...v5.4.5) (2025-11-27)
+
+### Other Changes
+
+- Try to fix types ([674ac4c](https://github.com/GMOD/mobx-state-tree/commit/674ac4c87fc1cc2d39e6186f3e94deb2781b8f80))
+
+## [5.4.4](https://github.com/GMOD/mobx-state-tree/compare/v5.4.2...v5.4.4) (2025-11-27)
+
+### Other Changes
+
+- README update ([624583f](https://github.com/GMOD/mobx-state-tree/commit/624583fc7d2d44573188188769a150acca7fdcec))
+- Modifications for 5.4.2 modernization with vitest (#3) ([a754515](https://github.com/GMOD/mobx-state-tree/commit/a754515a18ce60a8052f6cf0588b62886a1e5203))
+- Rm some deps ([0553364](https://github.com/GMOD/mobx-state-tree/commit/055336447b36ac831edb6c128cb8ee9579bb6264))
+- No husky ([453e26c](https://github.com/GMOD/mobx-state-tree/commit/453e26c558c60b20d9bbdc06673890fd164f314a))
+- Rm git head ([02aa277](https://github.com/GMOD/mobx-state-tree/commit/02aa277a58992a174ad5edd6c9f7bc15202d05d4))
+- Prettier 3 ([0612daf](https://github.com/GMOD/mobx-state-tree/commit/0612daf0012be340870badfe570463751e1ed442))
+- Rm circleci ([2a3314f](https://github.com/GMOD/mobx-state-tree/commit/2a3314f700b2db653f93e01fd943dac8aab60569))
+- Rm vscode ([16c1b4c](https://github.com/GMOD/mobx-state-tree/commit/16c1b4c85d7d0711c190dbd4eaa90bc1779ada38))
+- More package.json tweaks ([e2c0a48](https://github.com/GMOD/mobx-state-tree/commit/e2c0a48743a0f90c406347777456e22ff2d300d5))
+- Rollup (#4) ([bd0f116](https://github.com/GMOD/mobx-state-tree/commit/bd0f116fdd5f216d89ccdfd0cbb9583a06a695ea))
+- Updates ([86aa383](https://github.com/GMOD/mobx-state-tree/commit/86aa38393b26bbddfabaf2bf8bbe66395d8ec04f))
+
+## [5.4.2](https://github.com/GMOD/mobx-state-tree/compare/v6.0.0-pre.2...v5.4.2) (2024-04-17)
+
+### Bug Fixes
+
+- Do not mutate properties object by model constructor (#2176) ([5f63509](https://github.com/GMOD/mobx-state-tree/commit/5f63509a3ee71143647791f639b57eb7a31ccec4))
+
+### Chores
+
+- Regenerate and re-deploy docs ([6005d9b](https://github.com/GMOD/mobx-state-tree/commit/6005d9b1f5fc2fe3b9e238c5626cee5f9c7d8b6d))
+- Version bump to 5.4.2 ([700ab6f](https://github.com/GMOD/mobx-state-tree/commit/700ab6f8b7cd0ef1dda2e87d8382f3d671caddb0))
+
+### Documentation
+
+- Generate and publish docs ([9649538](https://github.com/GMOD/mobx-state-tree/commit/964953853db34036515c21ef2e0e4bcf4d401b37))
+- Fix broken link (#2165) ([01dd4ac](https://github.com/GMOD/mobx-state-tree/commit/01dd4acf1febb122764d02d9349e0b661f1713d6))
+- Update TypeScript tips ([631436d](https://github.com/GMOD/mobx-state-tree/commit/631436d3ac0bcaae9df2c6c82a4f1b8713b0516c))
+- Roll back TS version to 3.0 for accuracy in 5.4.1 docs ([ebc464d](https://github.com/GMOD/mobx-state-tree/commit/ebc464db54cb8a3f6ec6d6b94a1c32cbdd86901b))
+- Generate and publish docs ([da43e6b](https://github.com/GMOD/mobx-state-tree/commit/da43e6b29632ed95427332a96b006866a2489c9f))
+- Add recipe for auto-generated property setters ([fb4f34d](https://github.com/GMOD/mobx-state-tree/commit/fb4f34ded572a56d7a18c349c30d9ae554c1b566))
+- Generate docs ([b129b18](https://github.com/GMOD/mobx-state-tree/commit/b129b18bcd3e885c09130e21f73324e852805e37))
+- Publish docs with new recipe ([922ac09](https://github.com/GMOD/mobx-state-tree/commit/922ac098d93b0ce8f1a4a72774ee162791f8b3e9))
+- One more docs site publish ([16a83b6](https://github.com/GMOD/mobx-state-tree/commit/16a83b6ec913b405785e2356a24b226514dc57d9))
+
+### Other Changes
+
+- Add comparison between React Context/Reducer (#2158) ([0369392](https://github.com/GMOD/mobx-state-tree/commit/0369392d7578e971c42bba4ce852d70c625e85e9))
+- Mst-form-type documentation in markdown as we talked in email (#2168) ([0215cc5](https://github.com/GMOD/mobx-state-tree/commit/0215cc5410756d90633bb4dae9939e068929fa06))
+- Fix/get members 2173 (#2174) ([eec0026](https://github.com/GMOD/mobx-state-tree/commit/eec002678aa0a5083ff4650c2b42edeabc388318))
+
 ## [6.9.0](https://github.com/GMOD/mobx-state-tree/compare/v6.8.1...v6.9.0) (2026-10-15)
 
 ### Bug Fixes
