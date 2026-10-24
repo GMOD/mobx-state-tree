@@ -43,7 +43,11 @@ const MAX_STRINGIFY_STRING_LENGTH = 100
 // huge offending snapshot degrades into readable, bounded context instead of a
 // wall of text that then gets sliced mid-structure. The depth cap also bounds
 // recursion on circular structures.
-function truncateForStringify(value: any, depth: number): any {
+function truncateForStringify(
+  value: any,
+  depth: number,
+  applyToJSON = true
+): any {
   if (typeof value === "string") {
     return value.length > MAX_STRINGIFY_STRING_LENGTH
       ? `${value.substring(0, MAX_STRINGIFY_STRING_LENGTH)}… (${value.length - MAX_STRINGIFY_STRING_LENGTH} more characters)`
@@ -51,6 +55,12 @@ function truncateForStringify(value: any, depth: number): any {
   }
   if (value === null || typeof value !== "object") {
     return value
+  }
+  if (applyToJSON && typeof value.toJSON === "function") {
+    const json = value.toJSON()
+    if (json !== value) {
+      return truncateForStringify(json, depth, false)
+    }
   }
   if (depth >= MAX_STRINGIFY_DEPTH) {
     return Array.isArray(value) ? "[…]" : "{…}"

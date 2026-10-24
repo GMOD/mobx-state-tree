@@ -1228,3 +1228,12 @@ test("large snapshots are truncated in conversion error messages", () => {
     )
   }
 })
+
+test("conversion error messages print a Date through its toJSON", () => {
+  if (process.env.NODE_ENV !== "production") {
+    const M = types.model({ s: types.string })
+    expect(() => M.create({ s: new Date(0) } as any)).toThrowError(
+      'value `"1970-01-01T00:00:00.000Z"` is not assignable to type: `string`'
+    )
+  }
+})
