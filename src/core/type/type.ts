@@ -455,10 +455,7 @@ export abstract class BaseType<
   }
 
   abstract getSubTypes():
-    | IAnyType[]
-    | IAnyType
-    | null
-    | typeof cannotDetermineSubtype
+    IAnyType[] | IAnyType | null | typeof cannotDetermineSubtype
 }
 BaseType.prototype.create = action(BaseType.prototype.create)
 // Defaults that every type shares, kept off the individual type objects. See

@@ -145,9 +145,7 @@ export class OptionalValue<
 
 /** @hidden */
 export type OptionalDefaultValueOrFunction<IT extends IAnyType> =
-  | IT["CreationType"]
-  | IT["SnapshotType"]
-  | (() => ExtractCSTWithSTN<IT>)
+  IT["CreationType"] | IT["SnapshotType"] | (() => ExtractCSTWithSTN<IT>)
 
 /** @hidden */
 export interface IOptionalIType<
