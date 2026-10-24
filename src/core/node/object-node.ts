@@ -2,6 +2,7 @@ import {
   type IComputedValue,
   _allowStateChangesInsideComputed,
   action,
+  compareShallow,
   computed,
   reaction
 } from "mobx"
@@ -148,7 +149,17 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     // time — the previous cost, driven by the eager root reaction below.
     this._snapshotComputed = computed<S>(() => {
       this._snapshotComputedEvaluated = true
-      return freeze(this.getSnapshot())
+      const snapshot = freeze(this.getSnapshot())
+      if (
+        this._observableInstanceState !== ObservableInstanceLifecycle.CREATED ||
+        !this._cachedInitialSnapshotCreated
+      ) {
+        return snapshot
+      }
+      const initial = this._cachedInitialSnapshot!
+      this._cachedInitialSnapshot = undefined
+      this._cachedInitialSnapshotCreated = false
+      return compareShallow(snapshot, initial) ? initial : snapshot
     }, snapshotComputedOptions)
 
     this.unbox = this.unbox.bind(this)
