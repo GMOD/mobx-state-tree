@@ -1,6 +1,12 @@
 import { test, expect } from "vitest"
 import { autorun, isComputedProp } from "mobx"
-import { types, extendInstance, getSnapshot, unprotect } from "../../src"
+import {
+  types,
+  extendInstance,
+  getSnapshot,
+  recordActions,
+  unprotect
+} from "../../src"
 
 const Base = types.model("Base", { count: types.optional(types.number, 5) })
 
@@ -164,4 +170,22 @@ test("refuses a member that redefines a property, leaving it intact", () => {
 
   expect(m.count).toBe(5)
   expect(getSnapshot(m)).toEqual({ count: 5 })
+})
+
+test("recordActions leaves out extendInstance, so replay works", () => {
+  const M = types.model({ x: 0 }).actions(self => ({
+    setX(x: number) {
+      self.x = x
+    }
+  }))
+  const source = M.create()
+  const target = M.create()
+  const recorder = recordActions(source)
+  extendInstance(source, () => ({ views: { get twice() { return 2 } } }))
+  source.setX(3)
+  recorder.stop()
+
+  expect(recorder.actions.map(a => a.name)).toEqual(["setX"])
+  recorder.replay(target)
+  expect(target.x).toBe(3)
 })

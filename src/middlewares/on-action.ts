@@ -4,6 +4,7 @@ import {
   type IActionContext,
   type IAnyStateTreeNode,
   type IDisposer,
+  EXTEND_INSTANCE_ACTION,
   addMiddleware,
   applyPatch,
   applySnapshot,
@@ -260,7 +261,11 @@ export function onAction(
   }
 
   return addMiddleware(target, function handler(rawCall, next) {
-    if (rawCall.type === "action" && rawCall.id === rawCall.rootId) {
+    if (
+      rawCall.type === "action" &&
+      rawCall.id === rawCall.rootId &&
+      rawCall.name !== EXTEND_INSTANCE_ACTION
+    ) {
       const sourceNode = getStateTreeNode(rawCall.context)
       const info = {
         name: rawCall.name,

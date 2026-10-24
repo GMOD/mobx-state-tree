@@ -68,6 +68,9 @@ import {
 const PRE_PROCESS_SNAPSHOT = "preProcessSnapshot"
 const POST_PROCESS_SNAPSHOT = "postProcessSnapshot"
 
+/** @internal @hidden */
+export const EXTEND_INSTANCE_ACTION = "@@extendInstance"
+
 /**
  * mobx's per-property `ObservableValue`: an atom we can `reportObserved()` plus
  * `raw()` to read the stored child node directly, bypassing the unboxing
@@ -1328,7 +1331,7 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   // write-protection interceptor is attached (see finalizeNewInstance). On a live
   // instance that interceptor is already active, so run the attach inside an action
   // context: isRunningAction() then short-circuits assertWritable.
-  const attach = createActionInvoker(instance, "@@extendInstance", (() => {
+  const attach = createActionInvoker(instance, EXTEND_INSTANCE_ACTION, (() => {
     type.applyExtensionToInstance(instance, fn(instance))
   }) as FunctionWithFlag)
   attach()
