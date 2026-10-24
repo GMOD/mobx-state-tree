@@ -1,33 +1,38 @@
 import { describe, expect, test, vi } from "vitest"
 
 // mobx's minified production builds rename the administration's `values_`
-// field (to `j` in mobx 7.0), and vitest always loads the unminified one. These
-// stand-ins rename it, or hide it outright, to cover what a CommonJS consumer
-// running in production gets.
+// field (to `j` in mobx 7.0 and 7.1). Vitest loads the unminified build in dev
+// and the minified one under NODE_ENV=production. These stand-ins rename the
+// field, or hide it outright, in whichever build loads, to cover what a
+// CommonJS consumer running in production gets.
 const mode = vi.hoisted(() => ({ current: "renamed" as "renamed" | "hidden" }))
 const getAtomCalls = vi.hoisted(() => ({ count: 0 }))
 
 vi.mock("mobx", async importOriginal => {
   const mobx = await importOriginal<typeof import("mobx")>()
-  const renamed = (adm: any) =>
-    new Proxy(adm, {
+  const renamed = (adm: any) => {
+    const real = "values_" in adm ? "values_" : "j"
+    const exposed = (key: string | symbol) =>
+      mode.current === "renamed" && key === "j"
+    return new Proxy(adm, {
       get: (target, key) =>
-        key === "values_"
-          ? undefined
-          : key === "j" && mode.current === "renamed"
-            ? target.values_
+        exposed(key)
+          ? target[real]
+          : key === real
+            ? undefined
             : Reflect.get(target, key),
-      ownKeys: target =>
-        Reflect.ownKeys(target).flatMap(key =>
-          key !== "values_" ? [key] : mode.current === "renamed" ? ["j"] : []
-        ),
+      ownKeys: target => [
+        ...Reflect.ownKeys(target).filter(key => key !== real),
+        ...(mode.current === "renamed" ? ["j"] : [])
+      ],
       getOwnPropertyDescriptor: (target, key) =>
-        key === "values_"
-          ? undefined
-          : key === "j" && mode.current === "renamed"
-            ? Reflect.getOwnPropertyDescriptor(target, "values_")
+        exposed(key)
+          ? Reflect.getOwnPropertyDescriptor(target, real)
+          : key === real
+            ? undefined
             : Reflect.getOwnPropertyDescriptor(target, key)
     })
+  }
   return {
     ...mobx,
     _getAdministration: (thing: any, property?: string) =>
