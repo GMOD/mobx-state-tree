@@ -688,6 +688,30 @@ test("a replaced object's never-read child reads from the replacement's own list
   }
 })
 
+test("a child whose initializer throws on first read keeps its snapshot in the parent's", () => {
+  let fail = true
+  const Child = types.model({ x: types.number }).volatile(() => {
+    if (fail) {
+      fail = false
+      throw new Error("init failed")
+    }
+    return {}
+  })
+  const Parent = types.model({
+    child: Child,
+    list: types.array(Child),
+    other: types.number
+  })
+  const p = Parent.create({ child: { x: 1 }, list: [{ x: 2 }], other: 3 })
+  expect(() => p.child).toThrow("init failed")
+  fail = true
+  expect(() => p.list[0]).toThrow("init failed")
+
+  const snapshot = getSnapshot(p)
+  expect(snapshot).toEqual({ child: { x: 1 }, list: [{ x: 2 }], other: 3 })
+  expect(getSnapshot(Parent.create(snapshot))).toEqual(snapshot)
+})
+
 test("attaching to or from a node that died in a tree fails without harming the live tree", () => {
   const Item = types.model("Item", { id: types.identifier })
   const Display = types

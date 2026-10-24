@@ -284,6 +284,11 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       type.finalizeNewInstance(this, this.storedValue)
     } catch (e) {
       // short-cut to die the instance, to avoid the snapshot computed starting to throw...
+      if (!diedUncreated) {
+        try {
+          this._snapshotUponDeath = freeze(this._getCachedInitialSnapshot())
+        } catch {}
+      }
       this.state = NodeLifeCycle.DEAD
       throw e
     } finally {
