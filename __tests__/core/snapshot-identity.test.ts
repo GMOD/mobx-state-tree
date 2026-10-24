@@ -44,13 +44,11 @@ describe("snapshot identity across lazy instantiation", () => {
     expect(store.items[1]).toBe(b)
   })
 
-  const Child = types
-    .model("Child", { value: types.number })
-    .actions(self => ({
-      setValue(value: number) {
-        self.value = value
-      }
-    }))
+  const Child = types.model("Child", { value: types.number }).actions(self => ({
+    setValue(value: number) {
+      self.value = value
+    }
+  }))
 
   test("an initializer that mutates a child is reflected in the node's snapshot", () => {
     const Parent = types.model("Parent", { child: Child }).extend(self => {

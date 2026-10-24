@@ -40,7 +40,9 @@ async function load(distDir) {
     elements: Array.from({ length: n }, (_, i) => elementSnap(`e${p}-${i}`))
   })
   const doc = (pages, n) =>
-    Doc.create({ pages: Array.from({ length: pages }, (_, p) => pageSnap(p, n)) })
+    Doc.create({
+      pages: Array.from({ length: pages }, (_, p) => pageSnap(p, n))
+    })
 
   const time = fn => {
     const t = performance.now()

@@ -91,7 +91,10 @@ export class IdentifierCache {
       if (!(node instanceof ObjectNode)) {
         return
       }
-      if (node.identifierAttribute && this.cache.get(node.identifier!)?.includes(node)) {
+      if (
+        node.identifierAttribute &&
+        this.cache.get(node.identifier!)?.includes(node)
+      ) {
         this.notifyDied(node)
         newCache.addNodeToCache(node, false)
       }

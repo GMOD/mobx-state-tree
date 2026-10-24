@@ -99,8 +99,7 @@ test("findParent returns the nearest ancestor a predicate accepts, or undefined"
   const Document = types.model({ rows: types.array(Row), label: "doc" })
   const doc = Document.create({ rows: [{ cells: [{}] }] })
   const cell = doc.rows[0].cells[0]
-  const hasLabel = (node: object): node is { label: string } =>
-    "label" in node
+  const hasLabel = (node: object): node is { label: string } => "label" in node
 
   const labelled = findParent(cell, hasLabel)
   expect(labelled).toBe(doc.rows[0])

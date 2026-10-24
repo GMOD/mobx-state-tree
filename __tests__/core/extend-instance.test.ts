@@ -181,7 +181,13 @@ test("recordActions leaves out extendInstance, so replay works", () => {
   const source = M.create()
   const target = M.create()
   const recorder = recordActions(source)
-  extendInstance(source, () => ({ views: { get twice() { return 2 } } }))
+  extendInstance(source, () => ({
+    views: {
+      get twice() {
+        return 2
+      }
+    }
+  }))
   source.setX(3)
   recorder.stop()
 
