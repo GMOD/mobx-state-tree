@@ -20,7 +20,5 @@ const label: string | undefined = labelled?.label
 
 const any = findParent(node, n => n !== node)
 const anyNode: IAnyStateTreeNode | undefined = any
-// @ts-expect-error a plain predicate does not narrow
-const notALabel: string | undefined = any?.label
 
-export { viewName, notANumber, label, anyNode, notALabel }
+export { viewName, notANumber, label, anyNode }
