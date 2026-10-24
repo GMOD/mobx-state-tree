@@ -1,6 +1,5 @@
 import eslint from "@eslint/js"
 import { defineConfig } from "eslint/config"
-import importPlugin from "eslint-plugin-import"
 import tseslint from "typescript-eslint"
 
 export default defineConfig(
@@ -30,7 +29,6 @@ export default defineConfig(
   },
 
   ...tseslint.configs.recommended,
-  importPlugin.flatConfigs.recommended,
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
@@ -49,8 +47,21 @@ export default defineConfig(
         }
       ],
       curly: "error",
-      "import/extensions": ["error", "ignorePackages"],
-      "import/no-unresolved": "off",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^\\.{1,2}/(?!.*\\.ts$)",
+              message: "Relative imports need a .ts extension"
+            }
+          ]
+        }
+      ],
+      "no-duplicate-imports": [
+        "error",
+        { includeExports: true, allowSeparateTypeImports: true }
+      ],
 
       // modernization
       "no-var": "error",

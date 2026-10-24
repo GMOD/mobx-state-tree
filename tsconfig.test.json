@@ -18,8 +18,5 @@
     // consistent-type-imports job — see the ignore note in eslint.config.mjs
     "verbatimModuleSyntax": false
   },
-  // mst.bench.ts imports dist_branch1/dist_branch2, which exist only after
-  // scripts/build-both-branches.sh has run
-  "exclude": ["__tests__/perf/mst.bench.ts"],
   "include": ["src", "__tests__"]
 }

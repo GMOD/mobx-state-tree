@@ -1,5 +1,4 @@
-import { test, expect } from "vitest"
-import { assert, _ } from "spec.ts"
+import { test, expect, expectTypeOf } from "vitest"
 
 import {
   types,
@@ -1060,11 +1059,11 @@ test("#1268", () => {
 test("#1307 optional can be omitted in .create", () => {
   const Model1 = types.model({ name: types.optional(types.string, "") })
   const model1 = Model1.create({})
-  assert(model1.name, _ as string)
+  expectTypeOf(model1.name).toEqualTypeOf<string>()
 
   const Model2 = types.model({ name: "" })
   const model2 = Model2.create({})
-  assert(model2.name, _ as string)
+  expectTypeOf(model2.name).toEqualTypeOf<string>()
 })
 
 test("#1307 custom types failing", () => {
@@ -1134,15 +1133,14 @@ test("#1330", () => {
     test: ""
   })
 
-  assert(
+  expectTypeOf(
     RootStore.create({
       childStore: {
         foo: "a",
         bar: true
       }
-    }).childStore.root.test,
-    _ as string
-  )
+    }).childStore.root.test
+  ).toEqualTypeOf<string>()
 })
 
 test("maybe / optional type inference verification", () => {
@@ -1157,9 +1155,9 @@ test("maybe / optional type inference verification", () => {
   interface ITC extends SnapshotIn<typeof T> {}
   interface ITS extends SnapshotOut<typeof T> {}
 
-  // Mutual assignability rather than spec.ts's `assert`: SnapshotIn resolves to
+  // Mutual assignability rather than `toEqualTypeOf`: SnapshotIn resolves to
   // `ModelCreationType<ExtractCFromProps<...>>`, and no object literal is
-  // *identical* to a mapped type, which is what assert() demands. It read as a
+  // *identical* to a mapped type, which is what toEqualTypeOf demands. It read as a
   // passing assertion only because nothing typechecked this file.
   type AssignableTo<X extends Y, Y> = true
   type ExpectedITC = {
@@ -1173,16 +1171,13 @@ test("maybe / optional type inference verification", () => {
   const _itcNarrowsFrom: AssignableTo<ExpectedITC, ITC> = true
   expect([_itcWidensTo, _itcNarrowsFrom]).toEqual([true, true])
 
-  assert(
-    _ as ITS,
-    _ as {
-      a: string
-      b: string
-      c: string | undefined
-      d: string | null
-      e: string
-    }
-  )
+  expectTypeOf<ITS>().toEqualTypeOf<{
+    a: string
+    b: string
+    c: string | undefined
+    d: string | null
+    e: string
+  }>()
 })
 
 test("#2186 substitutability for model types extending a common base", () => {

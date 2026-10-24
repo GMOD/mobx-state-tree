@@ -2,8 +2,6 @@ node_modules
 *.log
 lib
 dist
-dist_branch1
-dist_branch2
 coverage
 .nyc_output
 .idea

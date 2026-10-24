@@ -10,7 +10,7 @@
 // brand on the snapshot type instead breaks that substitutability via the weak-type
 // "no properties in common" check, and is what this test guards against.
 
-import { assert, _ } from "spec.ts"
+import { expectTypeOf } from "vitest"
 
 import { types, type SnapshotOut } from "../../src/index.ts"
 
@@ -46,7 +46,7 @@ useRequired(RequiredPlusOptional)
 
 // --- the empty model's *snapshot out* is `{}`, with no leaked brand key. (SnapshotIn keeps
 // the weak brand on purpose — that is what rejects the excess-property creates above.) ---
-assert(_ as SnapshotOut<typeof Empty>, _ as {})
+expectTypeOf<SnapshotOut<typeof Empty>>().toEqualTypeOf<{}>()
 
 // --- a derived model's snapshot has its props (no leaked brand key) ---
-assert(_ as SnapshotOut<typeof Optional>, _ as { a: string })
+expectTypeOf<SnapshotOut<typeof Optional>>().toEqualTypeOf<{ a: string }>()

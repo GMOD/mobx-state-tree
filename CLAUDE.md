@@ -287,13 +287,11 @@ passes. Also add a negative control: an assertion that has to fail.
 
 ## Benchmarking
 
-**The stock `__tests__/perf/mst.bench.ts` A/B harness is not trustworthy for
-small deltas.** It runs all of one branch's samples then all of the other's, at
-`{warmupIterations: 3, iterations: 20}`. On the allocation-heavy
-create/applySnapshot scenarios that gives ±5–13% rme and self-contradictory
-verdicts run to run — the same build pair once reported "baseline 1.26x faster"
-on one create scenario and "optimized 1.17x faster" on a near-identical one.
-Treat anything under ~1.3x from it as noise.
+**Don't A/B with `vitest bench`.** The old `mst.bench.ts` harness (removed
+October 2026) ran all of one branch's samples, then all of the other's: ±5–13%
+rme on create/applySnapshot, and the same build pair read "baseline 1.26x
+faster" on one scenario and "optimized 1.17x faster" on a near-identical one.
+`pnpm bench` still runs single-build microbenchmarks.
 
 **What works:** an alternating-round harness. Per round, time A then B back to
 back; flip the leading side each round; compare per-round **medians**, not means,
@@ -369,10 +367,7 @@ you made with plain `git worktree add` (it echoes the path; status is in the log
 echo '{"worktree_path":"/path/to/wt"}' | .claude/hooks/setup-worktree.sh
 ```
 
-**Building a baseline without disturbing this worktree.** Don't use
-`scripts/build-both-branches.sh` (wired to `prebench`) — it does `git checkout` of
-two branches, which is unsafe in a shared worktree, and it refuses to run with
-uncommitted changes anyway. Instead:
+**Building a baseline without disturbing this worktree:**
 
 1. `git worktree add --detach <scratch>/baseline HEAD`
 2. `ln -s <main>/node_modules <scratch>/baseline/node_modules` (or run the setup
