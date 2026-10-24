@@ -16,8 +16,16 @@ The workload that drives these is JBrowse: hundreds of config-schema types built
 | Instance creation | The root snapshot computes lazily, not eagerly at `create()`                                                                       | Removed ~42% of `create()` time on a wide session                              | -                                                                                                                                                                                           |
 | `stripDefault`    | Compare snapshots by walking, with a size short-circuit, not by stringifying                                                       | Hot path for every JBrowse config schema                                       | -                                                                                                                                                                                           |
 | Actions           | Build each action's mobx wrapper once, not per call                                                                                | -                                                                              | -                                                                                                                                                                                           |
+| `detach`          | Move only the detached subtree's nodes between identifier caches, not scan every identifier in the tree                            | Detaching 600 of 3,600 nodes: 4.5 s to 34 ms (upstream 9.0.0: 52 ms)           | -                                                                                                                                                                                           |
+| Snapshot identity | A node's first snapshot read after instantiation returns the initial snapshot object when its entries are unchanged                | A snapshot taken before a read still matches by identity, so undo skips it     | -                                                                                                                                                                                           |
 
 ## Choices that measured neutral
 
 - Batching MST's per-getter `makeObservable` into one call was rejected: the cost is mobx's per-computed work.
 - Hoisting `flags` to the prototype saved 0.6% heap and no time, so it was reverted ([ADR 0004](../agent-docs/architecture-decision-records/0004-a-type-object-is-its-field-list.md)).
+- Compiling with `useDefineForClassFields: false` (upstream #2309) measured inside the noise of a null control. The build targets `esnext`, so classes already emit native fields.
+
+## Where upstream 9.0.0 is faster
+
+- Reordering or undoing through `applySnapshot` re-validates the whole snapshot, because the validation cache is gone: one page moved in a 100-page document takes 16.8 ms here and 0.24 ms upstream. Only undo/redo and session loads reach it.
+- `scripts/ab-editor.mjs` compares a build against upstream's published `dist/mobx-state-tree.module.js`, copied to `mobx-state-tree.mjs` in a directory of its own.
