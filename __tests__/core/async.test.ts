@@ -437,3 +437,18 @@ test("a flow yielding a non-promise after its first step rejects", async () => {
     "Only promises can be yielded to `async`, got: 42"
   )
 })
+
+test("a flow generator gets the actions object as this, like a plain action", async () => {
+  const M = types.model({ x: 0 }).actions(self => ({
+    setX(x: number) {
+      self.x = x
+    },
+    setXLater: flow(function* (this: { setX(x: number): void }, x: number) {
+      yield Promise.resolve()
+      this.setX(x)
+    })
+  }))
+  const m = M.create()
+  await m.setXLater(2)
+  expect(m.x).toBe(2)
+})

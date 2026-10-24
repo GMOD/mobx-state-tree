@@ -118,6 +118,7 @@ function createFlowSpawner(name: string, generator: FunctionWithFlag) {
     }
 
     const spawnerWithMw = spawner as FunctionWithFlag
+    const boundGenerator = generator.bind(this)
 
     function wrap(fn: FunctionWithFlag, type: IMiddlewareEventType, arg: any) {
       fn.$mst_middleware = spawnerWithMw.$mst_middleware // pick up any middleware attached to the flow
@@ -134,7 +135,7 @@ function createFlowSpawner(name: string, generator: FunctionWithFlag) {
     return new Promise(function (resolve, reject) {
       let gen: Generator<PromiseLike<unknown>, unknown, unknown>
       const init = function asyncActionInit(...initArgs: any[]) {
-        gen = generator(...initArgs)
+        gen = boundGenerator(...initArgs)
         onFulfilled(undefined) // kick off the flow
       } as FunctionWithFlag
       init.$mst_middleware = spawnerWithMw.$mst_middleware
