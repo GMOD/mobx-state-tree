@@ -4,7 +4,7 @@
 //
 // Why this exists: a change that removes an own slot from a type object — the
 // ADR 0003 / 0004 trick — moves *memory*, and the A/B timer cannot resolve it.
-// The timing harness bottoms out around 1.1x (see CLAUDE.md, "Benchmarking"),
+// The timing harness bottoms out around 1.1x (agent-docs/reference/benchmarking.md),
 // while this reads the same to the byte on every run, so a sub-1% effect is
 // legible here and simply invisible there. Run it before concluding that a
 // slot removal "did nothing".

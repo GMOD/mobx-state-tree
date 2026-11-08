@@ -1,4 +1,5 @@
-// Alternating-round A/B for the value-churn path CLAUDE.md identifies as the
+// Alternating-round A/B for the value-churn path
+// agent-docs/reference/jbrowse-workload.md identifies as the
 // workload that actually matters: one typed write per frame on a
 // jbrowse-shaped session, with an onSnapshot(root) listener above it (the
 // TimeTraveller shape) — ~75 us/write on this fork today.

@@ -2,7 +2,7 @@
 
 The workload that drives these is JBrowse: hundreds of config-schema types built at startup, large arrays loaded through `applySnapshot`, and one typed write per frame while a view scrolls.
 
-- Numbers come from the harnesses in `scripts/`. `CLAUDE.md` explains how to run them and why one invocation resolves nothing under ~1.1x.
+- Numbers come from the harnesses in `scripts/`. `agent-docs/reference/benchmarking.md` explains how to run them and why one invocation resolves nothing under ~1.1x.
 - Each decision has an ADR with the measurement and what was tried and rejected.
 
 | Area              | Choice                                                                                                                             | Result                                                                         | ADR                                                                                                                                                                                         |

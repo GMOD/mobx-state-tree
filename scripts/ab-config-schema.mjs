@@ -1,7 +1,7 @@
 // Alternating-round A/B for the jbrowse config-schema type-construction
 // workload. Per round: time A then B back to back, flipping the leading side
-// each round; compare per-round MEDIANS (GC spikes skew means). See the
-// "Benchmarking" section of CLAUDE.md for why the stock bench harness is not
+// each round; compare per-round MEDIANS (GC spikes skew means). See
+// agent-docs/reference/benchmarking.md for why the stock bench harness is not
 // trustworthy for deltas under ~1.3x.
 //
 // Usage: node scripts/ab-config-schema.mjs <baselineDistDir> <newDistDir> [rounds]

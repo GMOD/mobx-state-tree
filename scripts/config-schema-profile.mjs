@@ -1,4 +1,4 @@
-// Profile the workload CLAUDE.md names as the open target for JBrowse startup:
+// Profile the config-schema workload in agent-docs/reference/jbrowse-workload.md:
 // building one config-schema *type* per track at runtime, 262 of them.
 //
 // Faithful to packages/core/src/configuration/{configurationSchema,configurationSlot}.ts:
