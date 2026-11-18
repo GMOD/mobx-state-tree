@@ -16,7 +16,7 @@ let identifierCacheId = 0
  * @hidden
  */
 export class IdentifierCache {
-  private cacheId = identifierCacheId++
+  readonly cacheId = identifierCacheId++
 
   // n.b. in cache all identifiers are normalized to strings
   private cache = observable.map<string, IObservableArray<AnyObjectNode>>()
@@ -34,9 +34,8 @@ export class IdentifierCache {
     )
   }
 
-  getLastCacheModificationPerId(identifier: string): string {
-    const modificationId = this.lastCacheModificationPerId.get(identifier) || 0
-    return `${this.cacheId}-${modificationId}`
+  getModificationCount(identifier: string): number {
+    return this.lastCacheModificationPerId.get(identifier) || 0
   }
 
   addNodeToCache(node: AnyObjectNode, lastCacheUpdate = true): void {

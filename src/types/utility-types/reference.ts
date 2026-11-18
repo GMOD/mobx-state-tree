@@ -66,7 +66,8 @@ class StoredReference<IT extends IAnyType> {
 
   private resolvedReference?: {
     node: AnyObjectNode
-    lastCacheModification: string
+    cacheId: number
+    modificationCount: number
   }
 
   constructor(
@@ -98,16 +99,17 @@ class StoredReference<IT extends IAnyType> {
 
   private updateResolvedReference(node: AnyNode) {
     const normalizedId = normalizeIdentifier(this.identifier)
-    const root = node.root
-    const lastCacheModification =
-      root.identifierCache!.getLastCacheModificationPerId(normalizedId)
+    const cache = node.root.identifierCache!
+    const modificationCount = cache.getModificationCount(normalizedId)
+    const resolved = this.resolvedReference
     if (
-      this.resolvedReference?.lastCacheModification !== lastCacheModification
+      resolved?.cacheId !== cache.cacheId ||
+      resolved.modificationCount !== modificationCount
     ) {
       const { targetType } = this
       // reference was initialized with the identifier of the target
 
-      const target = root.identifierCache!.resolve(targetType, normalizedId)
+      const target = cache.resolve(targetType, normalizedId)
 
       if (!target) {
         throw new InvalidReferenceError(
@@ -117,7 +119,8 @@ class StoredReference<IT extends IAnyType> {
 
       this.resolvedReference = {
         node: target,
-        lastCacheModification
+        cacheId: cache.cacheId,
+        modificationCount
       }
     }
   }
