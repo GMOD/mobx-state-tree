@@ -1,3 +1,37 @@
+## [6.10.1](https://github.com/GMOD/mobx-state-tree/compare/v6.10.0...v6.10.1) (2026-11-18)
+
+### Bug Fixes
+
+- A reference with onInvalidated no longer subscribes to a root that has finished creating ([cd127fc](https://github.com/GMOD/mobx-state-tree/commit/cd127fc0bacde9e8ddef1436860fc91db49d98d9))
+
+### Chores
+
+- Drop four dev deps and the branch-checkout bench harness ([c12d2ac](https://github.com/GMOD/mobx-state-tree/commit/c12d2ac3be0dc9a790973e446adcd765cedaa533))
+
+### Documentation
+
+- Add format:check to the verification norm ([157f9e0](https://github.com/GMOD/mobx-state-tree/commit/157f9e0fed73812ea2a180495913e571d8fa248d))
+
+### Other Changes
+
+- CLAUDE.md keeps the four silent traps; the runbooks, benchmarks and JBrowse workload move to agent-docs/reference ([4bb2760](https://github.com/GMOD/mobx-state-tree/commit/4bb276083df660ebc6657ffeeb0ace5bee262275))
+
+### Performance Improvements
+
+- Compare the identifier cache by id and count, not a built string ([54bb989](https://github.com/GMOD/mobx-state-tree/commit/54bb989d39c0c95e3f963a41766cf486663508fc))
+- A splice near the end reads only the nodes it touches ([609f525](https://github.com/GMOD/mobx-state-tree/commit/609f5257921192434a9196a8ebdbb6383ac4598e))
+- An action invoker holds its node ([6c262db](https://github.com/GMOD/mobx-state-tree/commit/6c262db54b164874f65629d6cad9280b62321144))
+
+### Styling
+
+- Prettier the two files format:check flagged ([55d19d8](https://github.com/GMOD/mobx-state-tree/commit/55d19d85d4d5cced5e6dafe5a4202370bc4d871a))
+
+### Tests
+
+- Pin findParent narrowing through a guard over unknown ([b327eb5](https://github.com/GMOD/mobx-state-tree/commit/b327eb5e97d10e954aac7c4823c289f0ec314aa2))
+- Drop the findParent assertion that never held ([302f448](https://github.com/GMOD/mobx-state-tree/commit/302f448b16b946644ef7c10bc4a3cdd173c00a32))
+- Let the mobx-minified stand-in handle an already-minified build ([2b5d2fe](https://github.com/GMOD/mobx-state-tree/commit/2b5d2fecb0e23a35f84c2367f9a2728d8c015d69))
+
 ## [6.10.0](https://github.com/GMOD/mobx-state-tree/compare/v6.9.0...v6.10.0) (2026-10-24)
 
 ### Bug Fixes
