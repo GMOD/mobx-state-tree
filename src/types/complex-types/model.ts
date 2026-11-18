@@ -654,6 +654,7 @@ export class ModelType<
       )
     }
 
+    const node = getStateTreeNode(self)
     // bind actions to the object created
     Object.keys(actions).forEach(name => {
       // warn if preprocessor was given
@@ -686,7 +687,7 @@ export class ModelType<
       const boundAction = action2.bind(actions)
       boundAction._isFlowAction = action2._isFlowAction ?? false
       boundAction.$mst_middleware = action2.$mst_middleware
-      const actionInvoker = createActionInvoker(self as any, name, boundAction)
+      const actionInvoker = createActionInvoker(node, name, boundAction)
       actions[name] = actionInvoker
 
       // See #646, allow models to be mocked
@@ -1322,7 +1323,8 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   if (!isStateTreeNode(instance)) {
     throw fail("extendInstance expects a mobx-state-tree node")
   }
-  const type: IAnyType = getStateTreeNode(instance).type
+  const node = getStateTreeNode(instance)
+  const type: IAnyType = node.type
   if (!(type instanceof ModelType)) {
     throw fail("extendInstance can only be used on model instances")
   }
@@ -1331,7 +1333,7 @@ export function extendInstance<T extends IAnyStateTreeNode>(
   // write-protection interceptor is attached (see finalizeNewInstance). On a live
   // instance that interceptor is already active, so run the attach inside an action
   // context: isRunningAction() then short-circuits assertWritable.
-  const attach = createActionInvoker(instance, EXTEND_INSTANCE_ACTION, (() => {
+  const attach = createActionInvoker(node, EXTEND_INSTANCE_ACTION, (() => {
     type.applyExtensionToInstance(instance, fn(instance))
   }) as FunctionWithFlag)
   attach()

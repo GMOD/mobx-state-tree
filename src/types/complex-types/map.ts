@@ -333,6 +333,7 @@ export class MapType<IT extends IAnyType> extends ComplexType<
 
     installHookInitializers(
       (node.type as this).hookInitializers,
+      node,
       instance as unknown as IMSTMap<IT>
     )
 

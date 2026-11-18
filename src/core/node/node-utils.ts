@@ -88,11 +88,12 @@ export function assertIsStateTreeNode(
  * @hidden
  */
 export function getStateTreeNode(value: IAnyStateTreeNode): AnyObjectNode {
-  if (!isStateTreeNode(value)) {
+  const node = getStateTreeNodeSafe(value)
+  if (!node) {
     // istanbul ignore next
     throw fail(`Value ${value} is no MST Node`)
   }
-  return value.$treenode!
+  return node
 }
 
 /**

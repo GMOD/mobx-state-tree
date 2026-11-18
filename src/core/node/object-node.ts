@@ -713,7 +713,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
 
   private preboot(): void {
     this._applyPatches = createActionInvoker(
-      this.storedValue,
+      this,
       "@APPLY_PATCHES",
       (patches: ReadonlyArray<IJsonPatch>) => {
         patches.forEach(patch => {
@@ -731,7 +731,7 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
       }
     )
     this._applySnapshot = createActionInvoker(
-      this.storedValue,
+      this,
       "@APPLY_SNAPSHOT",
       (snapshot: C) => {
         // the current snapshot needs no reconcile

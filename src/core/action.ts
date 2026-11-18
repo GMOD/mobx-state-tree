@@ -4,7 +4,6 @@ import {
   isHookName,
   devMode,
   fail,
-  getRoot,
   getStateTreeNode,
   warnError
 } from "../internal.ts"
@@ -87,10 +86,9 @@ export function getNextActionId() {
  */
 export function runWithActionContext(
   context: IMiddlewareEvent,
-  fn: (...args: any[]) => any
+  fn: (...args: any[]) => any,
+  node = getStateTreeNode(context.context)
 ) {
-  const node = getStateTreeNode(context.context)
-
   if (context.type === "action") {
     node.assertAlive({
       actionContext: context
@@ -130,7 +128,7 @@ export function getParentActionContext(
  * @hidden
  */
 export function createActionInvoker<T extends FunctionWithFlag>(
-  target: IAnyStateTreeNode,
+  node: AnyObjectNode,
   name: string,
   fn: T
 ) {
@@ -145,8 +143,8 @@ export function createActionInvoker<T extends FunctionWithFlag>(
         name,
         id,
         args,
-        context: target,
-        tree: getRoot(target),
+        context: node.storedValue,
+        tree: node.root.storedValue,
         rootId: parentContext ? parentContext.rootId : id,
         parentId: parentContext ? parentContext.id : 0,
         allParentIds: parentContext
@@ -155,7 +153,8 @@ export function createActionInvoker<T extends FunctionWithFlag>(
         parentEvent: parentContext,
         parentActionEvent: parentActionContext
       },
-      fn
+      fn,
+      node
     )
   }
   ;(res as FunctionWithFlag)._isMSTAction = true

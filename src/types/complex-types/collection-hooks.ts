@@ -1,4 +1,5 @@
 import {
+  type AnyObjectNode,
   EMPTY_ARRAY,
   type IHooksGetter,
   addHiddenFinalProp,
@@ -40,6 +41,7 @@ export function appendHookInitializer<T>(
  */
 export function installHookInitializers<T>(
   hookInitializers: HookInitializers<T>,
+  node: AnyObjectNode,
   instance: T
 ): void {
   const addProp = !devMode() ? addHiddenFinalProp : addHiddenWritableProp
@@ -47,7 +49,7 @@ export function installHookInitializers<T>(
     const hooks = initializer(instance)
     for (const name of Object.keys(hooks)) {
       const hook = hooks[name as keyof typeof hooks]!
-      addProp(instance, name, createActionInvoker(instance, name, hook))
+      addProp(instance, name, createActionInvoker(node, name, hook))
     }
   }
 }

@@ -161,7 +161,11 @@ export class ArrayType<IT extends IAnyType> extends ComplexType<
   finalizeNewInstance(node: this["N"], instance: this["T"]): void {
     _getAdministration(instance).dehancer = node.unbox
 
-    installHookInitializers((node.type as this).hookInitializers, instance)
+    installHookInitializers(
+      (node.type as this).hookInitializers,
+      node,
+      instance
+    )
 
     intercept(instance as IObservableArray<AnyNode>, this.willChange)
     observe(instance as IObservableArray<AnyNode>, this.didChange)
