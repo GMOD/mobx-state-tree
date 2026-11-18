@@ -15,8 +15,11 @@ import {
   destroy,
   detach,
   getLivelinessChecking,
+  getParent,
+  getRoot,
   setLivelinessChecking
 } from "../../src"
+import { getStateTreeNode } from "../../src/internal"
 
 const Todo = types.model({ id: types.identifier })
 
@@ -644,4 +647,189 @@ test("an onInvalidated handler can destructure removeRef", () => {
   store.items.clear()
 
   expect(store.selected).toBeUndefined()
+})
+
+test("a safeReference created in a live tree leaves nothing on the root", () => {
+  const Target = types.model({ id: types.identifier })
+  const Item = types.model({ ref: types.safeReference(Target) })
+  const Root = types.model({
+    targets: types.array(Target),
+    items: types.array(Item)
+  })
+  const root = Root.create({ targets: [{ id: "a" }], items: [{ ref: "a" }] })
+  unprotect(root)
+  expect(root.items[0].ref).toBe(root.targets[0])
+
+  root.items.push({ ref: "a" })
+  expect(root.items[1].ref).toBe(root.targets[0])
+  root.items.pop()
+
+  const subscribers = (getStateTreeNode(root) as any)._hookSubscribers
+  expect(
+    subscribers?.hasSubscribers("afterCreationFinalization") ?? false
+  ).toBe(false)
+
+  destroy(root.targets[0])
+  expect(getSnapshot(root.items)).toEqual([{ ref: undefined }])
+})
+
+describe("a reference created while its root finalizes its children", () => {
+  function build(initialRef: string) {
+    const events: string[] = []
+    const Target = types.model({ id: types.identifier })
+    const Item = types
+      .model({
+        ref: types.maybe(
+          types.reference(Target, {
+            onInvalidated(ev) {
+              events.push(`${ev.cause}:${ev.invalidId}`)
+              ev.removeRef()
+            }
+          })
+        )
+      })
+      .actions(() => ({
+        afterAttach() {
+          events.push("attached")
+        }
+      }))
+    const Child = types.model({ items: types.array(Item) }).actions(self => ({
+      afterAttach() {
+        self.items.push({ ref: initialRef })
+      }
+    }))
+    const Root = types
+      .model({ targets: types.array(Target), child: Child })
+      .actions(self => ({
+        afterCreate() {
+          void self.child
+        }
+      }))
+    const root = Root.create({ targets: [{ id: "a" }], child: { items: [] } })
+    unprotect(root)
+    return { root, events }
+  }
+
+  it("is watched before anything reads its holder", () => {
+    const { root, events } = build("a")
+    expect(events).toEqual(["attached"])
+    destroy(root.targets[0])
+    expect(events).toEqual(["attached", "destroy:a"])
+    expect(getSnapshot(root.child)).toEqual({ items: [{ ref: undefined }] })
+  })
+
+  it("reports a target that was never there", () => {
+    const { root, events } = build("missing")
+    expect(events).toEqual(["attached", "invalidSnapshotReference:missing"])
+    expect(getSnapshot(root.child)).toEqual({ items: [{ ref: undefined }] })
+  })
+})
+
+test("a reference under a node detached while it finalizes its children is watched", () => {
+  const events: string[] = []
+  const Target = types.model({ id: types.identifier })
+  const Item = types.model({
+    ref: types.maybe(
+      types.reference(Target, {
+        onInvalidated(ev) {
+          events.push(`${ev.cause}:${ev.invalidId}`)
+          ev.removeRef()
+        }
+      })
+    )
+  })
+  let middle: any
+  const Leaf = types.model({}).actions(self => ({
+    afterAttach() {
+      middle = getParent(self)
+      getRoot<any>(self).release()
+      middle.addItem()
+    }
+  }))
+  const Middle = types
+    .model({
+      targets: types.array(Target),
+      leaf: Leaf,
+      items: types.array(Item)
+    })
+    .actions(self => ({
+      afterCreate() {
+        void self.leaf
+      },
+      addItem() {
+        self.items.push({ ref: "t" })
+      },
+      removeTarget() {
+        destroy(self.targets[0])
+      }
+    }))
+  const Root = types.model({ middle: types.maybe(Middle) }).actions(self => ({
+    release() {
+      detach(self.middle!)
+    }
+  }))
+  const root = Root.create({
+    middle: { targets: [{ id: "t" }], leaf: {}, items: [] }
+  })
+  void root.middle
+  middle.removeTarget()
+  expect(events).toEqual(["destroy:t"])
+  expect(getSnapshot(middle.items)).toEqual([{ ref: undefined }])
+})
+
+describe("a reference created between a node's two finalizations", () => {
+  function build(refId: string) {
+    const events: string[] = []
+    const Target = types.model({ id: types.identifier })
+    const Item = types.model({
+      ref: types.maybe(
+        types.reference(Target, {
+          onInvalidated(ev) {
+            events.push(`${ev.cause}:${ev.invalidId}`)
+            ev.removeRef()
+          }
+        })
+      )
+    })
+    let entered = false
+    let held: any
+    const Holder = types
+      .model({ targets: types.array(Target), items: types.array(Item) })
+      .actions(self => ({
+        afterAttach() {
+          if (!entered) {
+            entered = true
+            held = self
+            detach(self)
+            const wrapper = Wrapper.create({ holder: self as any })
+            unprotect(wrapper)
+            detach(self)
+            self.items.push({ ref: refId })
+          }
+        },
+        removeTarget() {
+          destroy(self.targets[0])
+        }
+      }))
+    const Wrapper = types.model({ holder: types.maybe(Holder) })
+    const root = Wrapper.create({
+      holder: { targets: [{ id: "t" }], items: [] }
+    })
+    unprotect(root)
+    void root.holder
+    return { holder: held, events }
+  }
+
+  it("is watched", () => {
+    const { holder, events } = build("t")
+    holder.removeTarget()
+    expect(events).toEqual(["destroy:t"])
+    expect(getSnapshot(holder.items)).toEqual([{ ref: undefined }])
+  })
+
+  it("reports a target that was never there", () => {
+    const { holder, events } = build("missing")
+    expect(events).toEqual(["invalidSnapshotReference:missing"])
+    expect(getSnapshot(holder.items)).toEqual([{ ref: undefined }])
+  })
 })

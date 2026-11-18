@@ -345,9 +345,12 @@ export abstract class BaseReferenceType<
       // already attached, so the whole tree is ready
       startWatching(true)
     } else {
-      if (!storedRefNode.isRoot) {
+      const root = storedRefNode.isRoot ? undefined : storedRefNode.root
+      // a root that has fired this never fires it again, so a subscription
+      // made then would only pin this node to the root for the root's lifetime
+      if (root?.awaitsCreationFinalization) {
         // start watching once the whole tree is ready
-        storedRefNode.root.registerHook(Hook.afterCreationFinalization, () => {
+        root.registerHook(Hook.afterCreationFinalization, () => {
           // make sure to attach it so it can start listening
           if (storedRefNode.parent) {
             storedRefNode.parent.createObservableInstanceIfNeeded()

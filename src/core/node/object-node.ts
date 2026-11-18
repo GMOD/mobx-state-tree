@@ -68,6 +68,10 @@ export interface IChildNodesMap {
   [key: string]: AnyNode
 }
 
+// a node being finalized reads FINALIZED from before its children finalize,
+// with its afterCreationFinalization still to fire
+const nodesFinalizing: AnyObjectNode[] = []
+
 const snapshotReactionOptions = {
   onError(e: any) {
     throw e
@@ -666,14 +670,37 @@ export class ObjectNode<C, S, T> extends BaseNode<C, S, T> {
     return `${this.type.name}@${path}${identifier}${this.isAlive ? "" : " [dead]"}`
   }
 
-  finalizeCreation(): void {
-    this.baseFinalizeCreation(() => {
-      for (const child of this.getChildren()) {
-        child.finalizeCreation()
-      }
+  get awaitsCreationFinalization(): boolean {
+    return (
+      this.state !== NodeLifeCycle.FINALIZED || nodesFinalizing.includes(this)
+    )
+  }
 
-      this.fireInternalHook(Hook.afterCreationFinalization)
-    })
+  finalizeCreation(): void {
+    const tracked = this.state === NodeLifeCycle.CREATED
+    if (tracked) {
+      nodesFinalizing.push(this)
+    }
+    try {
+      this.baseFinalizeCreation(() => {
+        for (const child of this.getChildren()) {
+          child.finalizeCreation()
+        }
+
+        this.fireInternalHook(Hook.afterCreationFinalization)
+        // an afterAttach that re-parents its own node finalizes it a second
+        // time inside the first, and the outer pass fires the hook again
+        if (
+          nodesFinalizing.indexOf(this) === nodesFinalizing.lastIndexOf(this)
+        ) {
+          this.dropHookSubscribers(Hook.afterCreationFinalization)
+        }
+      })
+    } finally {
+      if (tracked) {
+        nodesFinalizing.pop()
+      }
+    }
   }
 
   detach(): void {

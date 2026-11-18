@@ -68,6 +68,11 @@ export abstract class BaseNode<C, S, T> {
     this._hookSubscribers?.emit(name, subject, name)
   }
 
+  // for a hook that fires once in a node's life
+  protected dropHookSubscribers(name: Hook) {
+    this._hookSubscribers?.clear(name)
+  }
+
   /**
    * Detaching a node takes its whole subtree out of the tree, but only the
    * detached node's parent changes, so only it fires `beforeDetach` for real.
