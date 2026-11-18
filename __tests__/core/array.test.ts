@@ -584,3 +584,61 @@ test("#1676 - should accept read-only arrays", () => {
   const instance = ArrayType.create(data)
   expect(getSnapshot(instance)).toEqual(["foo", "bar"])
 })
+
+test("a splice anywhere keeps survivors, paths and patches in step", () => {
+  const Item = types.model({ id: types.identifier })
+  const Store = types.model({ items: types.array(Item) })
+  const ids = Array.from({ length: 12 }, (_, i) => `i${i}`)
+  const snapshot = () => ({ items: ids.map(id => ({ id })) })
+
+  for (let start = 0; start <= ids.length; start++) {
+    for (let deleteCount = 0; deleteCount <= 3; deleteCount++) {
+      for (let insertCount = 0; insertCount <= 3; insertCount++) {
+        const store = Store.create(snapshot())
+        const mirror = Store.create(snapshot())
+        unprotect(store)
+        unprotect(mirror)
+        const before = store.items.slice()
+        const expected = ids.slice()
+        const added = Array.from({ length: insertCount }, (_, i) => `n${i}`)
+        const removedIds = expected.splice(start, deleteCount, ...added)
+        const patches: IJsonPatch[] = []
+        onPatch(store, patch => patches.push(patch))
+
+        const removed = store.items.splice(
+          start,
+          deleteCount,
+          ...added.map(id => ({ id }))
+        )
+
+        expect(store.items.map(item => item.id)).toEqual(expected)
+        expect(removed.map(item => getSnapshot(item).id)).toEqual(removedIds)
+        expect(removed.every(item => !isAlive(item))).toBe(true)
+        store.items.forEach((item, i) => {
+          expect(getPath(item)).toBe(`/items/${i}`)
+          const was = ids.indexOf(item.id)
+          expect(was < 0 || before[was] === item).toBe(true)
+        })
+        applyPatch(mirror, patches)
+        expect(getSnapshot(mirror)).toEqual(getSnapshot(store))
+      }
+    }
+  }
+})
+
+test("a splice that swaps in a node from later in the array re-stamps the tail", () => {
+  const Item = types.model({ id: types.identifier })
+  const store = types.model({ items: types.array(Item) }).create({
+    items: Array.from({ length: 8 }, (_, i) => ({ id: `i${i}` }))
+  })
+  unprotect(store)
+  const five = store.items[5]
+  store.items.splice(0, 1, five)
+  expect(getPath(five)).toBe("/items/5")
+  expect(store.items.slice(1, 5).map(item => getPath(item))).toEqual([
+    "/items/1",
+    "/items/2",
+    "/items/3",
+    "/items/4"
+  ])
+})
