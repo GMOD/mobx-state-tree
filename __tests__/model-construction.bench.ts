@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { test } from "vitest"
 import { types, type IAnyModelType } from "../src/index.ts"
 
 // Isolates the sub-costs of building a jbrowse-shaped model type at module-eval:
@@ -28,28 +28,27 @@ const A = types.model("base", wideProps("base", true))
 const B = types.model("linear", wideProps("linear"))
 const C = types.model("feature", wideProps("feature"))
 
-describe("model construction", () => {
-  bench("model() over 40 raw props", () => {
-    void types.model("m", wideProps("m", true))
-  })
-
-  bench("compose() 3 x 40 converted props", () => {
-    void types.compose("D", A, B, C)
-  })
-
-  bench(".props(+1) on a 40-prop parent", () => {
-    void A.props({ zz: types.optional(types.number, 0) })
-  })
-
-  bench("40 no-new-prop chain steps on a 40-prop parent", () => {
-    let M: IAnyModelType = A
-    for (let i = 0; i < 40; i++) {
-      M = M.views(() => ({
-        get [`v${i}`]() {
-          return i
-        }
-      })).actions(() => ({ [`a${i}`]() {} }))
-    }
-    return void M
-  })
+test("model construction", async ({ bench }) => {
+  await bench.compare(
+    bench("model() over 40 raw props", () => {
+      void types.model("m", wideProps("m", true))
+    }),
+    bench("compose() 3 x 40 converted props", () => {
+      void types.compose("D", A, B, C)
+    }),
+    bench(".props(+1) on a 40-prop parent", () => {
+      void A.props({ zz: types.optional(types.number, 0) })
+    }),
+    bench("40 no-new-prop chain steps on a 40-prop parent", () => {
+      let M: IAnyModelType = A
+      for (let i = 0; i < 40; i++) {
+        M = M.views(() => ({
+          get [`v${i}`]() {
+            return i
+          }
+        })).actions(() => ({ [`a${i}`]() {} }))
+      }
+      return void M
+    })
+  )
 })

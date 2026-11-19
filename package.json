@@ -28,7 +28,7 @@
     "test-ci": "pnpm test:types && pnpm test:dev --run && pnpm test:prod --run",
     "test:dev": "vitest --mode development",
     "test:prod": "vitest --mode production",
-    "bench": "vitest bench --run --mode production",
+    "bench": "vitest bench --run --mode production --reporter=verbose",
     "preversion": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build && pnpm test-ci",
     "version": "git-cliff --tag v$npm_package_version --unreleased --prepend CHANGELOG.md && git add CHANGELOG.md",
     "postversion": "git push --follow-tags"
@@ -49,17 +49,17 @@
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.5",
-    "eslint": "^10.13.0",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
     "git-cliff": "^2.14.2",
-    "mobx": "^7.1.0",
-    "prettier": "^3.9.10",
-    "rollup": "^4.65.0",
+    "mobx": "^7.1.7",
+    "prettier": "^3.10.1",
+    "rollup": "^4.68.6",
     "rollup-plugin-dts": "^6.5.1",
     "rollup-plugin-sourcemaps2": "^0.5.10",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.0",
-    "vitest": "^4.1.7"
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.1"
   },
   "peerDependencies": {
     "mobx": "^7.0.0"

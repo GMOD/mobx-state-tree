@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { test } from "vitest"
 import { types, type IAnyModelType } from "../src/index.ts"
 
 // A benchmark modeled on jbrowse's state-tree shape: wide models (~40 props of
@@ -75,11 +75,7 @@ function buildDisplayType(): IAnyModelType {
   return M
 }
 
-describe("jbrowse-like model", () => {
-  bench("construct display model type (module-eval cost)", () => {
-    buildDisplayType()
-  })
-
+test("jbrowse-like model", async ({ bench }) => {
   const DisplayType = buildDisplayType()
   const SessionType = types.model("Session", {
     displays: types.array(DisplayType)
@@ -92,7 +88,12 @@ describe("jbrowse-like model", () => {
       feature_type: "feature"
     }))
   }
-  bench("create session instance with 20 displays", () => {
-    SessionType.create(snapshot as never)
-  })
+  await bench.compare(
+    bench("construct display model type (module-eval cost)", () => {
+      buildDisplayType()
+    }),
+    bench("create session instance with 20 displays", () => {
+      SessionType.create(snapshot as never)
+    })
+  )
 })
